@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <title>LogRPG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/ic-logrpg-monograme.svg">
+  <style>
+    @media (max-width: 1099px) {
+      /* Cacher l'app desktop */
+      #app { display: none !important; }
+      .mobile-wip { display: none !important; }
+      /* Montrer l'app mobile */
+      #mobile-app { display: flex !important; }
+    }
+    @media (min-width: 1100px) {
+      .mobile-wip { display: none !important; }
+      #mobile-app { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<!-- Écran mobile : en cours de développement -->
+<div class="mobile-wip">
+  <svg width="56" height="56" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M18.7186 3C20.7123 3 22.249 3.4878 23.3289 4.46339C24.4254 5.42245 24.9736 6.76178 24.9736 8.48146C24.9736 9.58933 24.7244 10.5567 24.226 11.3834C23.7442 12.1937 23.0381 12.8221 22.1077 13.2685C21.8186 13.4046 21.5078 13.5188 21.1754 13.6118C21.4715 13.6983 21.749 13.8238 22.0081 13.9878C22.5563 14.3186 23.0132 14.8311 23.3787 15.5256L24.6248 17.7579C24.8906 18.2374 25.0151 18.7087 24.9985 19.1717C24.9819 19.6181 24.7992 19.9902 24.4504 20.2878C24.1181 20.5689 23.628 20.7095 22.9801 20.7095C22.3321 20.7095 21.8004 20.5772 21.385 20.3126C20.9863 20.048 20.6292 19.6346 20.3135 19.0724L18.0458 14.9303C17.8464 14.5666 17.5889 14.3185 17.2732 14.1862C16.9742 14.0374 16.6253 13.963 16.2266 13.963H14.8565V17.609C14.8565 19.7255 13.9836 21.3295 12.7874 22.3878C11.5912 23.4626 9.88001 24 7.65378 24C6.74005 24 5.88447 23.9339 5.08703 23.8016C4.28959 23.6859 3.60007 23.5123 3.0186 23.2808C2.53681 23.1155 2.19614 22.8757 1.99677 22.5615C1.79741 22.2474 1.70608 21.9166 1.7227 21.5693C1.73931 21.2221 1.83065 20.9079 1.99677 20.6268C2.17952 20.3457 2.42045 20.139 2.71947 20.0067C3.01852 19.891 3.35088 19.8992 3.71638 20.0315C4.44735 20.3292 5.11186 20.5194 5.70993 20.602C6.30799 20.7012 6.81474 20.7508 7.23007 20.7508C8.24351 20.7508 8.99955 20.5359 9.49796 20.1059C10.0129 19.6925 10.2705 19.0394 10.2705 18.1466V17.0196C9.98784 17.5207 9.54762 17.946 8.94968 18.2954C8.18545 18.7253 7.35468 18.9403 6.45754 18.9403C5.36109 18.9402 4.40584 18.6922 3.5918 18.1962C2.77774 17.6836 2.13805 16.9725 1.67287 16.0631C1.2243 15.1536 1 14.087 1 12.8634C1.00001 11.9374 1.13298 11.1024 1.39879 10.3583C1.6646 9.61423 2.03007 8.97764 2.49523 8.44852C2.97701 7.9194 3.55018 7.51422 4.2147 7.23312C4.89585 6.93549 5.6435 6.78661 6.45754 6.78661C7.38791 6.78661 8.21868 7.00159 8.94968 7.43151C9.51556 7.75692 9.93849 8.15824 10.2188 8.63523C10.2311 8.53186 10.2485 8.43278 10.2706 8.33791V5.30668C10.2706 4.56262 10.4699 3.99215 10.8686 3.5953C11.284 3.19845 11.8572 3 12.5882 3H18.7186ZM7.82819 10.0359C7.36304 10.0359 6.94774 10.1516 6.58226 10.3831C6.21676 10.598 5.93421 10.9205 5.73485 11.3504C5.5521 11.7637 5.46078 12.2681 5.46077 12.8634C5.46077 13.7563 5.67677 14.4508 6.10872 14.9469C6.54067 15.4429 7.11382 15.6909 7.82819 15.691C8.3266 15.691 8.75029 15.5835 9.09918 15.3686C9.44805 15.1371 9.72218 14.8146 9.92154 14.4013C10.1209 13.9714 10.2205 13.4586 10.2205 12.8634C10.2205 11.9705 10.0046 11.2761 9.57271 10.78C9.14076 10.2839 8.55919 10.0359 7.82819 10.0359ZM14.856 10.7385H17.8963C18.7768 10.7385 19.4496 10.5649 19.9147 10.2176C20.3799 9.87039 20.6125 9.33301 20.6125 8.60545C20.6125 7.91098 20.3799 7.3901 19.9147 7.04286C19.4496 6.67911 18.7767 6.49716 17.8963 6.49716H14.856V10.7385Z" fill="url(#wip_grad)"/>
+    <defs><linearGradient id="wip_grad" x1="1" y1="3" x2="21.8142" y2="26.7876" gradientUnits="userSpaceOnUse"><stop stop-color="#5CC8A8"/><stop offset="1" stop-color="#3DAF8E"/></linearGradient></defs>
+  </svg>
+  <h1>LogRPG</h1>
+  <p>La version mobile est en cours de développement.<br>Consulte l'application Android en attendant !</p>
+  <span class="badge">🖥️ Disponible sur PC</span>
+</div>
+
+<div id="app">
+  <div class="app-topbar">
+    <div class="logo-pill">
+      <svg width="20" height="20" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.7186 3C20.7123 3 22.249 3.4878 23.3289 4.46339C24.4254 5.42245 24.9736 6.76178 24.9736 8.48146C24.9736 9.58933 24.7244 10.5567 24.226 11.3834C23.7442 12.1937 23.0381 12.8221 22.1077 13.2685C21.8186 13.4046 21.5078 13.5188 21.1754 13.6118C21.4715 13.6983 21.749 13.8238 22.0081 13.9878C22.5563 14.3186 23.0132 14.8311 23.3787 15.5256L24.6248 17.7579C24.8906 18.2374 25.0151 18.7087 24.9985 19.1717C24.9819 19.6181 24.7992 19.9902 24.4504 20.2878C24.1181 20.5689 23.628 20.7095 22.9801 20.7095C22.3321 20.7095 21.8004 20.5772 21.385 20.3126C20.9863 20.048 20.6292 19.6346 20.3135 19.0724L18.0458 14.9303C17.8464 14.5666 17.5889 14.3185 17.2732 14.1862C16.9742 14.0374 16.6253 13.963 16.2266 13.963H14.8565V17.609C14.8565 19.7255 13.9836 21.3295 12.7874 22.3878C11.5912 23.4626 9.88001 24 7.65378 24C6.74005 24 5.88447 23.9339 5.08703 23.8016C4.28959 23.6859 3.60007 23.5123 3.0186 23.2808C2.53681 23.1155 2.19614 22.8757 1.99677 22.5615C1.79741 22.2474 1.70608 21.9166 1.7227 21.5693C1.73931 21.2221 1.83065 20.9079 1.99677 20.6268C2.17952 20.3457 2.42045 20.139 2.71947 20.0067C3.01852 19.891 3.35088 19.8992 3.71638 20.0315C4.44735 20.3292 5.11186 20.5194 5.70993 20.602C6.30799 20.7012 6.81474 20.7508 7.23007 20.7508C8.24351 20.7508 8.99955 20.5359 9.49796 20.1059C10.0129 19.6925 10.2705 19.0394 10.2705 18.1466V17.0196C9.98784 17.5207 9.54762 17.946 8.94968 18.2954C8.18545 18.7253 7.35468 18.9403 6.45754 18.9403C5.36109 18.9402 4.40584 18.6922 3.5918 18.1962C2.77774 17.6836 2.13805 16.9725 1.67287 16.0631C1.2243 15.1536 1 14.087 1 12.8634C1.00001 11.9374 1.13298 11.1024 1.39879 10.3583C1.6646 9.61423 2.03007 8.97764 2.49523 8.44852C2.97701 7.9194 3.55018 7.51422 4.2147 7.23312C4.89585 6.93549 5.6435 6.78661 6.45754 6.78661C7.38791 6.78661 8.21868 7.00159 8.94968 7.43151C9.51556 7.75692 9.93849 8.15824 10.2188 8.63523C10.2311 8.53186 10.2485 8.43278 10.2706 8.33791V5.30668C10.2706 4.56262 10.4699 3.99215 10.8686 3.5953C11.284 3.19845 11.8572 3 12.5882 3H18.7186ZM7.82819 10.0359C7.36304 10.0359 6.94774 10.1516 6.58226 10.3831C6.21676 10.598 5.93421 10.9205 5.73485 11.3504C5.5521 11.7637 5.46078 12.2681 5.46077 12.8634C5.46077 13.7563 5.67677 14.4508 6.10872 14.9469C6.54067 15.4429 7.11382 15.6909 7.82819 15.691C8.3266 15.691 8.75029 15.5835 9.09918 15.3686C9.44805 15.1371 9.72218 14.8146 9.92154 14.4013C10.1209 13.9714 10.2205 13.4586 10.2205 12.8634C10.2205 11.9705 10.0046 11.2761 9.57271 10.78C9.14076 10.2839 8.55919 10.0359 7.82819 10.0359ZM14.856 10.7385H17.8963C18.7768 10.7385 19.4496 10.5649 19.9147 10.2176C20.3799 9.87039 20.6125 9.33301 20.6125 8.60545C20.6125 7.91098 20.3799 7.3901 19.9147 7.04286C19.4496 6.67911 18.7767 6.49716 17.8963 6.49716H14.856V10.7385Z" fill="url(#paint0_linear_327_1631)"/><defs><linearGradient id="paint0_linear_327_1631" x1="1" y1="3" x2="21.8142" y2="26.7876" gradientUnits="userSpaceOnUse"><stop stop-color="#5CC8A8"/><stop offset="1" stop-color="#3DAF8E"/></linearGradient></defs></svg>
+      <svg width="48" height="13" viewBox="0 0 52 14" style="display:block;margin-top:1px;" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M27.2646 0.754883C28.4646 0.754883 29.39 1.04967 30.04 1.63965C30.7 2.21965 31.0303 3.03031 31.0303 4.07031C31.0302 4.74012 30.88 5.32531 30.5801 5.8252C30.2901 6.3151 29.8646 6.69488 29.3047 6.96484C29.1293 7.04775 28.9401 7.11541 28.7383 7.17188C28.9184 7.22426 29.0877 7.29926 29.2451 7.39941C29.5751 7.59941 29.8503 7.91008 30.0703 8.33008L30.8203 9.67969C30.9803 9.96967 31.0549 10.2552 31.0449 10.5352C31.0348 10.805 30.9248 11.03 30.7148 11.21C30.5149 11.3799 30.2199 11.4648 29.8301 11.4648C29.4401 11.4648 29.1201 11.3846 28.8701 11.2246C28.6301 11.0646 28.4146 10.8146 28.2246 10.4746L26.8604 7.96973C26.7404 7.74973 26.5845 7.59953 26.3945 7.51953C26.2146 7.42968 26.0045 7.38477 25.7646 7.38477H24.9404V9.58984C24.9404 10.8698 24.4143 11.8395 23.6943 12.4795C22.9743 13.1295 21.9445 13.4551 20.6045 13.4551C20.0545 13.4551 19.5395 13.415 19.0596 13.335C18.5796 13.265 18.1644 13.1595 17.8145 13.0195C17.5246 12.9195 17.3192 12.7749 17.1992 12.585C17.0794 12.3951 17.0243 12.1951 17.0342 11.9854C17.0442 11.7755 17.0993 11.585 17.1992 11.415C17.3092 11.245 17.4548 11.12 17.6348 11.04C17.8147 10.9701 18.0145 10.9748 18.2344 11.0547C18.6743 11.2347 19.0746 11.3494 19.4346 11.3994C19.7946 11.4594 20.0996 11.4902 20.3496 11.4902C20.9596 11.4902 21.4148 11.3596 21.7148 11.0996C22.0246 10.8496 22.1797 10.4548 22.1797 9.91504V9.22949C22.0096 9.53383 21.7458 9.79295 21.3848 10.0049C20.9248 10.2649 20.4247 10.3945 19.8848 10.3945C19.2248 10.3945 18.6492 10.2453 18.1592 9.94531C17.6694 9.6354 17.2848 9.20503 17.0049 8.65527C16.7349 8.10527 16.5996 7.45973 16.5996 6.71973C16.5996 6.15983 16.6799 5.65501 16.8398 5.20508C16.9998 4.75508 17.22 4.3698 17.5 4.0498C17.7899 3.72998 18.1344 3.48441 18.5342 3.31445C18.9442 3.13445 19.3948 3.04492 19.8848 3.04492C20.4447 3.04495 20.9448 3.1746 21.3848 3.43457C21.7265 3.632 21.9807 3.87634 22.1494 4.16602C22.1566 4.10422 22.1667 4.04506 22.1797 3.98828V2.14941C22.1798 1.69971 22.3002 1.35515 22.54 1.11523C22.79 0.875234 23.1352 0.754883 23.5752 0.754883H27.2646ZM20.71 5.00977C20.4301 5.00977 20.1799 5.07986 19.96 5.21973C19.74 5.34972 19.5692 5.54469 19.4492 5.80469C19.3392 6.05465 19.2842 6.35979 19.2842 6.71973C19.2842 7.25965 19.4149 7.6795 19.6748 7.97949C19.9348 8.27949 20.28 8.42969 20.71 8.42969C21.0097 8.42964 21.2647 8.36521 21.4746 8.23535C21.6846 8.09535 21.8497 7.89941 21.9697 7.64941C22.0896 7.3895 22.1494 7.07953 22.1494 6.71973C22.1494 6.17987 22.0197 5.75992 21.7598 5.45996C21.4998 5.16004 21.1498 5.00985 20.71 5.00977ZM24.9395 5.43457H26.7695C27.2995 5.43457 27.7054 5.33012 27.9854 5.12012C28.2653 4.91011 28.4053 4.58446 28.4053 4.14453C28.4052 3.72491 28.265 3.41014 27.9854 3.2002C27.7054 2.9802 27.2995 2.87012 26.7695 2.87012H24.9395V5.43457Z" fill="#2C3E50"/><path d="M47.8584 0.589844C48.3582 0.589859 48.8679 0.640299 49.3877 0.740234C49.9076 0.83022 50.418 1.00472 50.918 1.26465C51.1778 1.38459 51.3533 1.55456 51.4434 1.77441C51.5434 1.98441 51.5732 2.21019 51.5332 2.4502C51.5032 2.68001 51.4182 2.89487 51.2783 3.09473C51.1484 3.28466 50.9682 3.41436 50.7383 3.48438C50.5083 3.54437 50.248 3.50988 49.958 3.37988C49.6581 3.23993 49.3333 3.13444 48.9834 3.06445C48.6334 2.98445 48.263 2.94531 47.873 2.94531C47.2032 2.94533 46.6433 3.06478 46.1934 3.30469C45.7534 3.54469 45.4231 3.90012 45.2031 4.37012C44.9832 4.84005 44.8731 5.41489 44.873 6.09473C44.873 7.11473 45.123 7.88527 45.623 8.40527C46.123 8.9251 46.8631 9.1845 47.8428 9.18457C48.1428 9.18457 48.4684 9.15473 48.8184 9.09473C49.0082 9.06309 49.1979 9.02406 49.3877 8.97852V7.30957H48.3379C47.998 7.30952 47.7329 7.22464 47.543 7.05469C47.3631 6.88472 47.2735 6.6448 47.2734 6.33496C47.2734 6.02504 47.3631 5.78988 47.543 5.62988C47.7329 5.45993 47.998 5.37505 48.3379 5.375H50.5586C50.9084 5.37508 51.1736 5.47023 51.3535 5.66016C51.5433 5.84015 51.6377 6.10528 51.6377 6.45508V9.76953C51.6377 10.0695 51.5734 10.3252 51.4434 10.5352C51.3234 10.745 51.1282 10.8944 50.8584 10.9844C50.3884 11.1444 49.8781 11.2694 49.3281 11.3594C48.7781 11.4494 48.2277 11.4951 47.6777 11.4951C46.4679 11.4951 45.4378 11.2703 44.5879 10.8203C43.7479 10.3703 43.108 9.73968 42.668 8.92969C42.228 8.11973 42.0078 7.17463 42.0078 6.09473C42.0078 5.25482 42.1385 4.50002 42.3984 3.83008C42.6684 3.15018 43.0528 2.5698 43.5527 2.08984C44.0527 1.59989 44.6629 1.22949 45.3828 0.979492C46.1128 0.719493 46.9384 0.589844 47.8584 0.589844Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M37.5557 0.754883C38.7557 0.754883 39.6811 1.06457 40.3311 1.68457C40.991 2.29455 41.3203 3.1398 41.3203 4.21973C41.3203 5.29955 40.9908 6.14956 40.3311 6.76953C39.6811 7.37953 38.7557 7.68457 37.5557 7.68457H35.2305V10.0703C35.2304 10.51 35.1155 10.8546 34.8857 11.1045C34.6557 11.3445 34.3106 11.4648 33.8506 11.4648C33.4107 11.4648 33.071 11.3445 32.8311 11.1045C32.5912 10.8546 32.4708 10.5101 32.4707 10.0703V2.14941C32.4708 1.69965 32.5912 1.35516 32.8311 1.11523C33.0811 0.875234 33.4262 0.754883 33.8662 0.754883H37.5557ZM35.2305 5.57031H37.0762C37.5957 5.57025 37.9955 5.45996 38.2754 5.24023C38.5554 5.01023 38.6953 4.66973 38.6953 4.21973C38.6953 3.75979 38.5554 3.42018 38.2754 3.2002C37.9955 2.98028 37.5959 2.87018 37.0762 2.87012H35.2305V5.57031Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9561 3.04492C12.7761 3.04492 13.4916 3.19977 14.1016 3.50977C14.7113 3.81971 15.1808 4.26496 15.5107 4.84473C15.8507 5.41462 16.0214 6.09961 16.0215 6.89941C16.0215 7.48939 15.9263 8.0249 15.7363 8.50488C15.5463 8.98488 15.2711 9.39535 14.9111 9.73535C14.5612 10.0652 14.131 10.32 13.6211 10.5C13.1211 10.67 12.566 10.7549 11.9561 10.7549C11.1363 10.7549 10.4214 10.5999 9.81152 10.29C9.20152 9.98004 8.72574 9.53508 8.38574 8.95508C8.04576 8.37509 7.87598 7.6894 7.87598 6.89941C7.87603 6.29962 7.9712 5.76479 8.16113 5.29492C8.35113 4.81493 8.62634 4.41008 8.98633 4.08008C9.34633 3.74008 9.77637 3.48445 10.2764 3.31445C10.7763 3.13454 11.3362 3.04493 11.9561 3.04492ZM11.9561 5.00977C11.6861 5.00978 11.4463 5.07511 11.2363 5.20508C11.0263 5.33508 10.8612 5.54031 10.7412 5.82031C10.6214 6.09018 10.5616 6.44982 10.5615 6.89941C10.5615 7.5594 10.6912 8.03984 10.9512 8.33984C11.2111 8.63982 11.5461 8.79001 11.9561 8.79004C12.226 8.79004 12.4658 8.72464 12.6758 8.59473C12.8858 8.45473 13.0462 8.24949 13.1562 7.97949C13.2761 7.69954 13.3359 7.33923 13.3359 6.89941C13.3359 6.22974 13.2062 5.7499 12.9463 5.45996C12.6863 5.15996 12.3561 5.00977 11.9561 5.00977Z" fill="#2C3E50"/><path d="M1.37988 0C1.82988 0 2.17039 0.120352 2.40039 0.360352C2.64004 0.600272 2.7597 0.944971 2.75977 1.39453V8.29492H6.41992C6.79989 8.29492 7.09004 8.39476 7.29004 8.59473C7.49998 8.78467 7.60541 9.06472 7.60547 9.43457C7.60547 9.80457 7.50004 10.09 7.29004 10.29C7.09004 10.49 6.79988 10.5898 6.41992 10.5898H1.39453C0.954755 10.5898 0.610263 10.4694 0.360352 10.2295C0.120447 9.97958 7.88719e-05 9.63509 0 9.19531V1.39453C6.16112e-05 0.944739 0.120454 0.600287 0.360352 0.360352C0.60033 0.120373 0.93994 2.13056e-05 1.37988 0Z" fill="#2C3E50"/></svg>
+    </div>
+    <div id="topbar-char-section" style="display:none;align-items:center;gap:8px;margin-left:12px;"
+         oncontextmenu="event.preventDefault();openCharContextMenu(event,_selectedCharId,document.getElementById('topbar-char-name').textContent)"
+         style="cursor:context-menu;">
+      <div style="width:1px;height:20px;background:#DDE2E6;"></div>
+      <div id="topbar-char-avatar" style="width:24px;height:24px;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:context-menu;">
+        <span id="topbar-char-initial"></span>
+      </div>
+      <span id="topbar-char-name" style="font-size:14px;font-weight:800;color:var(--text-mid);cursor:context-menu;"></span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" onclick="triggerImport()">
+      📥 Importer
+    </button>
+  </div>
+  <div class="app-body">
+    <div class="panel-sidebar" id="panel-sidebar">
+      <!-- Mode plein -->
+      <div class="sidebar-full">
+        <div style="display:flex;align-items:center;padding:10px 10px 4px;gap:4px;">
+          <div class="section-label" style="flex:1;padding:0;">Mes personnages</div>
+          <button class="sidebar-toggle" onclick="collapseSidebar()" title="Réduire">◀</button>
+        </div>
+        <div class="scroll" style="flex:1;padding:4px 10px 60px;">
+          <div id="char-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button class="add-pill green" onclick="openCreateCharModal()">＋ Ajouter un personnage</button>
+        </div>
+      </div>
+      <!-- Mode réduit (rail) -->
+      <div class="sidebar-rail">
+        <button class="sidebar-toggle" onclick="expandSidebar()" title="Agrandir" style="margin-bottom:4px;">▶</button>
+        <div id="char-rail"></div>
+        <button class="rail-add-btn" onclick="openCreateCharModal()" title="Nouveau personnage">＋</button>
+      </div>
+    </div>
+    <div class="panel-counters">
+      <div class="panel-header" id="counters-char-header" style="min-height:0;padding:0;border:none;"></div>
+      <div class="panel-inner scroll" id="counters-content">
+        <div class="empty-panel"><div class="emoji">🎯</div><p>Sélectionne un personnage<br>pour voir ses compteurs</p></div>
+      </div>
+    </div>
+    <div class="panel-content">
+      <div class="panel-tabs" id="main-tabs" style="display:none;">
+        <button class="tab-btn active" onclick="switchTab('tab-fiche')">📄 Fiche</button>
+        <button class="tab-btn" onclick="switchTab('tab-caract')">⚔️ Caract.</button>
+        <button class="tab-btn" onclick="switchTab('tab-capacites')">✨ Capacités</button>
+        <button class="tab-btn" onclick="switchTab('tab-inventaire')">🎒 Inventaire</button>
+        <button class="tab-btn" onclick="switchTab('tab-notes')">📝 Notes</button>
+      </div>
+      <div class="panel-inner scroll" id="content-area">
+        <div class="empty-panel"><div class="emoji">🧙</div><p>Sélectionne un personnage<br>pour accéder à sa fiche</p></div>
+      </div>
+    </div>
+    <div class="panel-detail" id="panel-detail">
+      <div class="panel-header">
+        <span id="detail-title" style="font-size:13.5px;font-weight:900;color:var(--text);flex:1;"></span>
+        <button class="btn-icon" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="panel-inner scroll" id="detail-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Créer un personnage -->
+<div class="modal-overlay" id="modal-create-char">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✨ Nouveau personnage</div>
+    <div class="input-group">
+      <label class="input-label" for="form-char-name">Nom *</label>
+      <input class="input" id="form-char-name" placeholder="Ex : Veek" onkeydown="if(event.key==='Enter')submitCreateChar()"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="input-group">
+        <label class="input-label" for="form-char-hp">PV max</label>
+        <input class="input" id="form-char-hp" type="number" min="1" placeholder="20"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label" for="form-char-mana">Mana max</label>
+        <input class="input" id="form-char-mana" type="number" min="0" placeholder="0"/>
+      </div>
+    </div>
+    <div class="modal-error" id="form-char-error"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="submitCreateChar()">Créer le personnage</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-create-char')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Mode monnaie -->
+<div class="modal-overlay" id="modal-currency-mode">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Mode de monnaie</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
+      <div class="currency-mode-option" onclick="setCurrencyMode('SINGLE')">
+        <div class="currency-mode-radio" id="radio-SINGLE"></div>
+        <div><div style="font-size:14px;font-weight:800;color:var(--text);">Monnaie unique</div><div style="font-size:11.5px;color:var(--text-mid);">Une seule valeur en crédits</div></div>
+      </div>
+      <div class="currency-mode-option" onclick="setCurrencyMode('BY_TEN')">
+        <div class="currency-mode-radio" id="radio-BY_TEN"></div>
+        <div><div style="font-size:14px;font-weight:800;color:var(--text);">Conversion ×10</div><div style="font-size:11.5px;color:var(--text-mid);">10 cuivre = 1 argent · 10 argent = 1 or</div></div>
+      </div>
+      <div class="currency-mode-option" onclick="setCurrencyMode('BY_HUNDRED')">
+        <div class="currency-mode-radio" id="radio-BY_HUNDRED"></div>
+        <div><div style="font-size:14px;font-weight:800;color:var(--text);">Conversion ×100</div><div style="font-size:11.5px;color:var(--text-mid);">100 cuivre = 1 argent · 100 argent = 1 or</div></div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('modal-currency-mode')">Fermer</button>
+  </div>
+</div>
+
+<!-- Modal : Ajouter monnaie -->
+<div class="modal-overlay" id="modal-currency-add">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">＋ Ajouter des crédits</div>
+    <div class="input-group">
+      <label class="input-label">Montant (en crédits)</label>
+      <input class="input" id="currency-add-input" type="number" min="1" placeholder="100" onkeydown="if(event.key==='Enter')submitAddCredits()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="submitAddCredits()">Ajouter</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-currency-add')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Dépenser monnaie -->
+<div class="modal-overlay" id="modal-currency-spend">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">− Dépenser des crédits</div>
+    <div class="input-group">
+      <label class="input-label">Montant (en crédits)</label>
+      <input class="input" id="currency-spend-input" type="number" min="1" placeholder="50" onkeydown="if(event.key==='Enter')submitSpendCredits()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;background:var(--orange);box-shadow:none;" onclick="submitSpendCredits()">Dépenser</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-currency-spend')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Choisir niveau de sort -->
+<div class="modal-overlay" id="modal-slot-picker">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📖 Choisir un niveau</div>
+    <div id="slot-picker-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
+    <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('modal-slot-picker')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Modifier max emplacements -->
+<div class="modal-overlay" id="modal-slot-edit">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="slot-edit-title">Emplacements max</div>
+    <input id="slot-edit-val" type="number" min="0" max="9"
+           style="width:100%;text-align:center;font-size:32px;font-weight:900;font-family:'Nunito',sans-serif;
+                  color:var(--purple);border:2.5px solid var(--purple-l);border-radius:14px;
+                  padding:12px;background:var(--purple-l);outline:none;margin-bottom:16px;"
+           onkeydown="if(event.key==='Enter')confirmSlotEdit()"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-slot-edit')">Annuler</button>
+      <button class="btn btn-primary" style="background:var(--purple);box-shadow:none;" onclick="confirmSlotEdit()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Modifier max HP/Mana -->
+<div class="modal-overlay" id="modal-edit-max">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="edit-max-title">Modifier le maximum</div>
+    <div class="input-group">
+      <label class="input-label">Nouvelle valeur</label>
+      <input class="input" id="edit-max-input" type="number" min="1"
+             style="font-size:24px;font-weight:900;text-align:center;"
+             onkeydown="if(event.key==='Enter')confirmEditMax()"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-max')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmEditMax()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu personnage -->
+<div id="char-context-menu" style="
+  display:none; position:fixed; z-index:2000;
+  background:var(--white); border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18); border:1.5px solid rgba(0,0,0,.06);
+  padding:6px; min-width:220px;">
+  <div id="char-context-title" style="
+    font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;
+    padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();closeCharContextMenu();selectCharacter(_ctxCharId||0)">
+    <span>👤</span> Ouvrir la fiche
+  </button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();renameCharFromCtx()">
+    <span>✏️</span> Renommer
+  </button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();const id=_ctxCharId;closeCharContextMenu();openProfilePhotoModal(id)">
+    <span>🖼️</span> Modifier la photo
+  </button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();exportCharacter(_ctxCharId);closeCharContextMenu()">
+    <span>📤</span> Exporter en JSON
+  </button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteCharFromContext()">
+    <span>🗑️</span> Supprimer le personnage
+  </button>
+</div>
+
+<!-- Context menu emplacements de sorts -->
+<div id="slot-context-menu" style="
+  display:none; position:fixed; z-index:2000;
+  background:var(--white); border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18); border:1.5px solid rgba(0,0,0,.06);
+  padding:6px; min-width:220px;">
+  <div id="slot-context-title" style="
+    font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;
+    padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();openSlotEditFromContext()">
+    <span>⚙️</span> Modifier le max
+  </button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();useSlotFromContext()">
+    <span>−</span> Utiliser un slot
+  </button>
+  <button class="ctx-menu-item" style="color:var(--green-d);" onclick="event.stopPropagation();recoverSlotFromContext()">
+    <span>＋</span> Récupérer un slot
+  </button>
+</div>
+
+<!-- Modal : Choisir un template -->
+<div class="modal-overlay" id="modal-template">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✨ Choisir un template</div>
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;line-height:1.5;">
+      Démarre avec un système préconfigué. Tu pourras ensuite ajouter, modifier ou supprimer des sections et widgets.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+      <button class="template-option" onclick="applyTemplate('dnd5e')">
+        <span class="template-emoji">⚔️</span>
+        <div><div class="template-name">D&D 5e / Pathfinder</div><div class="template-desc">6 caractéristiques + modificateurs, combat, jets de sauvegarde</div></div>
+      </button>
+      <button class="template-option" onclick="applyTemplate('coc')">
+        <span class="template-emoji">🐙</span>
+        <div><div class="template-name">Call of Cthulhu (BRP)</div><div class="template-desc">9 caractéristiques en %, compétences, santé mentale</div></div>
+      </button>
+      <button class="template-option" onclick="applyTemplate('cyberpunk')">
+        <span class="template-emoji">🤖</span>
+        <div><div class="template-name">Cyberpunk Red</div><div class="template-desc">10 stats, armure, humanité, compétences</div></div>
+      </button>
+      <button class="template-option" onclick="applyTemplate('anatheme')">
+        <span class="template-emoji">✨</span>
+        <div><div class="template-name">Anathème</div><div class="template-desc">4 caractéristiques en %, valeurs de combat</div></div>
+      </button>
+    </div>
+    <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('modal-template')">Annuler</button>
+  </div>
+</div>
+
+<!-- Context menu PDF -->
+<div id="pdf-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:230px;">
+  <button class="ctx-menu-item" onclick="event.stopPropagation();closePdfContextMenu();openPdfFullscreen(_ctxPdfCharId)"><span>⛶</span> Ouvrir dans un nouvel onglet</button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();replacePdf()"><span>📎</span> Remplacer le PDF</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();unlinkPdf()"><span>🗑️</span> Délier le PDF</button>
+</div>
+
+<!-- Modal : Photo de profil (choix) -->
+<div class="modal-overlay" id="modal-profile-photo">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🖼️ Photo de profil</div>
+    <div style="display:flex;justify-content:center;margin-bottom:16px;">
+      <div id="photo-preview" style="width:90px;height:90px;border-radius:20px;
+        background:var(--green);display:flex;align-items:center;justify-content:center;
+        overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);"></div>
+    </div>
+    <button class="pdf-option-row" onclick="triggerPhotoImport()">
+      <div class="pdf-option-icon" style="background:var(--blue-l);">🖼️</div>
+      <div>
+        <div class="pdf-option-label">Choisir une image</div>
+        <div class="pdf-option-desc">JPG, PNG — recadrage interactif</div>
+      </div>
+    </button>
+    <button class="pdf-option-row" onclick="removeProfilePhoto()">
+      <div class="pdf-option-icon" style="background:var(--red-l);">🗑️</div>
+      <div>
+        <div class="pdf-option-label" style="color:var(--red);">Supprimer la photo</div>
+        <div class="pdf-option-desc">Revenir à l'initiale colorée</div>
+      </div>
+    </button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-profile-photo')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmProfilePhoto()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cropper plein écran -->
+<div id="photo-cropper-screen" style="display:none;position:fixed;inset:0;z-index:20000;background:#0D0F1A;flex-direction:column;">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+              background:linear-gradient(180deg,rgba(0,0,0,.75),transparent);position:absolute;top:0;left:0;right:0;z-index:2;">
+    <button onclick="closeCropper()" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.12);
+            border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div style="text-align:center;">
+      <div style="font-size:15px;font-weight:900;color:#fff;font-family:'Nunito',sans-serif;">Recadrer la photo</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.5);font-family:'Nunito',sans-serif;">Glissez · Molette pour zoomer</div>
+    </div>
+    <button onclick="resetCropper()" style="padding:8px 16px;border-radius:99px;background:rgba(255,255,255,.12);
+            border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);font-size:13px;font-weight:800;
+            cursor:pointer;font-family:'Nunito',sans-serif;">Réinit.</button>
+  </div>
+
+  <!-- Zone image interactive -->
+  <div id="cropper-canvas" style="position:absolute;inset:0;overflow:hidden;cursor:grab;">
+    <img id="cropper-img" style="position:absolute;transform-origin:center;user-select:none;-webkit-user-drag:none;" draggable="false"/>
+    <!-- Overlay avec découpe carrée -->
+    <div id="crop-overlay" style="position:absolute;inset:0;pointer-events:none;">
+      <!-- Fond sombre autour du carré -->
+      <svg id="crop-svg" style="position:absolute;inset:0;width:100%;height:100%;"></svg>
+      <!-- Bordure du carré -->
+      <div id="crop-box" style="position:absolute;border:2px solid rgba(255,255,255,.8);box-shadow:0 0 0 9999px rgba(0,0,0,.55);border-radius:4px;"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="display:flex;align-items:center;justify-content:flex-end;padding:24px 20px;
+              background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);position:absolute;bottom:0;left:0;right:0;z-index:2;">
+    <button id="crop-validate-btn" onclick="validateCrop()" style="padding:10px 24px;border-radius:99px;
+            background:linear-gradient(135deg,#5CC8A8,#3DAF8E);border:none;color:#fff;
+            font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;
+            display:flex;align-items:center;gap:8px;">
+      ✓ Valider
+    </button>
+  </div>
+</div>
+
+<!-- Modal : Options PDF -->
+<div class="modal-overlay" id="modal-pdf-options">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📄 Fiche de personnage</div>
+
+    <button class="pdf-option-row" onclick="replacePdf()">
+      <div class="pdf-option-icon" style="background:var(--green-l);">📎</div>
+      <div>
+        <div class="pdf-option-label">Remplacer le PDF</div>
+        <div class="pdf-option-desc">Choisir un nouveau fichier</div>
+      </div>
+    </button>
+
+    <button class="pdf-option-row" onclick="closeModal('modal-pdf-options');openPdfFullscreen(_ficheCharId)">
+      <div class="pdf-option-icon" style="background:var(--blue-l);">⛶</div>
+      <div>
+        <div class="pdf-option-label">Ouvrir dans un nouvel onglet</div>
+        <div class="pdf-option-desc">Afficher en plein écran</div>
+      </div>
+    </button>
+
+    <div style="height:1px;background:#F0F3F2;margin:8px 0;"></div>
+
+    <button class="pdf-option-row" onclick="unlinkPdf()">
+      <div class="pdf-option-icon" style="background:var(--red-l);">🗑️</div>
+      <div>
+        <div class="pdf-option-label" style="color:var(--red);">Délier le PDF</div>
+        <div class="pdf-option-desc">Supprime le PDF de l'application</div>
+      </div>
+    </button>
+
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-pdf-options')">Fermer</button>
+  </div>
+</div>
+
+<!-- Context menu note -->
+<div id="note-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:220px;">
+  <div id="note-ctx-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();renameNoteFromCtx()"><span>✏️</span> Renommer</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteNoteFromCtx()"><span>🗑️</span> Supprimer</button>
+</div>
+
+<!-- Modal : Renommer un personnage -->
+<div class="modal-overlay" id="modal-rename-char">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Renommer le personnage</div>
+    <div class="input-group">
+      <label class="input-label">Nouveau nom</label>
+      <input class="input" id="rename-char-input" placeholder="Nom du personnage"
+             onkeydown="if(event.key==='Enter')submitRenameChar()"/>
+    </div>
+    <input type="hidden" id="rename-char-id"/>
+    <div class="modal-error" id="rename-char-error"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-rename-char')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitRenameChar()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Conflit d'import (doublon de nom) -->
+<div class="modal-overlay" id="modal-import-conflict">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚠️ Personnage existant</div>
+    <p style="font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:16px;">
+      Un personnage nommé <strong id="import-conflict-name" style="color:var(--text);"></strong> existe déjà.
+      Que veux-tu faire ?
+    </p>
+
+    <button class="pdf-option-row" onclick="importConflictOverwrite()">
+      <div class="pdf-option-icon" style="background:var(--orange-l);">🔄</div>
+      <div>
+        <div class="pdf-option-label">Écraser le personnage existant</div>
+        <div class="pdf-option-desc">Mise à jour des données · PDF et photo conservés</div>
+      </div>
+    </button>
+
+    <button class="pdf-option-row" onclick="importConflictNew()">
+      <div class="pdf-option-icon" style="background:var(--green-l);">➕</div>
+      <div>
+        <div class="pdf-option-label">Créer un nouveau personnage</div>
+        <div class="pdf-option-desc">Importé avec le suffixe "(importé)"</div>
+      </div>
+    </button>
+
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-import-conflict');_pendingImportData=null;">
+      Annuler
+    </button>
+  </div>
+</div>
+
+<!-- Modal : Créer / Renommer une note -->
+<div class="modal-overlay" id="modal-note-dialog">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="note-dialog-title">📝 Nouvelle note</div>
+    <div class="input-group">
+      <label class="input-label">Titre</label>
+      <input class="input" id="note-dialog-input" placeholder="Ex : Session du 12 mars, Lore du monde…"
+             onkeydown="if(event.key==='Enter')document.getElementById('note-dialog-submit').click()"/>
+    </div>
+    <div class="modal-error" id="note-dialog-error"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-note-dialog')">Annuler</button>
+      <button class="btn btn-primary" id="note-dialog-submit">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu item -->
+<div id="item-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:230px;">
+  <div id="item-ctx-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" id="item-ctx-equip" onclick="event.stopPropagation();toggleEquipFromCtx()"><span>●</span> Équiper</button>
+  <button class="ctx-menu-item" id="item-ctx-consume" onclick="event.stopPropagation();toggleConsumeFromCtx()"><span>🧪</span> Marquer consommable</button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();editItemFromCtx()"><span>✏️</span> Modifier</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteItemFromCtx()"><span>🗑️</span> Supprimer</button>
+</div>
+
+<!-- Modal : Ajouter / Modifier un objet -->
+<div class="modal-overlay" id="modal-item">
+  <div class="modal-sheet" style="max-width:560px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="it-modal-title">🎒 Nouvel objet</div>
+    <div class="input-group">
+      <label class="input-label">Nom *</label>
+      <input class="input" id="it-name" placeholder="Ex : Épée longue, Potion de soin…"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <textarea class="input" id="it-desc" placeholder="Effets, origine, histoire…" rows="2" style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="input-group">
+        <label class="input-label">Quantité</label>
+        <input class="input" id="it-qty" type="number" min="0" placeholder="1"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Poids ⚖️</label>
+        <input class="input" id="it-weight" placeholder="Ex : 1 kg"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Catégorie</label>
+        <input class="input" id="it-category" placeholder="Ex : Arme, Armure…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Notes</label>
+        <input class="input" id="it-notes" placeholder="Optionnel"/>
+      </div>
+    </div>
+    <!-- Toggle Consommable -->
+    <div class="item-toggle-row" onclick="document.getElementById('it-consumable').click()">
+      <div>
+        <div style="font-size:13.5px;font-weight:800;color:var(--text);">🧪 Consommable</div>
+        <div style="font-size:11px;color:var(--text-mid);">L'objet est utilisable et a une quantité</div>
+      </div>
+      <label class="toggle-switch" onclick="event.stopPropagation()">
+        <input type="checkbox" id="it-consumable" onchange="updateItemToggles()"/>
+        <span class="toggle-track" style="--active-color:var(--red);"></span>
+      </label>
+    </div>
+    <!-- Toggle Équipé (masqué si consommable) -->
+    <div class="item-toggle-row" id="it-equipped-row" onclick="document.getElementById('it-equipped').click()">
+      <div>
+        <div style="font-size:13.5px;font-weight:800;color:var(--text);">⚔️ Équipé</div>
+        <div style="font-size:11px;color:var(--text-mid);">L'objet est actuellement porté</div>
+      </div>
+      <label class="toggle-switch" onclick="event.stopPropagation()">
+        <input type="checkbox" id="it-equipped"/>
+        <span class="toggle-track" style="--active-color:var(--green);"></span>
+      </label>
+    </div>
+    <div class="modal-error" id="it-error"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-item')">Annuler</button>
+      <button class="btn btn-primary" id="it-submit-btn">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu capacité -->
+<div id="ability-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:220px;">
+  <div id="ability-ctx-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();editAbilityFromCtx()"><span>✏️</span> Modifier</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteAbilityFromCtx()"><span>🗑️</span> Supprimer</button>
+</div>
+
+<!-- Modal : Ajouter / Modifier une capacité -->
+<div class="modal-overlay" id="modal-ability">
+  <div class="modal-sheet" style="max-width:560px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ab-modal-title">✨ Nouvelle capacité</div>
+    <div class="input-group">
+      <label class="input-label">Nom *</label>
+      <input class="input" id="ab-name" placeholder="Ex : Forge d'un bouclier" onkeydown="if(event.key==='Enter')document.getElementById('ab-desc').focus()"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <textarea class="input" id="ab-desc" placeholder="Description de la capacité…" rows="3" style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="input-group">
+        <label class="input-label">Catégorie</label>
+        <input class="input" id="ab-category" placeholder="Ex : Combat, Magie…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Coût</label>
+        <input class="input" id="ab-cost" placeholder="Ex : 2 psy, 1 action…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Portée 🎯</label>
+        <input class="input" id="ab-range" placeholder="Ex : 6m, Contact…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Durée ⏱️</label>
+        <input class="input" id="ab-duration" placeholder="Ex : 1 round, Instantané…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Dégâts ⚔️</label>
+        <input class="input" id="ab-damage" placeholder="Ex : 2d6+3…"/>
+      </div>
+    </div>
+    <div class="modal-error" id="ab-error"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-ability')">Annuler</button>
+      <button class="btn btn-primary" id="ab-submit-btn">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Modifier la valeur d'un widget -->
+<div class="modal-overlay" id="modal-edit-value">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="edit-val-title">Modifier la valeur</div>
+    <div class="input-group">
+      <label class="input-label">Valeur</label>
+      <input class="input" id="edit-val-input"
+             style="font-size:22px;font-weight:900;text-align:center;"
+             onkeydown="if(event.key==='Enter')submitEditWidgetValue()"/>
+    </div>
+    <div id="edit-val-mod-row" style="display:none;">
+      <div class="input-group">
+        <label class="input-label">Modificateur</label>
+        <input class="input" id="edit-val-mod-input" placeholder="Ex : +3"
+               onkeydown="if(event.key==='Enter')submitEditWidgetValue()"/>
+      </div>
+    </div>
+    <input type="hidden" id="edit-val-section"/>
+    <input type="hidden" id="edit-val-widget"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-value')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitEditWidgetValue()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu section -->
+<div id="section-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:220px;">
+  <div id="section-context-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();renameSectionFromCtx()"><span>✏️</span> Renommer la section</button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();openAddWidgetFromCtx()"><span>＋</span> Ajouter un widget</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteSectionFromCtx()"><span>🗑️</span> Supprimer la section</button>
+</div>
+
+<!-- Context menu widget -->
+<div id="widget-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:220px;">
+  <div id="widget-context-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();editWidgetValueFromCtx()"><span>🔢</span> Modifier la valeur</button>
+  <button class="ctx-menu-item" onclick="event.stopPropagation();editWidgetFromCtx()"><span>✏️</span> Modifier le widget</button>
+  <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteWidgetFromCtx()"><span>🗑️</span> Supprimer le widget</button>
+</div>
+
+<!-- Modal : Ajouter une section -->
+<div class="modal-overlay" id="modal-add-section">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">＋ Nouvelle section</div>
+    <div class="input-group">
+      <label class="input-label">Titre de la section</label>
+      <input class="input" id="add-section-input" placeholder="Ex : Caractéristiques" onkeydown="if(event.key==='Enter')submitAddSection()"/>
+    </div>
+    <div class="modal-error" id="add-section-error"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="submitAddSection()">Créer</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-add-section')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Renommer une section -->
+<div class="modal-overlay" id="modal-rename-section">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Renommer la section</div>
+    <div class="input-group">
+      <label class="input-label">Nouveau titre</label>
+      <input class="input" id="rename-section-input" onkeydown="if(event.key==='Enter')submitRenameSection()"/>
+    </div>
+    <div class="modal-error" id="rename-section-error"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="submitRenameSection()">Valider</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-rename-section')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Ajouter un widget -->
+<div class="modal-overlay" id="modal-add-widget">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✨ Nouveau widget</div>
+    <div class="input-group">
+      <label class="input-label">Titre</label>
+      <input class="input" id="add-widget-title" placeholder="Ex : Force" onkeydown="if(event.key==='Enter')submitAddWidget()"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Type</label>
+      <select class="input" id="add-widget-type">
+        <option value="FREE">Valeur libre</option>
+        <option value="CAR_MOD">Valeur + Modificateur</option>
+        <option value="PERCENT">Pourcentage</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Couleur d'accent</label>
+      <div id="add-widget-color-dots" style="display:flex;gap:8px;margin-top:4px;"></div>
+      <input type="hidden" id="add-widget-color" value="PURPLE"/>
+    </div>
+    <div class="modal-error" id="add-widget-error"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="submitAddWidget()">Ajouter</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-add-widget')">Annuler</button>
+  </div>
+</div>
+
+<!-- Modal : Modifier un widget (titre + type + couleur) -->
+<div class="modal-overlay" id="modal-edit-widget">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Modifier le widget</div>
+    <div class="input-group">
+      <label class="input-label">Titre</label>
+      <input class="input" id="edit-widget-title" onkeydown="if(event.key==='Enter')submitEditWidget()"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Type</label>
+      <select class="input" id="edit-widget-type">
+        <option value="FREE">Valeur libre</option>
+        <option value="CAR_MOD">Valeur + Modificateur</option>
+        <option value="PERCENT">Pourcentage</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Couleur d'accent</label>
+      <div id="edit-widget-color-dots" style="display:flex;gap:8px;margin-top:4px;"></div>
+      <input type="hidden" id="edit-widget-color" value="PURPLE"/>
+    </div>
+    <div class="modal-error" id="edit-widget-error"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-widget')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitEditWidget()">Valider</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP MOBILE (< 1100px)
+════════════════════════════════════════════════════════════ -->
+<div id="mobile-app" style="display:none;flex-direction:column;height:100vh;background:#EEF6F4;font-family:'Nunito',sans-serif;overflow:hidden;">
+
+  <!-- ── Écran Liste ─────────────────────────────────────── -->
+  <div id="mob-screen-list" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+    <!-- Header -->
+    <div style="padding:14px 16px 10px;background:#EEF6F4;flex-shrink:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <svg width="60" height="16" viewBox="0 0 52 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M27.2646 0.754883C28.4646 0.754883 29.39 1.04967 30.04 1.63965C30.7 2.21965 31.0303 3.03031 31.0303 4.07031C31.0302 4.74012 30.88 5.32531 30.5801 5.8252C30.2901 6.3151 29.8646 6.69488 29.3047 6.96484C29.1293 7.04775 28.9401 7.11541 28.7383 7.17188C28.9184 7.22426 29.0877 7.29926 29.2451 7.39941C29.5751 7.59941 29.8503 7.91008 30.0703 8.33008L30.8203 9.67969C30.9803 9.96967 31.0549 10.2552 31.0449 10.5352C31.0348 10.805 30.9248 11.03 30.7148 11.21C30.5149 11.3799 30.2199 11.4648 29.8301 11.4648C29.4401 11.4648 29.1201 11.3846 28.8701 11.2246C28.6301 11.0646 28.4146 10.8146 28.2246 10.4746L26.8604 7.96973C26.7404 7.74973 26.5845 7.59953 26.3945 7.51953C26.2146 7.42968 26.0045 7.38477 25.7646 7.38477H24.9404V9.58984C24.9404 10.8698 24.4143 11.8395 23.6943 12.4795C22.9743 13.1295 21.9445 13.4551 20.6045 13.4551C20.0545 13.4551 19.5395 13.415 19.0596 13.335C18.5796 13.265 18.1644 13.1595 17.8145 13.0195C17.5246 12.9195 17.3192 12.7749 17.1992 12.585C17.0794 12.3951 17.0243 12.1951 17.0342 11.9854C17.0442 11.7755 17.0993 11.585 17.1992 11.415C17.3092 11.245 17.4548 11.12 17.6348 11.04C17.8147 10.9701 18.0145 10.9748 18.2344 11.0547C18.6743 11.2347 19.0746 11.3494 19.4346 11.3994C19.7946 11.4594 20.0996 11.4902 20.3496 11.4902C20.9596 11.4902 21.4148 11.3596 21.7148 11.0996C22.0246 10.8496 22.1797 10.4548 22.1797 9.91504V9.22949C22.0096 9.53383 21.7458 9.79295 21.3848 10.0049C20.9248 10.2649 20.4247 10.3945 19.8848 10.3945C19.2248 10.3945 18.6492 10.2453 18.1592 9.94531C17.6694 9.6354 17.2848 9.20503 17.0049 8.65527C16.7349 8.10527 16.5996 7.45973 16.5996 6.71973C16.5996 6.15983 16.6799 5.65501 16.8398 5.20508C16.9998 4.75508 17.22 4.3698 17.5 4.0498C17.7899 3.72998 18.1344 3.48441 18.5342 3.31445C18.9442 3.13445 19.3948 3.04492 19.8848 3.04492C20.4447 3.04495 20.9448 3.1746 21.3848 3.43457C21.7265 3.632 21.9807 3.87634 22.1494 4.16602C22.1566 4.10422 22.1667 4.04506 22.1797 3.98828V2.14941C22.1798 1.69971 22.3002 1.35515 22.54 1.11523C22.79 0.875234 23.1352 0.754883 23.5752 0.754883H27.2646ZM20.71 5.00977C20.4301 5.00977 20.1799 5.07986 19.96 5.21973C19.74 5.34972 19.5692 5.54469 19.4492 5.80469C19.3392 6.05465 19.2842 6.35979 19.2842 6.71973C19.2842 7.25965 19.4149 7.6795 19.6748 7.97949C19.9348 8.27949 20.28 8.42969 20.71 8.42969C21.0097 8.42964 21.2647 8.36521 21.4746 8.23535C21.6846 8.09535 21.8497 7.89941 21.9697 7.64941C22.0896 7.3895 22.1494 7.07953 22.1494 6.71973C22.1494 6.17987 22.0197 5.75992 21.7598 5.45996C21.4998 5.16004 21.1498 5.00985 20.71 5.00977ZM24.9395 5.43457H26.7695C27.2995 5.43457 27.7054 5.33012 27.9854 5.12012C28.2653 4.91011 28.4053 4.58446 28.4053 4.14453C28.4052 3.72491 28.265 3.41014 27.9854 3.2002C27.7054 2.9802 27.2995 2.87012 26.7695 2.87012H24.9395V5.43457Z" fill="#2C3E50"/><path d="M47.8584 0.589844C48.3582 0.589859 48.8679 0.640299 49.3877 0.740234C49.9076 0.83022 50.418 1.00472 50.918 1.26465C51.1778 1.38459 51.3533 1.55456 51.4434 1.77441C51.5434 1.98441 51.5732 2.21019 51.5332 2.4502C51.5032 2.68001 51.4182 2.89487 51.2783 3.09473C51.1484 3.28466 50.9682 3.41436 50.7383 3.48438C50.5083 3.54437 50.248 3.50988 49.958 3.37988C49.6581 3.23993 49.3333 3.13444 48.9834 3.06445C48.6334 2.98445 48.263 2.94531 47.873 2.94531C47.2032 2.94533 46.6433 3.06478 46.1934 3.30469C45.7534 3.54469 45.4231 3.90012 45.2031 4.37012C44.9832 4.84005 44.8731 5.41489 44.873 6.09473C44.873 7.11473 45.123 7.88527 45.623 8.40527C46.123 8.9251 46.8631 9.1845 47.8428 9.18457C48.1428 9.18457 48.4684 9.15473 48.8184 9.09473C49.0082 9.06309 49.1979 9.02406 49.3877 8.97852V7.30957H48.3379C47.998 7.30952 47.7329 7.22464 47.543 7.05469C47.3631 6.88472 47.2735 6.6448 47.2734 6.33496C47.2734 6.02504 47.3631 5.78988 47.543 5.62988C47.7329 5.45993 47.998 5.37505 48.3379 5.375H50.5586C50.9084 5.37508 51.1736 5.47023 51.3535 5.66016C51.5433 5.84015 51.6377 6.10528 51.6377 6.45508V9.76953C51.6377 10.0695 51.5734 10.3252 51.4434 10.5352C51.3234 10.745 51.1282 10.8944 50.8584 10.9844C50.3884 11.1444 49.8781 11.2694 49.3281 11.3594C48.7781 11.4494 48.2277 11.4951 47.6777 11.4951C46.4679 11.4951 45.4378 11.2703 44.5879 10.8203C43.7479 10.3703 43.108 9.73968 42.668 8.92969C42.228 8.11973 42.0078 7.17463 42.0078 6.09473C42.0078 5.25482 42.1385 4.50002 42.3984 3.83008C42.6684 3.15018 43.0528 2.5698 43.5527 2.08984C44.0527 1.59989 44.6629 1.22949 45.3828 0.979492C46.1128 0.719493 46.9384 0.589844 47.8584 0.589844Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M37.5557 0.754883C38.7557 0.754883 39.6811 1.06457 40.3311 1.68457C40.991 2.29455 41.3203 3.1398 41.3203 4.21973C41.3203 5.29955 40.9908 6.14956 40.3311 6.76953C39.6811 7.37953 38.7557 7.68457 37.5557 7.68457H35.2305V10.0703C35.2304 10.51 35.1155 10.8546 34.8857 11.1045C34.6557 11.3445 34.3106 11.4648 33.8506 11.4648C33.4107 11.4648 33.071 11.3445 32.8311 11.1045C32.5912 10.8546 32.4708 10.5101 32.4707 10.0703V2.14941C32.4708 1.69965 32.5912 1.35516 32.8311 1.11523C33.0811 0.875234 33.4262 0.754883 33.8662 0.754883H37.5557ZM35.2305 5.57031H37.0762C37.5957 5.57025 37.9955 5.45996 38.2754 5.24023C38.5554 5.01023 38.6953 4.66973 38.6953 4.21973C38.6953 3.75979 38.5554 3.42018 38.2754 3.2002C37.9955 2.98028 37.5959 2.87018 37.0762 2.87012H35.2305V5.57031Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9561 3.04492C12.7761 3.04492 13.4916 3.19977 14.1016 3.50977C14.7113 3.81971 15.1808 4.26496 15.5107 4.84473C15.8507 5.41462 16.0214 6.09961 16.0215 6.89941C16.0215 7.48939 15.9263 8.0249 15.7363 8.50488C15.5463 8.98488 15.2711 9.39535 14.9111 9.73535C14.5612 10.0652 14.131 10.32 13.6211 10.5C13.1211 10.67 12.566 10.7549 11.9561 10.7549C11.1363 10.7549 10.4214 10.5999 9.81152 10.29C9.20152 9.98004 8.72574 9.53508 8.38574 8.95508C8.04576 8.37509 7.87598 7.6894 7.87598 6.89941C7.87603 6.29962 7.9712 5.76479 8.16113 5.29492C8.35113 4.81493 8.62634 4.41008 8.98633 4.08008C9.34633 3.74008 9.77637 3.48445 10.2764 3.31445C10.7763 3.13454 11.3362 3.04493 11.9561 3.04492ZM11.9561 5.00977C11.6861 5.00978 11.4463 5.07511 11.2363 5.20508C11.0263 5.33508 10.8612 5.54031 10.7412 5.82031C10.6214 6.09018 10.5616 6.44982 10.5615 6.89941C10.5615 7.5594 10.6912 8.03984 10.9512 8.33984C11.2111 8.63982 11.5461 8.79001 11.9561 8.79004C12.226 8.79004 12.4658 8.72464 12.6758 8.59473C12.8858 8.45473 13.0462 8.24949 13.1562 7.97949C13.2761 7.69954 13.3359 7.33923 13.3359 6.89941C13.3359 6.22974 13.2062 5.7499 12.9463 5.45996C12.6863 5.15996 12.3561 5.00977 11.9561 5.00977Z" fill="#2C3E50"/><path d="M1.37988 0C1.82988 0 2.17039 0.120352 2.40039 0.360352C2.64004 0.600272 2.7597 0.944971 2.75977 1.39453V8.29492H6.41992C6.79989 8.29492 7.09004 8.39476 7.29004 8.59473C7.49998 8.78467 7.60541 9.06472 7.60547 9.43457C7.60547 9.80457 7.50004 10.09 7.29004 10.29C7.09004 10.49 6.79988 10.5898 6.41992 10.5898H1.39453C0.954755 10.5898 0.610263 10.4694 0.360352 10.2295C0.120447 9.97958 7.88719e-05 9.63509 0 9.19531V1.39453C6.16112e-05 0.944739 0.120454 0.600287 0.360352 0.360352C0.60033 0.120373 0.93994 2.13056e-05 1.37988 0Z" fill="#2C3E50"/></svg>
+        <button onclick="mobTriggerImport()" style="padding:7px 14px;border-radius:99px;background:white;border:1.5px solid #E8ECF0;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#2C3E50;cursor:pointer;">📥 Importer</button>
+      </div>
+      <div style="font-size:10px;font-weight:900;color:#6B7C8E;letter-spacing:1.2px;">MES PERSONNAGES</div>
+    </div>
+    <!-- Liste personnages -->
+    <div id="mob-char-list" style="flex:1;overflow-y:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;"></div>
+
+  </div>
+
+  <!-- ── Écran Détail Personnage ────────────────────────────── -->
+  <div id="mob-screen-detail" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+    <!-- Header -->
+    <div style="background:white;padding:12px 16px 0;flex-shrink:0;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <button onclick="mobGoBack()" style="width:36px;height:36px;border-radius:12px;background:#F5F7F8;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">←</button>
+        <div id="mob-detail-char-info" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;"
+             ontouchstart="mobDetailLongPressStart(event)"
+             ontouchend="mobDetailLongPressEnd()"
+             ontouchmove="mobDetailLongPressEnd()">
+          <div id="mob-avatar" style="width:46px;height:46px;border-radius:13px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;flex-shrink:0;"></div>
+          <div style="flex:1;min-width:0;">
+            <div id="mob-char-name" style="font-size:17px;font-weight:900;color:#2C3E50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Tabs scrollables -->
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;" id="mob-tabs">
+        <button class="mob-tab active" onclick="mobSwitchTab('tab-fiche')">📄 Fiche</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-compteurs')">🎲 Compteurs</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-caract')">⚔️ Caract.</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-capacites')">✨ Capacités</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-inventaire')">🎒 Inventaire</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-notes')">📝 Notes</button>
+      </div>
+    </div>
+    <!-- Contenu onglet -->
+    <!-- Zone compteurs mobile permanente -->
+    <div id="mob-counters-zone" style="display:none;flex:1;overflow-y:auto;min-height:0;padding:16px;">
+      <div id="counters-content"></div>
+    </div>
+    <!-- Zone contenu : utilise directement content-area pour réutiliser les renders desktop -->
+    <div id="content-area-mobile" style="flex:1;overflow-y:auto;min-height:0;"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/db.js"></script>
+<script src="js/counters.js"></script>
+<script src="js/caract.js"></script>
+<script src="js/capacites.js"></script>
+<script src="js/inventaire.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/mobile.js"></script>
+<script src="js/init.js"></script>
+</body>
+</html>
