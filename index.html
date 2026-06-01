@@ -653,6 +653,7 @@
 <div id="widget-context-menu" style="display:none;position:fixed;z-index:2000;background:var(--white);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);border:1.5px solid rgba(0,0,0,.06);padding:6px;min-width:220px;">
   <div id="widget-context-title" style="font-size:10px;font-weight:900;color:var(--text-light);letter-spacing:1px;padding:6px 10px 4px;text-transform:uppercase;border-bottom:1px solid #F0F3F2;margin-bottom:4px;"></div>
   <button class="ctx-menu-item" onclick="event.stopPropagation();editWidgetValueFromCtx()"><span>🔢</span> Modifier la valeur</button>
+  <button class="ctx-menu-item" id="widget-ctx-invert" onclick="event.stopPropagation();toggleModFirstFromCtx()"><span>🔄</span> Modificateur en avant</button>
   <button class="ctx-menu-item" onclick="event.stopPropagation();editWidgetFromCtx()"><span>✏️</span> Modifier le widget</button>
   <button class="ctx-menu-item" style="color:var(--red);" onclick="event.stopPropagation();deleteWidgetFromCtx()"><span>🗑️</span> Supprimer le widget</button>
 </div>
@@ -698,11 +699,25 @@
     </div>
     <div class="input-group">
       <label class="input-label">Type</label>
-      <select class="input" id="add-widget-type">
+      <select class="input" id="add-widget-type" onchange="_updateModFirstRow('add-widget-type','add-widget-modfirst-row')">
         <option value="FREE">Valeur libre</option>
         <option value="CAR_MOD">Valeur + Modificateur</option>
         <option value="PERCENT">Pourcentage</option>
+        <option value="SWITCH">Interrupteur (actif/inactif)</option>
       </select>
+    </div>
+    <!-- Toggle modFirst : visible uniquement pour CAR_MOD -->
+    <div id="add-widget-modfirst-row" style="display:none;">
+      <div class="item-toggle-row" onclick="document.getElementById('add-widget-modfirst').click()">
+        <div>
+          <div style="font-size:13.5px;font-weight:800;color:var(--text);">🔄 Modificateur en avant</div>
+          <div style="font-size:11px;color:var(--text-mid);">Affiche le modificateur en grand, la valeur en petit</div>
+        </div>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="add-widget-modfirst"/>
+          <span class="toggle-track" style="--active-color:var(--purple);"></span>
+        </label>
+      </div>
     </div>
     <div class="input-group">
       <label class="input-label">Couleur d'accent</label>
@@ -726,11 +741,25 @@
     </div>
     <div class="input-group">
       <label class="input-label">Type</label>
-      <select class="input" id="edit-widget-type">
+      <select class="input" id="edit-widget-type" onchange="_updateModFirstRow('edit-widget-type','edit-widget-modfirst-row')">
         <option value="FREE">Valeur libre</option>
         <option value="CAR_MOD">Valeur + Modificateur</option>
         <option value="PERCENT">Pourcentage</option>
+        <option value="SWITCH">Interrupteur (actif/inactif)</option>
       </select>
+    </div>
+    <!-- Toggle modFirst : visible uniquement pour CAR_MOD -->
+    <div id="edit-widget-modfirst-row" style="display:none;">
+      <div class="item-toggle-row" onclick="document.getElementById('edit-widget-modfirst').click()">
+        <div>
+          <div style="font-size:13.5px;font-weight:800;color:var(--text);">🔄 Modificateur en avant</div>
+          <div style="font-size:11px;color:var(--text-mid);">Affiche le modificateur en grand, la valeur en petit</div>
+        </div>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="edit-widget-modfirst"/>
+          <span class="toggle-track" style="--active-color:var(--purple);"></span>
+        </label>
+      </div>
     </div>
     <div class="input-group">
       <label class="input-label">Couleur d'accent</label>

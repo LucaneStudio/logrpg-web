@@ -773,7 +773,7 @@ body {
 /* ═══════════════════════════════════════
    CARACT — Sections & Widgets
 ═══════════════════════════════════════ */
-.stat-section { padding: 14px 14px 10px; }
+.stat-section { padding: 14px 14px 10px; margin-bottom: 12px; }
 
 .stat-section-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -1306,3 +1306,69 @@ body {
   transition: background .15s; margin-bottom: 4px;
 }
 .cbt-bestiary-toggle:hover { background: var(--green-l); }
+/* ═══════════════════════════════════════
+   CARACT — Drag & Drop sections (v1.2.0)
+═══════════════════════════════════════ */
+
+/* Poignée de drag */
+.section-drag-handle {
+  font-size: 16px;
+  color: var(--text-light);
+  cursor: grab;
+  padding: 0 6px 0 2px;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color .15s;
+}
+.section-drag-handle:hover { color: var(--text-mid); }
+.section-drag-handle:active { cursor: grabbing; }
+
+/* Card en cours de drag */
+.stat-section.dragging {
+  opacity: .4;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+}
+
+/* Ligne verte d'insertion entre sections */
+.section-drop-line {
+  height: 3px;
+  border-radius: 99px;
+  background: var(--green);
+  margin: 4px 16px;
+  box-shadow: 0 0 10px rgba(92,200,168,.55);
+  pointer-events: none;
+  flex-shrink: 0;
+  animation: dropLineFade .1s ease;
+}
+@keyframes dropLineFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════
+   WIDGET SWITCH (v1.2.0)
+═══════════════════════════════════════ */
+.widget-switch-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: #DDE2E6;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.widget-switch-track.on { background: var(--green); }
+
+.widget-switch-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: transform .2s;
+}
+.widget-switch-track.on .widget-switch-thumb {
+  transform: translateX(20px);
+}
