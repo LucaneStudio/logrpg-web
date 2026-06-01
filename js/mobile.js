@@ -35,10 +35,36 @@ async function mobLoadCharList() {
 
   list.innerHTML = chars.map(char => {
     const hpPct = char.hpMax > 0 ? Math.min(char.hpCurrent || 0, char.hpMax) / char.hpMax * 100 : 0;
-    const mpPct = char.manaMax > 0 ? Math.min(char.manaCurrent || 0, char.manaMax) / char.manaMax * 100 : 0;
     const avatarContent = char.profilePhoto
       ? `<img src="${char.profilePhoto}" style="width:100%;height:100%;object-fit:cover;"/>`
       : `<span style="font-size:19px;font-weight:900;color:#fff;">${getInitial(char.name)}</span>`;
+
+    // Ligne mana/sorts selon manaMode
+    let manaRow = '';
+    if (char.manaMode === 'SPELL_SLOTS') {
+      const slots = ((char.spellSlots || []).filter(s => s.max > 0));
+      if (slots.length > 0) {
+        const total   = slots.reduce((a, s) => a + s.max,     0);
+        const current = slots.reduce((a, s) => a + s.current, 0);
+        const pills = slots.map(s => {
+          const depleted = s.current === 0;
+          return `<div class="char-slot-pill ${depleted ? 'empty' : ''}" title="Niveau ${s.level}">${s.current}</div>`;
+        }).join('');
+        manaRow = `<div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+          <span style="font-size:11px;">📖</span>
+          <div style="display:flex;gap:3px;align-items:center;flex:1;flex-wrap:wrap;">${pills}</div>
+        </div>`;
+      }
+    } else if (char.manaMax > 0) {
+      const mpPct = Math.min(char.manaCurrent || 0, char.manaMax) / char.manaMax * 100;
+      manaRow = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <span style="font-size:11px;">💧</span>
+        <div style="flex:1;height:6px;background:#EEF2F5;border-radius:99px;overflow:hidden;">
+          <div style="width:${mpPct}%;height:100%;background:#5B9CF6;border-radius:99px;"></div>
+        </div>
+      </div>`;
+    }
+
     return `
     <div class="mob-char-card" data-id="${char.id}"
          ontouchstart="mobLongPressStart(event,${char.id},'${escapeHtml(char.name)}')"
@@ -48,18 +74,13 @@ async function mobLoadCharList() {
       <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;background:${getAvatarColor(char.id)};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${avatarContent}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:15px;font-weight:900;color:#2C3E50;margin-bottom:6px;">${escapeHtml(char.name)}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;">❤️</span>
           <div style="flex:1;height:6px;background:#EEF2F5;border-radius:99px;overflow:hidden;">
             <div style="width:${hpPct}%;height:100%;background:#FF6B6B;border-radius:99px;"></div>
           </div>
         </div>
-        ${char.manaMax > 0 ? `<div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:11px;">💧</span>
-          <div style="flex:1;height:6px;background:#EEF2F5;border-radius:99px;overflow:hidden;">
-            <div style="width:${mpPct}%;height:100%;background:#5B9CF6;border-radius:99px;"></div>
-          </div>
-        </div>` : ''}
+        ${manaRow}
       </div>
       <span style="font-size:18px;color:#C8D0D8;">›</span>
     </div>`;
@@ -120,7 +141,6 @@ async function mobRenderTab(tabId, mobileArea) {
   if (tabId === 'tab-capacites')  { _capSearch = ''; }
   if (tabId === 'tab-inventaire') { _invSearch = ''; _invFilter = 'ALL'; }
   if (tabId === 'tab-notes')      { _notesSearch = ''; }
-  mobileArea.style.padding = '16px';
   mobileArea.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7C8E;font-size:13px;font-weight:700;">Chargement…</div>';
   await _mobDoRender(mobileArea);
 }
@@ -177,6 +197,8 @@ async function _mobDoRender(mobileArea) {
     // Ne copier que si l'onglet n'a pas changé pendant l'await
     if (_mobTab === tab) {
       mobileArea.innerHTML = ghost.innerHTML;
+      // Rebinder le touch drag&drop après copie HTML (les listeners ne se clonent pas)
+      if (tab === 'tab-caract') _bindDragDrop();
     }
   } catch(e) {
     console.error('[_mobDoRender]', e);

@@ -145,7 +145,163 @@ let _dragSectionId  = null;
 let _dropTargetId   = null;  // section sous le curseur
 let _dropPosition   = null;  // 'before' | 'after'
 
-function _bindDragDrop() {}
+// Appelé après chaque render — branche desktop (HTML5) ou mobile (touch)
+function _bindDragDrop() {
+  if (window.innerWidth < 1100) _bindTouchDragDrop();
+}
+
+// ── Touch drag & drop (mobile) ────────────────────────────────────────────────
+let _touchGhost    = null;   // clone visuel qui suit le doigt
+let _touchOffsetY  = 0;      // offset du doigt dans la card draggée
+
+function _bindTouchDragDrop() {
+  const list = document.getElementById('sections-list');
+  if (!list) return;
+
+  // Attacher uniquement sur les poignées
+  list.querySelectorAll('.section-drag-handle').forEach(handle => {
+    handle.addEventListener('touchstart', _onTouchDragStart, { passive: false });
+  });
+}
+
+function _onTouchDragStart(e) {
+  const handle  = e.currentTarget;
+  const card    = handle.closest('.stat-section');
+  if (!card) return;
+  e.preventDefault(); // empêche le scroll pendant le drag
+
+  _dragSectionId = card.dataset.sectionId;
+
+  const touch   = e.touches[0];
+  const rect    = card.getBoundingClientRect();
+  _touchOffsetY = touch.clientY - rect.top;
+
+  // Créer le ghost visuel
+  _touchGhost = card.cloneNode(true);
+  _touchGhost.style.cssText = `
+    position: fixed;
+    left: ${rect.left}px;
+    top:  ${rect.top}px;
+    width: ${rect.width}px;
+    pointer-events: none;
+    opacity: 0.75;
+    z-index: 9999;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    border-radius: 16px;
+    transition: none;
+  `;
+  document.body.appendChild(_touchGhost);
+  card.style.opacity = '0.3';
+
+  document.addEventListener('touchmove',  _onTouchDragMove,  { passive: false });
+  document.addEventListener('touchend',   _onTouchDragEnd,   { passive: false });
+  document.addEventListener('touchcancel',_onTouchDragEnd,   { passive: false });
+}
+
+let _touchScrollRaf = null;
+
+function _onTouchDragMove(e) {
+  if (!_dragSectionId || !_touchGhost) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+
+  // Déplacer le ghost
+  _touchGhost.style.top = `${touch.clientY - _touchOffsetY}px`;
+
+  // ── Auto-scroll ───────────────────────────────────────────────────────────
+  // Trouver le conteneur scrollable (onglet mobile ou panel desktop)
+  const scrollEl = _isMobile()
+    ? document.getElementById('content-area-mobile')
+    : document.querySelector('.panel-content .panel-inner');
+
+  if (scrollEl) {
+    const ZONE   = 80;   // px depuis le bord pour déclencher le scroll
+    const SPEED  = 10;   // px par frame
+    const sRect  = scrollEl.getBoundingClientRect();
+    const distTop    = touch.clientY - sRect.top;
+    const distBottom = sRect.bottom  - touch.clientY;
+
+    if (_touchScrollRaf) { cancelAnimationFrame(_touchScrollRaf); _touchScrollRaf = null; }
+
+    if (distTop < ZONE && distTop > 0) {
+      // Proche du bord haut → scroller vers le haut
+      const speed = SPEED * (1 - distTop / ZONE);
+      const _scroll = () => {
+        scrollEl.scrollTop -= speed;
+        if (_dragSectionId) _touchScrollRaf = requestAnimationFrame(_scroll);
+      };
+      _touchScrollRaf = requestAnimationFrame(_scroll);
+    } else if (distBottom < ZONE && distBottom > 0) {
+      // Proche du bord bas → scroller vers le bas
+      const speed = SPEED * (1 - distBottom / ZONE);
+      const _scroll = () => {
+        scrollEl.scrollTop += speed;
+        if (_dragSectionId) _touchScrollRaf = requestAnimationFrame(_scroll);
+      };
+      _touchScrollRaf = requestAnimationFrame(_scroll);
+    }
+  }
+
+  // Masquer le ghost pour que elementFromPoint ne le retourne pas
+  _touchGhost.style.display = 'none';
+  const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+  _touchGhost.style.display = '';
+
+  const targetCard = elUnder?.closest('.stat-section[data-section-id]');
+  if (!targetCard) return;
+
+  const targetId = targetCard.dataset.sectionId;
+  if (targetId === _dragSectionId) return;
+
+  const rect     = targetCard.getBoundingClientRect();
+  const position = touch.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+
+  if (targetId === _dropTargetId && position === _dropPosition) return;
+  _dropTargetId = targetId;
+  _dropPosition = position;
+  _renderDropIndicators();
+}
+
+async function _onTouchDragEnd(e) {
+  document.removeEventListener('touchmove',   _onTouchDragMove);
+  document.removeEventListener('touchend',    _onTouchDragEnd);
+  document.removeEventListener('touchcancel', _onTouchDragEnd);
+  if (_touchScrollRaf) { cancelAnimationFrame(_touchScrollRaf); _touchScrollRaf = null; }
+
+  // Nettoyer le ghost
+  if (_touchGhost) { _touchGhost.remove(); _touchGhost = null; }
+
+  // Restaurer l'opacité de la card source
+  const srcCard = document.querySelector(`.stat-section[data-section-id="${_dragSectionId}"]`);
+  if (srcCard) srcCard.style.opacity = '';
+
+  _clearDropIndicators();
+
+  const fromId   = _dragSectionId;
+  const toId     = _dropTargetId;
+  const position = _dropPosition;
+
+  _dragSectionId = null;
+  _dropTargetId  = null;
+  _dropPosition  = null;
+
+  if (!fromId || !toId || fromId === toId) return;
+
+  const char     = await getCharacter(_caractCharId);
+  const sections = getStatSections(char);
+  const fromIdx  = sections.findIndex(s => s.id === fromId);
+  const toIdx    = sections.findIndex(s => s.id === toId);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  const [moved]  = sections.splice(fromIdx, 1);
+  const newToIdx = sections.findIndex(s => s.id === toId);
+  const insertAt = position === 'after' ? newToIdx + 1 : newToIdx;
+  sections.splice(insertAt, 0, moved);
+
+  await saveStatSections(_caractCharId, sections);
+  refreshCaractTab();
+}
 
 function onSectionDragStart(e, sectionId) {
   _dragSectionId = sectionId;

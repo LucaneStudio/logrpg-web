@@ -1315,14 +1315,16 @@ body {
   font-size: 16px;
   color: var(--text-light);
   cursor: grab;
-  padding: 0 6px 0 2px;
+  padding: 6px 8px 6px 2px; /* zone de touch plus large */
   line-height: 1;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: none; /* empêche le scroll natif sur la poignée */
   flex-shrink: 0;
   transition: color .15s;
 }
-.section-drag-handle:hover { color: var(--text-mid); }
-.section-drag-handle:active { cursor: grabbing; }
+.section-drag-handle:hover  { color: var(--text-mid); }
+.section-drag-handle:active { cursor: grabbing; color: var(--green); }
 
 /* Card en cours de drag */
 .stat-section.dragging {
@@ -1371,4 +1373,23 @@ body {
 }
 .widget-switch-track.on .widget-switch-thumb {
   transform: translateX(20px);
+}
+
+/* ── Pastilles emplacements de sorts — card personnage ── */
+.char-slot-pill {
+  min-width: 18px; height: 18px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--purple);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.char-slot-pill.empty {
+  background: transparent;
+  border: 1.5px solid var(--purple);
+  color: var(--purple);
+  opacity: .45;
 }

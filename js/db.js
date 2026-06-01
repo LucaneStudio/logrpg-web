@@ -188,12 +188,33 @@ function getAvatarColor(id) { return AVATAR_COLORS[id % AVATAR_COLORS.length]; }
 let _selectedCharId = null;
 
 function renderCharCard(char) {
-  const hpPct   = char.hpMax   > 0 ? char.hpCurrent  / char.hpMax   * 100 : 0;
-  const manaPct = char.manaMax > 0 ? char.manaCurrent / char.manaMax * 100 : 0;
-  const manaBar = char.manaMax > 0 ? `
-    <div class="bar-row"><span class="bar-icon">💧</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${manaPct}%;background:var(--blue);"></div></div>
-    </div>` : '';
+  const hpPct = char.hpMax > 0 ? char.hpCurrent / char.hpMax * 100 : 0;
+
+  // Ligne mana : barre classique ou pips de sorts selon manaMode
+  let manaRow = '';
+  if (char.manaMode === 'SPELL_SLOTS') {
+    const slots = (char.spellSlots || defaultSlots()).filter(s => s.max > 0);
+    if (slots.length > 0) {
+      const total   = slots.reduce((a, s) => a + s.max,     0);
+      const current = slots.reduce((a, s) => a + s.current, 0);
+      const pills = slots.map(s => {
+        const depleted = s.current === 0;
+        return `<div class="char-slot-pill ${depleted ? 'empty' : ''}" title="Niveau ${s.level}">${s.current}</div>`;
+      }).join('');
+      manaRow = `
+        <div class="bar-row" style="align-items:center;">
+          <span class="bar-icon">📖</span>
+          <div style="display:flex;gap:3px;flex:1;align-items:center;flex-wrap:wrap;">${pills}</div>
+        </div>`;
+    }
+  } else if (char.manaMax > 0) {
+    const manaPct = char.manaCurrent / char.manaMax * 100;
+    manaRow = `
+      <div class="bar-row"><span class="bar-icon">💧</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${manaPct}%;background:var(--blue);"></div></div>
+      </div>`;
+  }
+
   return `
     <div class="card">
       <div class="char-row ${char.id===_selectedCharId?'selected':''}"
@@ -210,7 +231,7 @@ function renderCharCard(char) {
           <div class="bar-row"><span class="bar-icon">❤️</span>
             <div class="bar-track"><div class="bar-fill" style="width:${hpPct}%;background:var(--red);"></div></div>
           </div>
-          ${manaBar}
+          ${manaRow}
         </div>
       </div>
     </div>`;
