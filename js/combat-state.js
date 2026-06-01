@@ -18,6 +18,9 @@ function combatColorFor(name) {
   return _COMBAT_PALETTE[h % _COMBAT_PALETTE.length];
 }
 
+// Normalise une condition (string ou objet) → nom
+function _condName(c) { return typeof c === 'string' ? c : c.name; }
+
 function _newCombatId() {
   return 'cp_' + Math.random().toString(36).slice(2, 9);
 }
@@ -63,6 +66,15 @@ function combatAddParticipant(name, type, maxHp, initiative, localCharId = null,
   return p;
 }
 
+// Génère un nom unique en ajoutant un suffixe numérique si besoin
+function _uniqueParticipantName(baseName) {
+  const existing = new Set(_combat.participants.map(p => p.name));
+  if (!existing.has(baseName)) return baseName;
+  let i = 2;
+  while (existing.has(`${baseName} ${i}`)) i++;
+  return `${baseName} ${i}`;
+}
+
 function combatRemoveParticipant(id) {
   _combat.participants = _combat.participants.filter(p => p.id !== id);
   if (_combat.currentId === id) _combat.currentId = null;
@@ -96,11 +108,32 @@ function combatChangeTempHp(id, delta) {
   _updateP(id, p => ({ ...p, tempHp: Math.max(0, (p.tempHp || 0) + delta) }));
 }
 
-function combatAddCondition(id, cond) {
-  _updateP(id, p => ({ ...p, conditions: [...new Set([...p.conditions, cond])] }));
+// rounds : nombre de rounds restants (null = permanent)
+function combatAddCondition(id, name, rounds) {
+  const obj = { name, rounds: (rounds > 0 ? rounds : null), expired: false };
+  _updateP(id, p => ({
+    ...p,
+    conditions: [...p.conditions.filter(c => _condName(c) !== name), obj]
+  }));
 }
-function combatRemoveCondition(id, cond) {
-  _updateP(id, p => ({ ...p, conditions: p.conditions.filter(c => c !== cond) }));
+function combatRemoveCondition(id, name) {
+  _updateP(id, p => ({ ...p, conditions: p.conditions.filter(c => _condName(c) !== name) }));
+}
+
+// Tick des conditions au début du tour du participant
+function _combatTickConditions(id) {
+  _updateP(id, p => ({
+    ...p,
+    conditions: p.conditions
+      .map(c => {
+        if (typeof c === 'string') return c;  // compat ancien format
+        if (c.rounds === null) return c;       // permanente
+        if (c.expired) return null;            // déjà expirée → supprimer
+        if (c.rounds <= 1) return { ...c, rounds: 0, expired: true };
+        return { ...c, rounds: c.rounds - 1 };
+      })
+      .filter(Boolean)
+  }));
 }
 
 // ── Statut ────────────────────────────────────────────────────
@@ -129,6 +162,7 @@ function combatForceTurn(id) {
   nowPlayed.delete(id);
   _combat.playedThisRound = [...nowPlayed];
   _combat.currentId = id;
+  _combatTickConditions(id);
 }
 
 // ── Démarrage ─────────────────────────────────────────────────
@@ -140,6 +174,7 @@ function combatStart() {
   _combat.round = 1;
   _combat.playedThisRound = [];
   _combat.currentId = sorted[0]?.id ?? null;
+  if (_combat.currentId) _combatTickConditions(_combat.currentId);
 }
 
 // ── Tour suivant ──────────────────────────────────────────────
@@ -164,6 +199,7 @@ function combatNextTurn() {
     _combat.playedThisRound = played;
     _combat.currentId       = remaining[0].id;
   }
+  if (_combat.currentId) _combatTickConditions(_combat.currentId);
 }
 
 // ── Fin / Reset ───────────────────────────────────────────────

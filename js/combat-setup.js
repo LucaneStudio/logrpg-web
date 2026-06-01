@@ -1,19 +1,19 @@
 // COMBAT SETUP
 // ═══════════════════════════════════════════════════════════════
 
-let _cSetup = { localSel: new Set(), type: 'MONSTRE' };
+let _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
 
 // ── Entrée ────────────────────────────────────────────────────
 async function openCombatSetup() {
   combatReset();
-  _cSetup = { localSel: new Set(), type: 'MONSTRE' };
+  _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
   document.getElementById('combat-overlay').style.display = 'flex';
   await _renderSetup();
 }
 
 function closeCombatOverlay() {
   combatReset();
-  _cSetup = { localSel: new Set(), type: 'MONSTRE' };
+  _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
   if (typeof _resetCombatViewState === 'function') _resetCombatViewState();
   document.getElementById('combat-overlay').style.display = 'none';
 }
@@ -28,11 +28,12 @@ async function _renderSetup() {
           <div style="font-size:18px;font-weight:900;color:var(--text);">⚔️ Préparer le combat</div>
           <div style="font-size:11px;color:var(--text-light);margin-top:2px;">${_combat.participants.length} participant(s) ajouté(s)</div>
         </div>
-        <button class="cbt-cancel-btn" onclick="closeCombatOverlay()">✕ Annuler</button>
+        <button class="cbt-cancel-btn cbt-hover-cancel" onclick="closeCombatOverlay()">✕ Annuler</button>
       </div>
       <div class="cbt-setup-body">
         <div class="cbt-setup-col scroll">
           ${chars.length ? _renderLocalSection(chars) : ''}
+          ${_renderBestiarySection()}
           ${_renderManualSection()}
         </div>
         <div class="cbt-setup-col" style="display:flex;flex-direction:column;gap:12px;">
@@ -101,7 +102,13 @@ function _renderManualSection() {
         <div style="flex:1;"><div class="field-label">INITIATIVE</div>
           <input id="setup-manual-init" class="field-input" type="number" placeholder="12"/></div>
       </div>
-      <button onclick="submitManualParticipant()" class="cbt-add-manual-btn">＋ Ajouter</button>
+      <div style="display:flex;gap:6px;">
+        <button onclick="submitManualParticipant()" class="cbt-add-manual-btn cbt-hover-green" style="flex:1;">＋ Ajouter</button>
+        <button onclick="submitManualParticipantAndSave()" title="Ajouter et sauvegarder comme modèle"
+          style="flex:0 0 auto;padding:10px 14px;border-radius:11px;background:var(--yellow-l);
+          border:1.5px solid rgba(255,209,102,.4);font-family:'Nunito',sans-serif;font-size:13px;
+          font-weight:900;color:#B8860B;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='rgba(255,209,102,.45)'" onmouseleave="this.style.background='var(--yellow-l)'">💾 Sauvegarder</button>
+      </div>
       <div id="setup-manual-error" style="font-size:11px;color:var(--red);font-weight:700;min-height:14px;"></div>
     </div>
   </div>`;
@@ -133,7 +140,7 @@ function _renderParticipantsList() {
             style="width:64px;font-size:16px;font-weight:900;text-align:center;"/>
         </div>
         <button onclick="setupRemoveParticipant('${p.id}')"
-          style="width:28px;height:28px;border-radius:8px;background:var(--red-l);border:none;color:var(--red);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:6px;">×</button>
+          style="width:28px;height:28px;border-radius:8px;background:var(--red-l);border:none;color:var(--red);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:6px;transition:filter .15s;" onmouseenter="this.style.filter='brightness(.88)'" onmouseleave="this.style.filter=''">×</button>
       </div>`;
     }).join('');
 }
@@ -142,14 +149,15 @@ function _renderParticipantsList() {
 function selectCombatType(type) {
   _cSetup.type = type;
   if (_combat.isStarted) {
-    // En mode combat : re-render le panneau droit pour refléter le changement
-    const right = document.querySelector('.cbt-right-panel');
-    if (right) right.innerHTML = _renderRightPanel();
+    // En mode combat : re-render complet pour mettre à jour les chips mid-combat
+    renderCombatView();
   } else {
-    // En setup : mise à jour des classes directement
+    // En setup : mise à jour des classes directement (pas de re-render, évite de perdre le focus)
     ['PJ','PNJ','MONSTRE'].forEach(t => {
-      const el = document.getElementById(`chip-${t}`);
-      if (el) el.classList.toggle('cbt-chip-active', t === type);
+      ['chip-', 'mchip-'].forEach(prefix => {
+        const el = document.getElementById(prefix + t);
+        if (el) el.classList.toggle('cbt-chip-active', t === type);
+      });
     });
   }
 }
@@ -186,7 +194,7 @@ function submitManualParticipant() {
   const err  = document.getElementById('setup-manual-error');
   if (!name) { if (err) err.textContent = 'Le nom est obligatoire.'; return; }
   if (err) err.textContent = '';
-  combatAddParticipant(name, _cSetup.type, Math.max(1, hp), init);
+  combatAddParticipant(_uniqueParticipantName(name), _cSetup.type, Math.max(1, hp), init);
   _renderSetup();
 }
 
@@ -194,4 +202,103 @@ function launchCombat() {
   if (_combat.participants.length < 2) return;
   combatStart();
   renderCombatView();
+}
+
+// ── Bestiary ──────────────────────────────────────────────────
+function _renderBestiarySection() {
+  const templates = bestiaryGetAll();
+  if (templates.length === 0) return '';
+  const open = _cSetup.bestiaryOpen === true;
+
+  const typeClr = t => t === 'PJ' ? 'var(--blue)' : t === 'PNJ' ? '#B8860B' : 'var(--red)';
+  const typeBg  = t => t === 'PJ' ? 'var(--blue-l)' : t === 'PNJ' ? 'var(--yellow-l)' : 'var(--red-l)';
+
+  const hoverImportOn  = "this.style.background='rgba(255,209,102,.45)'";
+  const hoverImportOff = "this.style.background='var(--yellow-l)'";
+  const hoverAddOn     = "this.style.background='rgba(92,200,168,.35)'";
+  const hoverAddOff    = "this.style.background='var(--green-l)'";
+  const hoverDelOn     = "this.style.background='rgba(255,107,107,.35)'";
+  const hoverDelOff    = "this.style.background='var(--red-l)'";
+
+  const cards = open ? templates.map(t => {
+    const av = (t.name[0]||'?').toUpperCase();
+    const tc = typeClr(t.type);
+    const tb = typeBg(t.type);
+    const bg = combatColorFor(t.name);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;
+        background:var(--white);border:1.5px solid var(--divider);margin-bottom:6px;">
+        <div style="width:36px;height:36px;border-radius:11px;background:${bg};display:flex;align-items:center;
+          justify-content:center;font-size:14px;font-weight:900;color:white;flex-shrink:0;">${av}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(t.name)}</div>
+          <div style="display:flex;gap:6px;margin-top:2px;align-items:center;">
+            <span style="font-size:9px;font-weight:900;color:${tc};background:${tb};padding:1px 6px;border-radius:4px;">${t.type}</span>
+            <span style="font-size:10px;font-weight:700;color:var(--text-light);">❤️ ${t.maxHp} PV · Init. ${t.initiative}</span>
+          </div>
+        </div>
+        <button onclick="importFromBestiary('${t.id}')" title="Importer dans le formulaire"
+          style="padding:6px 10px;border-radius:9px;background:var(--yellow-l);border:1.5px solid rgba(255,209,102,.4);
+          font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;color:#B8860B;cursor:pointer;flex-shrink:0;transition:background .15s;"
+          onmouseenter="${hoverImportOn}" onmouseleave="${hoverImportOff}">📋</button>
+        <button onclick="addFromBestiary('${t.id}')" title="Ajouter au combat"
+          style="padding:6px 12px;border-radius:9px;background:var(--green-l);border:1.5px solid rgba(92,200,168,.4);
+          font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;color:var(--green-d);cursor:pointer;flex-shrink:0;transition:background .15s;"
+          onmouseenter="${hoverAddOn}" onmouseleave="${hoverAddOff}">＋</button>
+        <button onclick="removeFromBestiary('${t.id}')" title="Supprimer du bestiaire"
+          style="padding:6px 10px;border-radius:9px;background:var(--red-l);border:1.5px solid rgba(255,107,107,.3);color:var(--red);
+          font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;flex-shrink:0;transition:background .15s;"
+          onmouseenter="${hoverDelOn}" onmouseleave="${hoverDelOff}">🗑️</button>
+      </div>`;
+  }).join('') : '';
+
+  return `<div class="setup-section">
+    <button class="cbt-bestiary-toggle" onclick="_cSetup.bestiaryOpen=!_cSetup.bestiaryOpen;_renderSetup()">
+      <span class="setup-section-label" style="margin:0;">🐉 BESTIAIRE (${templates.length})</span>
+      <span style="font-size:12px;color:var(--text-light);">${open ? '▲' : '▼'}</span>
+    </button>
+    ${cards}
+  </div>`;
+}
+
+
+function importFromBestiary(id) {
+  const t = bestiaryGetAll().find(t => t.id === id);
+  if (!t) return;
+  selectCombatType(t.type);
+  // _renderSetup re-render le DOM — on attend que les champs existent
+  _renderSetup().then(() => {
+    const nameEl = document.getElementById('setup-manual-name');
+    const hpEl   = document.getElementById('setup-manual-hp');
+    const initEl = document.getElementById('setup-manual-init');
+    if (nameEl)  nameEl.value  = t.name;
+    if (hpEl)    hpEl.value    = t.maxHp;
+    if (initEl)  initEl.value  = t.initiative;
+    nameEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    nameEl?.focus();
+  });
+}
+
+function addFromBestiary(id) {
+  const t = bestiaryGetAll().find(t => t.id === id);
+  if (!t) return;
+  const uniqueName = _uniqueParticipantName(t.name);
+  combatAddParticipant(uniqueName, t.type, t.maxHp, t.initiative);
+  _renderSetup();
+}
+
+function removeFromBestiary(id) {
+  bestiaryRemove(id);
+  _renderSetup();
+}
+
+function submitManualParticipantAndSave() {
+  const name = document.getElementById('setup-manual-name')?.value.trim();
+  const hp   = parseInt(document.getElementById('setup-manual-hp')?.value)   || 10;
+  const init = parseInt(document.getElementById('setup-manual-init')?.value) || 0;
+  const err  = document.getElementById('setup-manual-error');
+  if (!name) { if (err) err.textContent = 'Le nom est obligatoire.'; return; }
+  if (err) err.textContent = '';
+  bestiaryAdd(name, _cSetup.type, Math.max(1, hp), init);
+  combatAddParticipant(_uniqueParticipantName(name), _cSetup.type, Math.max(1, hp), init);
+  _renderSetup();
 }

@@ -1,10 +1,11 @@
 // COMBAT VIEW
 // ═══════════════════════════════════════════════════════════════
 
-let _cvCtxId    = null;
-let _cvShowAdd  = false;
-let _cvBonusId  = null;
-let _cvEndModal = false;
+let _cvCtxId       = null;
+let _cvShowAdd     = false;
+let _cvBonusId     = null;
+let _cvEndModal    = false;
+let _cvConditionId = null; // id du participant pour la dialog condition
 
 // ── Render principal ──────────────────────────────────────────
 function renderCombatView() {
@@ -16,8 +17,9 @@ function renderCombatView() {
     <div class="cbt-right-panel">
       ${_renderRightPanel()}
     </div>
-    ${_cvBonusId  ? _renderBonusDialog()  : ''}
-    ${_cvEndModal ? _renderEndModal()     : ''}
+    ${_cvBonusId     ? _renderBonusDialog()     : ''}
+    ${_cvEndModal    ? _renderEndModal()      : ''}
+    ${_cvConditionId ? _renderConditionDialog() : ''}
     ${_cvCtxId    ? _renderCtxMenu()      : ''}`;
 
   overlay.addEventListener('click', (e) => {
@@ -143,10 +145,19 @@ function _renderLeftPanel() {
     <div class="cbt-section" style="flex:1;overflow:hidden;">
       <div class="hp-label" style="margin-bottom:8px;">⚡ CONDITIONS</div>
       <div class="conditions-row">
-        ${p.conditions.map(c => `
-          <span class="condition-badge active" onclick="combatRemoveCondition('${p.id}','${_safeAttr(c)}');renderCombatView()">
-            ${escapeHtml(c)} ×</span>`).join('')}
-        <button class="add-condition" onclick="event.stopPropagation();_promptCustomCondition('${p.id}')">＋ Ajouter</button>
+        ${p.conditions.map(c => {
+          const name    = _condName(c);
+          const expired = c.expired;
+          const rounds  = c.rounds;
+          if (expired) {
+            return `<span class="condition-badge" style="background:var(--divider);color:var(--text-light);text-decoration:line-through;cursor:default;">
+              n'est plus ${escapeHtml(name)}</span>`;
+          }
+          return `<span class="condition-badge active" onclick="combatRemoveCondition('${p.id}','${_safeAttr(name)}');renderCombatView()" title="Cliquer pour retirer">
+            ${escapeHtml(name)}${rounds !== null ? ` <span style="font-size:9px;font-weight:900;background:rgba(255,140,66,.3);border-radius:4px;padding:0 4px;">${rounds}🔄</span>` : ''} ×
+          </span>`;
+        }).join('')}
+        <button class="add-condition" onclick="event.stopPropagation();_cvConditionId='${p.id}';renderCombatView()">＋ Ajouter</button>
       </div>
     </div>
 
@@ -196,6 +207,15 @@ function _renderInitCard(p) {
     <div style="flex:1;min-width:0;">
       <div style="font-size:13px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
       <div style="font-size:10px;font-weight:700;color:${typeClr};">${p.type}</div>
+      ${p.conditions.length > 0 ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">
+        ${p.conditions.map(c => {
+          const name = _condName(c);
+          const expired = c.expired;
+          const rounds = typeof c === 'object' ? c.rounds : null;
+          if (expired) return '<span style="font-size:8px;font-weight:800;color:var(--text-light);background:var(--divider);border-radius:4px;padding:1px 5px;text-decoration:line-through;">'+escapeHtml(name)+'</span>';
+          return '<span style="font-size:8px;font-weight:800;color:var(--orange);background:var(--orange-l);border-radius:4px;padding:1px 5px;">'+escapeHtml(name)+(rounds!==null?' ('+rounds+')':'')+'</span>';
+        }).join('')}
+      </div>` : ''}
     </div>
     ${p.status === 'ACTIVE' ? `
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
@@ -323,6 +343,78 @@ function _renderBonusDialog() {
 }
 
 // ── Modal fin de combat ───────────────────────────────────────
+// ── Dialog ajout condition ────────────────────────────────────
+const _COMMON_CONDITIONS = [
+  '🔥 Brûlé','❄️ Gelé','⚡ Étourdi','🤢 Empoisonné','⬇️ À terre',
+  '😱 Effrayé','🧲 Agrippé','🌀 Concentré','👁 Invisible','🐌 Ralenti',
+];
+
+function _renderConditionDialog() {
+  const p = _combat.participants.find(p => p.id === _cvConditionId);
+  if (!p) return '';
+  return `<div class="cbt-overlay-dim" onclick="_cvConditionId=null;renderCombatView()">
+    <div class="cbt-bonus-dialog" style="max-width:420px;" onclick="event.stopPropagation()">
+      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:4px;">⚡ Ajouter une condition</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">${escapeHtml(p.name)}</div>
+
+      <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:1px;margin-bottom:8px;">SUGGESTIONS — cliquer pour pré-remplir</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;">
+        ${_COMMON_CONDITIONS.map(c => `
+          <button onclick="_prefillCondition('${_safeAttr(c)}')"
+            class="condition-badge inactive" style="cursor:pointer;font-size:11px;padding:5px 10px;">
+            ${escapeHtml(c)}</button>`).join('')}
+      </div>
+
+      <div style="height:1px;background:var(--divider);margin-bottom:14px;"></div>
+
+      <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:14px;">
+        <div>
+          <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:1px;margin-bottom:6px;">CONDITION</div>
+          <input id="cond-name-input" placeholder="Nom…"
+            style="width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--divider);
+            background:var(--green-l);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;
+            color:var(--text);outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--divider)'"
+            onkeydown="if(event.key==='Enter') _submitCondition('${p.id}')"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:1px;margin-bottom:6px;">ROUNDS</div>
+          <input id="cond-rounds-input" type="number" min="1" placeholder="∞"
+            style="width:80px;padding:11px 10px;border-radius:12px;border:1.5px solid var(--divider);
+            background:var(--purple-l, #F0EEFF);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;
+            color:var(--text);text-align:center;outline:none;"
+            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--divider)'"
+            onkeydown="if(event.key==='Enter') _submitCondition('${p.id}')"/>
+        </div>
+      </div>
+
+      <button onclick="_submitCondition('${p.id}')"
+        style="width:100%;padding:11px;border-radius:12px;background:var(--orange-l);border:1.5px solid rgba(255,140,66,.4);
+        font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;color:var(--orange);cursor:pointer;margin-bottom:8px;">
+        ＋ Ajouter la condition</button>
+      <button onclick="_cvConditionId=null;renderCombatView()"
+        style="width:100%;padding:9px;border-radius:10px;background:transparent;border:none;
+        font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--text-light);cursor:pointer;">
+        Fermer</button>
+    </div>
+  </div>`;
+}
+
+// Pré-remplit le champ nom sans ajouter immédiatement
+function _prefillCondition(name) {
+  const input = document.getElementById('cond-name-input');
+  if (input) { input.value = name; input.focus(); }
+}
+
+function _submitCondition(participantId) {
+  const name   = document.getElementById('cond-name-input')?.value.trim();
+  const rounds = parseInt(document.getElementById('cond-rounds-input')?.value) || null;
+  if (!name) return;
+  combatAddCondition(participantId, name, rounds);
+  _cvConditionId = null;
+  renderCombatView();
+}
+
 function openEndCombatModal()  { _cvEndModal = true; renderCombatView(); }
 
 function _renderEndModal() {
@@ -380,10 +472,11 @@ function _endCombatDiscard() { closeCombatOverlay(); }
 
 // Reset complet de l'état de la vue combat — appelé par closeCombatOverlay
 function _resetCombatViewState() {
-  _cvCtxId    = null;
-  _cvShowAdd  = false;
-  _cvBonusId  = null;
-  _cvEndModal = false;
+  _cvCtxId       = null;
+  _cvShowAdd     = false;
+  _cvBonusId     = null;
+  _cvEndModal    = false;
+  _cvConditionId = null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -403,10 +496,7 @@ function combatClearTempHp(el) {
   if (p) { combatChangeTempHp(id, -(p.tempHp)); renderCombatView(); }
 }
 
-function _promptCustomCondition(participantId) {
-  const cond = prompt('Condition personnalisée :');
-  if (cond?.trim()) { combatAddCondition(participantId, cond.trim()); renderCombatView(); }
-}
+// _promptCustomCondition remplacée par _renderConditionDialog
 
 function _effectiveInit(p) { return p.initiative + p.initiativeBonus; }
 

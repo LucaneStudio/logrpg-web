@@ -122,6 +122,15 @@ body {
 }
 .sidebar-toggle:hover { background: var(--bg); }
 
+/* Conteneur des avatars dans le rail */
+#char-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
 /* Avatar pill dans le rail */
 .rail-avatar {
   width: 40px; height: 40px;
@@ -136,13 +145,9 @@ body {
   overflow: hidden;
 }
 .rail-avatar:hover { transform: scale(1.06); box-shadow: 0 4px 14px rgba(0,0,0,.18); }
-.rail-avatar.selected::after {
-  content: '';
-  position: absolute;
-  left: -4px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 24px;
-  background: var(--green);
-  border-radius: 0 3px 3px 0;
+/* Indicateur de sélection : ring vert autour de l'avatar */
+.rail-avatar.selected {
+  box-shadow: 0 0 0 2.5px var(--green), 0 2px 8px rgba(0,0,0,.12);
 }
 .rail-add-btn {
   width: 40px; height: 40px;
@@ -1285,3 +1290,19 @@ body {
 /* Bouton combat desktop only */
 @media (max-width: 1099px) { #btn-combat { display: none !important; } }
 }
+
+/* ── Hovers boutons setup combat ── */
+.cbt-add-manual-btn:hover { filter: brightness(.93); }
+.cbt-cancel-btn:hover     { background: var(--divider) !important; }
+.cbt-hover-green:hover    { filter: brightness(.93); }
+.cbt-hover-cancel:hover   { background: var(--divider) !important; }
+.cbt-launch-btn.active:hover { filter: brightness(1.06); }
+
+/* Bouton toggle bestiaire */
+.cbt-bestiary-toggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-radius: 8px; border: none;
+  background: transparent; cursor: pointer; font-family: 'Nunito', sans-serif;
+  transition: background .15s; margin-bottom: 4px;
+}
+.cbt-bestiary-toggle:hover { background: var(--green-l); }
