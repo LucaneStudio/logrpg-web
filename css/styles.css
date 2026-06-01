@@ -1393,3 +1393,59 @@ body {
   color: var(--purple);
   opacity: .45;
 }
+
+/* ═══════════════════════════════════════
+   PRINT — Sélection notes modal (v1.2.0)
+═══════════════════════════════════════ */
+.print-note-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #EEF2F5;
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+}
+.print-note-row:hover { border-color: var(--green); background: var(--green-l); }
+.print-note-row.selected { border-color: var(--green); background: var(--green-l); }
+
+.print-note-check {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 2px solid #DDE2E6;
+  background: white;
+  flex-shrink: 0;
+  transition: all .15s;
+  position: relative;
+}
+.print-note-check.checked {
+  background: var(--green);
+  border-color: var(--green);
+}
+.print-note-check.checked::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 5px;
+  width: 6px; height: 9px;
+  border: 2.5px solid white;
+  border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+
+.print-note-info { flex: 1; min-width: 0; }
+.print-note-title {
+  font-size: 13px; font-weight: 800; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.print-note-preview {
+  font-size: 11px; color: var(--text-mid); font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.print-note-date {
+  font-size: 10px; font-weight: 800; color: var(--text-light);
+  flex-shrink: 0;
+}
