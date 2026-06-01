@@ -1,0 +1,13 @@
+// ═══════════════════════════════════════════════════════════════
+// CONFIG LogRPG — modifier ici sans toucher au code
+// ═══════════════════════════════════════════════════════════════
+const APP_CONFIG = {
+  version : '1.0.0',
+  appName : 'LogRPG',
+};
+
+// Affichage automatique de la version dans le badge topbar
+document.addEventListener('DOMContentLoaded', () => {
+  const badge = document.getElementById('app-version-badge');
+  if (badge) badge.textContent = 'v' + APP_CONFIG.version;
+});
