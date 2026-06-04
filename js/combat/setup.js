@@ -4,18 +4,42 @@
 let _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
 
 // ── Entrée ────────────────────────────────────────────────────
-async function openCombatSetup() {
+// encounter (optionnel) : rencontre MJ avec participants pré-chargés
+async function openCombatSetup(encounter = null) {
   combatReset();
-  _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
+  _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false, fromMJ: !!encounter };
+
+  if (encounter?.participants?.length) {
+    const bestiary = bestiaryGetAll();
+    for (const ep of encounter.participants) {
+      if (ep.bestiaryId) {
+        // Participant depuis le bestiaire
+        const t = bestiary.find(b => b.id === ep.bestiaryId);
+        if (!t) continue;
+        for (let i = 0; i < (ep.qty || 1); i++) {
+          combatAddParticipant(_uniqueParticipantName(t.name), t.type, t.maxHp, t.initiative);
+        }
+      } else if (ep.pid) {
+        // Participant manuel (nom libre)
+        for (let i = 0; i < (ep.qty || 1); i++) {
+          combatAddParticipant(_uniqueParticipantName(ep.name), ep.ptype || 'MONSTRE', ep.maxHp || 10, ep.initiative || 0);
+        }
+      }
+    }
+  }
+
   document.getElementById('combat-overlay').style.display = 'flex';
   await _renderSetup();
 }
 
 function closeCombatOverlay() {
+  const fromMJ = _cSetup.fromMJ;
   combatReset();
   _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
   if (typeof _resetCombatViewState === 'function') _resetCombatViewState();
   document.getElementById('combat-overlay').style.display = 'none';
+  // Retourner au mode MJ si le combat avait été lancé depuis une rencontre
+  if (fromMJ && typeof returnToMjMode === 'function') returnToMjMode();
 }
 
 // ── Render setup ──────────────────────────────────────────────

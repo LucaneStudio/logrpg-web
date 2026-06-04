@@ -262,22 +262,62 @@ function toggleNotePreview() {
   }
 }
 
-// ── Renderer markdown simple ──────────────────────────────────────────────────
+// ── Renderer markdown ─────────────────────────────────────────────────────────
 function renderMarkdown(md) {
   if (!md.trim()) return '<div style="opacity:.4;text-align:center;padding:20px;">Aucun contenu</div>';
   const lines = md.split('\n');
-  return '<div style="line-height:1.75;font-size:13.5px;">' + lines.map(line => {
-    if (line.startsWith('### ')) return `<h3 style="font-size:16px;font-weight:800;color:var(--text);margin:10px 0 4px;">${escapeHtml(line.slice(4))}</h3>`;
-    if (line.startsWith('## '))  return `<h2 style="font-size:19px;font-weight:900;color:var(--text);margin:14px 0 5px;">${escapeHtml(line.slice(3))}</h2>`;
-    if (line.startsWith('# '))   return `<h1 style="font-size:22px;font-weight:900;color:var(--purple);margin:16px 0 6px;">${escapeHtml(line.slice(2))}</h1>`;
-    if (line.trimStart().startsWith('- '))
-      return `<div style="display:flex;gap:8px;margin:2px 0;"><span style="color:var(--purple);">•</span><span>${inlineMd(escapeHtml(line.trimStart().slice(2)))}</span></div>`;
-    if (line.trimStart().startsWith('> '))
-      return `<div style="border-left:3px solid var(--purple);background:var(--purple-l);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0;font-style:italic;">${escapeHtml(line.trimStart().slice(2))}</div>`;
-    if (!line.trim()) return '<div style="height:8px;"></div>';
-    return `<div>${inlineMd(escapeHtml(line))}</div>`;
-  }).join('') + '</div>';
+  const out   = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const tr   = line.trim();
+    // Séparateur horizontal : --- / *** / ___
+    if (/^([-*_]\s*){3,}$/.test(tr)) {
+      out.push('<hr style="border:none;border-top:2px solid rgba(0,0,0,.15);margin:16px 0;"/>');
+      i++; continue;
+    }
+    // Tableau : lignes consécutives commençant par |
+    if (tr.startsWith('|')) {
+      const tLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) { tLines.push(lines[i]); i++; }
+      out.push(_mdTable(tLines)); continue;
+    }
+    // Titres
+    if (line.startsWith('### ')) { out.push(`<h3 style="font-size:16px;font-weight:800;color:var(--text);margin:10px 0 4px;">${escapeHtml(line.slice(4))}</h3>`); i++; continue; }
+    if (line.startsWith('## '))  { out.push(`<h2 style="font-size:19px;font-weight:900;color:var(--text);margin:14px 0 5px;">${escapeHtml(line.slice(3))}</h2>`); i++; continue; }
+    if (line.startsWith('# '))   { out.push(`<h1 style="font-size:22px;font-weight:900;color:var(--purple);margin:16px 0 6px;">${escapeHtml(line.slice(2))}</h1>`); i++; continue; }
+    // Liste
+    if (tr.startsWith('- ') || tr.startsWith('* '))  { out.push(`<div style="display:flex;gap:8px;margin:2px 0;"><span style="color:var(--purple);">•</span><span>${inlineMd(escapeHtml(tr.slice(2)))}</span></div>`); i++; continue; }
+    // Citation
+    if (tr.startsWith('> '))  { out.push(`<div style="border-left:3px solid var(--purple);background:var(--purple-l);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0;font-style:italic;">${escapeHtml(tr.slice(2))}</div>`); i++; continue; }
+    // Ligne vide
+    if (!tr) { out.push('<div style="height:8px;"></div>'); i++; continue; }
+    // Paragraphe
+    out.push(`<div>${inlineMd(escapeHtml(line))}</div>`);
+    i++;
+  }
+  return '<div style="line-height:1.75;font-size:13.5px;">' + out.join('') + '</div>';
 }
+
+function _mdTable(lines) {
+  const parseRow = l => l.trim().replace(/^\|?|\|?$/g,'').split('|').map(c => c.trim());
+  const isSep    = l => /^[\|\-:\s]+$/.test(l.trim());
+  if (lines.length < 2 || !isSep(lines[1])) {
+    // Pas un vrai tableau, render ligne par ligne
+    return lines.map(l => `<div>${inlineMd(escapeHtml(l))}</div>`).join('');
+  }
+  const headers = parseRow(lines[0]);
+  const rows    = lines.slice(2).map(parseRow);
+  const thCells = headers.map(h => `<th style="padding:7px 12px;background:var(--surface);font-size:12px;font-weight:900;color:var(--text);text-align:left;border-bottom:2px solid var(--divider);">${escapeHtml(h)}</th>`).join('');
+  const dataRows = rows.map(row =>
+    `<tr>${row.map((cell,j) => `<td style="padding:6px 12px;font-size:12.5px;border:1px solid var(--divider);color:${j===0?'var(--text)':'var(--text-mid)'};">${inlineMd(escapeHtml(cell))}</td>`).join('')}</tr>`
+  ).join('');
+  return `<div style="overflow-x:auto;margin:8px 0;"><table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);border:1px solid var(--divider);">
+    <thead><tr>${thCells}</tr></thead>
+    <tbody>${dataRows}</tbody>
+  </table></div>`;
+}
+
 function inlineMd(t) {
   return t
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')

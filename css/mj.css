@@ -1,0 +1,251 @@
+/* ═══════════════════════════════════════
+   MODE MJ (desktop uniquement)
+═══════════════════════════════════════ */
+
+#mj-overlay {
+  position: fixed; inset: 0; z-index: 4998;
+  display: none; flex-direction: column;
+  background: var(--bg);
+}
+
+/* ── Topbar ── */
+.mj-topbar {
+  height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 18px;
+  background: var(--white); border-bottom: 1px solid rgba(0,0,0,.06); flex-shrink: 0;
+}
+.mj-topbar-left { display: flex; align-items: center; gap: 10px; }
+.mj-topbar-title { font-size: 15px; font-weight: 900; color: var(--text); }
+.mj-topbar-badge {
+  font-size: 9px; font-weight: 900; color: var(--orange);
+  background: var(--orange-l); padding: 2px 9px; border-radius: 99px; letter-spacing: .5px;
+}
+.mj-btn-combat {
+  background: linear-gradient(135deg,var(--green),var(--green-d));
+  border: none; border-radius: 10px; padding: 6px 14px;
+  font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 900;
+  color: #fff; cursor: pointer; box-shadow: 0 3px 8px rgba(61,175,142,.3);
+  transition: filter .15s;
+}
+.mj-btn-combat:hover { filter: brightness(1.06); }
+.mj-btn-export, .mj-btn-close {
+  background: #F0F3F2; border: none; border-radius: 9px; padding: 6px 13px;
+  font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800;
+  color: var(--text-mid); cursor: pointer; transition: background .15s;
+}
+.mj-btn-export:hover, .mj-btn-close:hover { background: var(--divider); }
+
+/* ── Body ── */
+.mj-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+/* ── Nav ── */
+.mj-nav {
+  width: 170px; background: var(--white); border-right: 1px solid rgba(0,0,0,.06);
+  display: flex; flex-direction: column; flex-shrink: 0; padding: 8px 0;
+}
+.mj-nav-group {
+  padding: 5px 14px 3px; font-size: 8.5px; font-weight: 900;
+  color: var(--text-light); letter-spacing: 1.2px;
+}
+.mj-nav-btn {
+  display: flex; align-items: center; width: 100%; padding: 8px 16px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'Nunito',sans-serif; font-size: 12.5px; font-weight: 800;
+  color: var(--text-mid); text-align: left; transition: all .1s;
+}
+.mj-nav-btn:hover { background: #F8FBF9; color: var(--text); }
+.mj-nav-btn.on { background: var(--orange-l); color: var(--orange); }
+.mj-nav-hr { height: 1px; background: rgba(0,0,0,.06); margin: 5px 12px; }
+
+/* ── Liste ── */
+.mj-list {
+  width: 230px; background: var(--bg); border-right: 1px solid rgba(0,0,0,.06);
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+.mj-list-hdr {
+  padding: 10px 12px; background: var(--white); border-bottom: 1px solid rgba(0,0,0,.06);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.mj-list-title { font-size: 11px; font-weight: 900; color: var(--text); }
+.mj-add-pill {
+  font-size: 11px; font-weight: 900; color: var(--green-d);
+  background: var(--green-l); border: none; border-radius: 8px; padding: 4px 10px;
+  cursor: pointer; font-family: 'Nunito',sans-serif; transition: filter .15s;
+}
+.mj-add-pill:hover { filter: brightness(.93); }
+.mj-list-body { flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+
+/* Cards liste */
+.mj-item-card {
+  background: var(--white); border-radius: 13px; padding: 11px 13px;
+  cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  display: flex; flex-direction: column; gap: 4px; transition: box-shadow .1s;
+}
+.mj-item-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.09); }
+.mj-item-card.active { box-shadow: 0 0 0 2px var(--orange); }
+.mj-item-name { font-size: 12.5px; font-weight: 900; color: var(--text); }
+.mj-item-sub { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: var(--text-light); }
+
+/* ── Détail ── */
+.mj-detail { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+.mj-detail-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 13px; font-weight: 700; color: var(--text-light);
+  line-height: 1.8;
+}
+.mj-detail-hdr {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 18px; background: var(--white); border-bottom: 1px solid rgba(0,0,0,.06);
+  flex-shrink: 0; gap: 12px;
+}
+.mj-detail-hdr-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mj-detail-body { flex: 1; padding: 16px 18px; overflow-y: auto; }
+
+/* Inputs titres */
+.mj-title-input {
+  font-family: 'Nunito',sans-serif; font-size: 16px; font-weight: 900;
+  color: var(--text); border: none; background: transparent; outline: none; width: 100%;
+}
+.mj-title-input::placeholder { color: var(--text-light); }
+.mj-subtitle-input {
+  font-family: 'Nunito',sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--text-light); border: none; background: transparent; outline: none; width: 100%;
+}
+.mj-subtitle-input::placeholder { color: var(--text-light); opacity: .6; }
+
+/* Tabs (même pattern que player) */
+.mj-tabs { display: flex; gap: 1px; padding: 0 18px; background: var(--white); border-bottom: 1px solid rgba(0,0,0,.06); flex-shrink: 0; }
+.mj-tab {
+  padding: 10px 14px; font-size: 12px; font-weight: 800;
+  font-family: 'Nunito',sans-serif; cursor: pointer; border: none;
+  background: transparent; color: var(--text-light);
+  border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+  border-radius: 7px 7px 0 0; transition: all .15s;
+}
+.mj-tab:hover { color: var(--text-mid); background: #F8FBF9; }
+.mj-tab.on { color: var(--orange); border-bottom-color: var(--orange); }
+
+/* ── Boutons actions ── */
+.mj-btn-launch {
+  background: linear-gradient(135deg,var(--green),var(--green-d));
+  border: none; border-radius: 11px; padding: 8px 16px;
+  font-family: 'Nunito',sans-serif; font-size: 13px; font-weight: 900;
+  color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(61,175,142,.3);
+  white-space: nowrap; transition: filter .15s;
+}
+.mj-btn-launch:hover { filter: brightness(1.06); }
+.mj-btn-danger {
+  background: var(--red-l); border: 1.5px solid rgba(255,107,107,.3); border-radius: 9px;
+  padding: 6px 12px; font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800;
+  color: var(--red); cursor: pointer; transition: filter .15s;
+}
+.mj-btn-danger:hover { filter: brightness(.92); }
+.mj-btn-secondary {
+  background: var(--surface); border: 1.5px solid var(--divider); border-radius: 9px;
+  padding: 6px 12px; font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800;
+  color: var(--text-mid); cursor: pointer; transition: background .15s;
+}
+.mj-btn-secondary:hover { background: var(--divider); }
+.mj-btn-sm-danger {
+  width: 26px; height: 26px; border-radius: 7px; background: var(--red-l);
+  border: none; color: var(--red); font-size: 15px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: filter .15s;
+}
+.mj-btn-sm-danger:hover { filter: brightness(.88); }
+
+/* ── Layout deux colonnes (rencontres) ── */
+.mj-two-col { display: flex; gap: 14px; }
+.mj-col { flex: 1; min-width: 0; }
+
+/* ── Participant row ── */
+.mj-participant-row {
+  background: var(--white); border-radius: 12px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,.05); margin-bottom: 6px;
+}
+.mj-p-av {
+  width: 36px; height: 36px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0;
+}
+.mj-p-name { font-size: 13px; font-weight: 900; color: var(--text); }
+.mj-p-sub { font-size: 10px; font-weight: 700; color: var(--text-light); }
+.mj-qty-ctrl { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.mj-qty-btn {
+  width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid rgba(92,200,168,.4);
+  background: var(--green-l); color: var(--green-d); font-size: 13px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: filter .15s;
+}
+.mj-qty-btn:hover { filter: brightness(.92); }
+.mj-qty-val { font-size: 15px; font-weight: 900; color: var(--text); min-width: 20px; text-align: center; }
+
+/* Ajout depuis bestiaire */
+.mj-bestiary-add-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  background: var(--white); border-radius: 10px; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04); margin-bottom: 5px; transition: box-shadow .1s;
+}
+.mj-bestiary-add-row:hover { box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+
+/* ── Pills ── */
+.mj-pill { font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 99px; }
+.mj-pill-red { background: var(--red-l); color: var(--red); }
+
+/* ── Empty states ── */
+.mj-empty { text-align: center; padding: 40px 16px; color: var(--text-light); font-size: 13px; font-weight: 700; line-height: 1.8; }
+.mj-empty-sm { font-size: 12px; font-weight: 700; color: var(--text-light); padding: 12px; text-align: center; }
+
+/* ── Section labels ── */
+.sec-lbl { font-size: 8.5px; font-weight: 900; color: var(--text-light); letter-spacing: 1.2px; margin-bottom: 10px; }
+
+/* Mode MJ desktop only */
+@media (max-width: 1099px) { #btn-mj { display: none !important; } }
+
+/* ── Sessions : layout dossier/documents ── */
+.mj-session-body {
+  display: flex; flex: 1; overflow: hidden; min-height: 0;
+}
+.mj-doc-list {
+  width: 220px; flex-shrink: 0; border-right: 1px solid rgba(0,0,0,.06); overflow:hidden; transition:width .2s ease;
+  display: flex; flex-direction: column; padding: 12px 10px; gap: 6px; overflow-y: auto;
+  background: var(--surface);
+}
+.mj-doc-list-hdr {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+}
+.mj-doc-item {
+  display: flex; align-items: center; gap: 7px; padding: 8px 10px;
+  border-radius: 9px; cursor: pointer; font-size: 12.5px; font-weight: 800;
+  color: var(--text-mid); transition: all .1s;
+}
+.mj-doc-item:hover { background: var(--white); color: var(--text); }
+.mj-doc-item.active { background: var(--white); color: var(--orange); box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+.mj-doc-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mj-doc-editor {
+  flex: 1; padding: 14px 18px; display: flex; flex-direction: column;
+  overflow: hidden; background: var(--bg);
+}
+
+/* ── Rencontres : formulaire ajout manuel ── */
+.mj-enc-add-form {
+  background: var(--white); border-radius: 12px; padding: 12px 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05); margin-bottom: 6px;
+}
+.mj-enc-chip {
+  padding: 5px 10px; border-radius: 8px; border: 1.5px solid var(--divider);
+  background: transparent; font-family: 'Nunito',sans-serif; font-size: 11px;
+  font-weight: 900; color: var(--text-mid); cursor: pointer; transition: all .1s;
+}
+.mj-enc-chip:hover { background: var(--surface); color: var(--text); }
+.mj-enc-chip.active { font-weight: 900; }
+.mj-field-input {
+  width: 100%; padding: 9px 12px; border-radius: 10px; box-sizing: border-box;
+  border: 1.5px solid var(--divider); background: var(--white);
+  font-family: 'Nunito',sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--text); outline: none; transition: border-color .15s;
+}
+.mj-field-input:focus { border-color: var(--green); }
+
+/* ── Volet sessions collapsible ── */
+.mj-list { transition: width .2s ease; }

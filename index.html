@@ -28,9 +28,11 @@
 
   <script src="js/config.js"></script>
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="/ic-logrpg-monograme.svg">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/combat.css">
+  <link rel="stylesheet" href="css/mj.css">
   <style>
     @media (max-width: 1099px) {
       /* Cacher l'app desktop */
@@ -73,8 +75,8 @@
       <span id="topbar-char-name" style="font-size:14px;font-weight:800;color:var(--text-mid);cursor:context-menu;"></span>
     </div>
     <div class="spacer"></div>
-    <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" id="btn-combat" onclick="openCombatSetup()">
-      ⚔️ Combat
+    <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" id="btn-mj" onclick="openMjMode()">
+      🗺 Mode MJ
     </button>
     <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" onclick="triggerImport()">
       📥 Importer
@@ -265,7 +267,7 @@
     <span>✏️</span> Renommer
   </button>
   <button class="ctx-menu-item" onclick="event.stopPropagation();const id=_ctxCharId;closeCharContextMenu();openProfilePhotoModal(id)">
-    <span>🖼️</span> Modifier la photo
+    <span>🖼️️️️</span> Modifier la photo
   </button>
   <button class="ctx-menu-item" onclick="event.stopPropagation();const _pid=_ctxCharId;closeCharContextMenu();openPrintFlow(_pid)">
     <span>🖨️</span> Générer la fiche PDF
@@ -339,14 +341,14 @@
 <div class="modal-overlay" id="modal-profile-photo">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">🖼️ Photo de profil</div>
+    <div class="modal-title">🖼️️️️ Photo de profil</div>
     <div style="display:flex;justify-content:center;margin-bottom:16px;">
       <div id="photo-preview" style="width:90px;height:90px;border-radius:20px;
         background:var(--green);display:flex;align-items:center;justify-content:center;
         overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);"></div>
     </div>
     <button class="pdf-option-row" onclick="triggerPhotoImport()">
-      <div class="pdf-option-icon" style="background:var(--blue-l);">🖼️</div>
+      <div class="pdf-option-icon" style="background:var(--blue-l);">🖼️️️️</div>
       <div>
         <div class="pdf-option-label">Choisir une image</div>
         <div class="pdf-option-desc">JPG, PNG — recadrage interactif</div>
@@ -879,8 +881,18 @@
 <script src="js/combat/setup.js"></script>
 <script src="js/combat/view.js"></script>
 
+<!-- ── Mode MJ (desktop) ──────────────────────────────────── -->
+<div id="mj-overlay" style="display:none;flex-direction:column;"></div>
+
 <!-- ── Mode combat (desktop) ─────────────────────────────── -->
 <div id="combat-overlay" style="display:none;flex-direction:row;"></div>
 
+<script src="js/mj/db.js"></script>
+<script src="js/mj/sessions.js"></script>
+<script src="js/mj/encounters.js"></script>
+<script src="js/mj/npcs.js"></script>
+<script src="js/mj/assets.js"></script>
+<script src="js/mj/pj.js"></script>
+<script src="js/mj/view.js"></script>
 </body>
 </html>
