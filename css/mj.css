@@ -202,30 +202,50 @@
 /* Mode MJ desktop only */
 @media (max-width: 1099px) { #btn-mj { display: none !important; } }
 
-/* ── Sessions : layout dossier/documents ── */
+/* ── Sessions : éditeur de document ── */
 .mj-session-body {
   display: flex; flex: 1; overflow: hidden; min-height: 0;
 }
-.mj-doc-list {
-  width: 220px; flex-shrink: 0; border-right: 1px solid rgba(0,0,0,.06); overflow:hidden; transition:width .2s ease;
-  display: flex; flex-direction: column; padding: 12px 10px; gap: 6px; overflow-y: auto;
-  background: var(--surface);
-}
-.mj-doc-list-hdr {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
-}
-.mj-doc-item {
-  display: flex; align-items: center; gap: 7px; padding: 8px 10px;
-  border-radius: 9px; cursor: pointer; font-size: 12.5px; font-weight: 800;
-  color: var(--text-mid); transition: all .1s;
-}
-.mj-doc-item:hover { background: var(--white); color: var(--text); }
-.mj-doc-item.active { background: var(--white); color: var(--orange); box-shadow: 0 2px 6px rgba(0,0,0,.05); }
-.mj-doc-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mj-doc-editor {
   flex: 1; padding: 14px 18px; display: flex; flex-direction: column;
   overflow: hidden; background: var(--bg);
 }
+
+/* ── Sessions : arborescence (style explorateur) ── */
+.mj-tree-node { display: flex; flex-direction: column; }
+.mj-tree-folder {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 8px; border-radius: 9px; cursor: pointer;
+  font-size: 12.5px; font-weight: 900; color: var(--text);
+  transition: background .1s;
+}
+.mj-tree-folder:hover { background: var(--white); }
+.mj-tree-folder.active { background: var(--white); box-shadow: 0 0 0 2px var(--orange); }
+.mj-tree-chevron { width: 10px; flex-shrink: 0; font-size: 9px; color: var(--text-light); text-align: center; }
+.mj-tree-ico { flex-shrink: 0; font-size: 13px; }
+.mj-tree-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mj-tree-count {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 800; color: var(--text-light);
+  background: var(--surface); border-radius: 99px; padding: 1px 7px;
+}
+.mj-tree-children {
+  display: flex; flex-direction: column; gap: 2px;
+  margin: 2px 0 2px 13px; padding-left: 8px;
+  border-left: 1.5px solid var(--divider);
+}
+.mj-tree-doc {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-weight: 800; color: var(--text-mid); transition: all .1s;
+}
+.mj-tree-doc:hover { background: var(--white); color: var(--text); }
+.mj-tree-doc.active { background: var(--white); color: var(--orange); box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+.mj-tree-add {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; border-radius: 8px; cursor: pointer;
+  font-size: 11.5px; font-weight: 800; color: var(--green-d); opacity: .85;
+}
+.mj-tree-add:hover { background: var(--green-l); opacity: 1; }
 
 /* ── Rencontres : formulaire ajout manuel ── */
 .mj-enc-add-form {

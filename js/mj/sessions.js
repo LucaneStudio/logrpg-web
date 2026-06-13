@@ -6,41 +6,65 @@ let _mjSession    = null;  // session (dossier) sélectionnée
 let _mjSessionDoc = null;  // document sélectionné dans la session
 let _mjDocSaveTimer = null;
 let _mjDocPreview      = false;
-let _mjSessionListOpen = true;  // volet sessions ouvert/fermé
-let _mjDocListOpen     = true;  // volet documents ouvert/fermé
+let _mjSessionListOpen = true;        // volet arborescence ouvert/fermé
+let _mjExpanded        = new Set();   // ids des sessions dépliées dans l'arbre
 
 function _newDocId() { return 'doc_' + Math.random().toString(36).slice(2, 9); }
 
-// ── Liste des sessions ────────────────────────────────────────
+// ── Arborescence des sessions (dossiers > documents) ──────────
 async function mjRenderSessionsList() {
   const sessions = await mjGetSessions();
   const list = document.getElementById('mj-list-body');
   if (!list) return;
 
-  list.innerHTML = sessions.length === 0
-    ? `<div class="mj-empty">📁<br>Aucune session.<br>Crée la première !</div>`
-    : sessions.map(s => {
-        const nbDocs = (s.docs || []).length;
-        return `
-          <div class="mj-item-card ${_mjSession?.id === s.id ? 'active' : ''}"
-               onclick="mjSelectSession(${s.id})">
-            <div class="mj-item-name" style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:14px;">📁</span>
-              ${escapeHtml(s.title || 'Sans titre')}
-            </div>
-            <div class="mj-item-sub">
-              ${s.date ? `<span>${new Date(s.date).toLocaleDateString('fr-FR')}</span>` : ''}
-              <span>${nbDocs} document${nbDocs !== 1 ? 's' : ''}</span>
-            </div>
-          </div>`;
-      }).join('');
+  if (sessions.length === 0) {
+    list.innerHTML = `<div class="mj-empty">📁<br>Aucune session.<br>Crée la première !</div>`;
+    return;
+  }
+
+  list.innerHTML = sessions.map(s => {
+    const docs        = s.docs || [];
+    const expanded    = _mjExpanded.has(s.id);
+    const activeSess  = _mjSession?.id === s.id;
+
+    const folder = `
+      <div class="mj-tree-folder ${activeSess ? 'active' : ''}" onclick="mjSelectSession(${s.id})">
+        <span class="mj-tree-chevron">${expanded ? '▾' : '▸'}</span>
+        <span class="mj-tree-ico">📁</span>
+        <span class="mj-tree-label">${escapeHtml(s.title || 'Sans titre')}</span>
+        <span class="mj-tree-count">${docs.length}</span>
+      </div>`;
+
+    let children = '';
+    if (expanded) {
+      const docNodes = docs.map(d => `
+        <div class="mj-tree-doc ${(activeSess && _mjSessionDoc?.id === d.id) ? 'active' : ''}"
+             onclick="event.stopPropagation();mjSelectDocFromTree(${s.id},'${d.id}')">
+          <span class="mj-tree-ico">📄</span>
+          <span class="mj-tree-label">${escapeHtml(d.title || 'Sans titre')}</span>
+        </div>`).join('');
+      const addRow = `
+        <div class="mj-tree-add" onclick="event.stopPropagation();mjAddDocTo(${s.id})">
+          <span class="mj-tree-ico">＋</span>
+          <span class="mj-tree-label">document</span>
+        </div>`;
+      children = `<div class="mj-tree-children">${docNodes}${addRow}</div>`;
+    }
+    return `<div class="mj-tree-node">${folder}${children}</div>`;
+  }).join('');
 }
 
+// Clic sur un dossier : sélectionne la session + déplie/replie
 async function mjSelectSession(id) {
+  const sameSession = _mjSession?.id === id;
   _mjSession    = await mjGetSession(id);
-  _mjSessionDoc = (_mjSession.docs || [])[0] || null;
-  _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
-  // Mettre à jour la liste (sélection visuelle) + afficher le détail
+  _mjSessionDoc = null;
+  _mjDocPreview = false;
+  if (sameSession) {
+    if (_mjExpanded.has(id)) _mjExpanded.delete(id); else _mjExpanded.add(id);
+  } else {
+    _mjExpanded.add(id);
+  }
   await mjRenderSessionsList();
   mjRenderSessionDetail();
 }
@@ -55,8 +79,7 @@ function mjRenderSessionDetail() {
     return;
   }
 
-  const s    = _mjSession;
-  const docs = s.docs || [];
+  const s = _mjSession;
 
   // En-tête session
   const hdr = `
@@ -72,24 +95,7 @@ function mjRenderSessionDetail() {
       <button class="mj-btn-danger" onclick="mjDeleteSessionConfirm(${s.id})">🗑️</button>
     </div>`;
 
-  // Liste de documents (colonne gauche du détail)
-  const docListItems = docs.map(d => `
-    <div class="mj-doc-item ${_mjSessionDoc?.id === d.id ? 'active' : ''}"
-         onclick="mjSelectDoc('${d.id}')">
-      <span style="font-size:12px;">📄</span>
-      <span class="mj-doc-title">${escapeHtml(d.title || 'Sans titre')}</span>
-    </div>`).join('');
-
-  const docList = _mjDocListOpen ? `
-    <div class="mj-doc-list">
-      <div class="mj-doc-list-hdr">
-        <span class="sec-lbl" style="margin:0;">DOCUMENTS</span>
-        <button class="mj-add-pill" onclick="mjAddDoc()">＋</button>
-      </div>
-      ${docListItems || `<div class="mj-empty-sm">Aucun document.<br>Clique + pour créer.</div>`}
-    </div>` : '';
-
-  // Éditeur (colonne droite)
+  // Éditeur de document (ou état vide)
   const editor = _mjSessionDoc
     ? `<div class="mj-doc-editor">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
@@ -116,20 +122,10 @@ function mjRenderSessionDetail() {
               oninput="_mjDocChanged()">${escapeHtml(_mjSessionDoc.content || '')}</textarea>`}
       </div>`
     : `<div class="mj-doc-editor" style="display:flex;align-items:center;justify-content:center;">
-        <div class="mj-empty-sm">📄 Sélectionne ou crée un document</div>
+        <div class="mj-empty-sm">📄 Sélectionne ou crée un document<br>dans l'arborescence à gauche</div>
       </div>`;
 
-  const docToggle = `<button id="mj-doc-toggle" onclick="mjToggleDocList()"
-    title="${_mjDocListOpen?'Réduire':'Agrandir'}"
-    style="width:18px;flex-shrink:0;background:var(--surface);border:none;
-    border-right:1px solid rgba(0,0,0,.06);border-left:1px solid rgba(0,0,0,.06);
-    cursor:pointer;display:flex;align-items:center;justify-content:center;
-    font-size:9px;color:var(--text-light);transition:background .15s;"
-    onmouseenter="this.style.background='var(--divider)'"
-    onmouseleave="this.style.background='var(--surface)'">
-    ${_mjDocListOpen?'◀':'▶'}</button>`;
-  detail.innerHTML = hdr + `<div class="mj-session-body">${docList}${docToggle}${editor}</div>`;
-
+  detail.innerHTML = hdr + `<div class="mj-session-body">${editor}</div>`;
 }
 
 // ── Actions ───────────────────────────────────────────────────
@@ -140,21 +136,29 @@ async function mjSessionSaveField(field, value) {
   await mjRenderSessionsList();
 }
 
-function mjSelectDoc(docId) {
+// Clic sur un document dans l'arbre : ouvre l'éditeur
+async function mjSelectDocFromTree(sessionId, docId) {
+  if (_mjSession?.id !== sessionId) _mjSession = await mjGetSession(sessionId);
+  _mjExpanded.add(sessionId);
   const docs = _mjSession?.docs || [];
   _mjSessionDoc = docs.find(d => d.id === docId) || null;
-  // Aperçu par défaut si le document a du contenu
   _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
+  await mjRenderSessionsList();
   mjRenderSessionDetail();
 }
 
-async function mjAddDoc() {
+// Ajout d'un document à une session donnée (depuis le ＋ de l'arbre)
+async function mjAddDocTo(sessionId) {
+  if (_mjSession?.id !== sessionId) _mjSession = await mjGetSession(sessionId);
   if (!_mjSession) return;
   if (!_mjSession.docs) _mjSession.docs = [];
   const doc = { id: _newDocId(), title: 'Nouveau document', content: '' };
   _mjSession.docs.push(doc);
   _mjSessionDoc = doc;
+  _mjDocPreview = false;
+  _mjExpanded.add(sessionId);
   await mjSaveSession(_mjSession);
+  await mjRenderSessionsList();
   mjRenderSessionDetail();
   setTimeout(() => document.getElementById('mj-doc-title')?.focus(), 80);
 }
@@ -163,7 +167,9 @@ async function mjDeleteDoc(docId) {
   if (!_mjSession || !confirm('Supprimer ce document ?')) return;
   _mjSession.docs = (_mjSession.docs || []).filter(d => d.id !== docId);
   _mjSessionDoc = _mjSession.docs[0] || null;
+  _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
   await mjSaveSession(_mjSession);
+  await mjRenderSessionsList();
   mjRenderSessionDetail();
 }
 
@@ -186,6 +192,8 @@ async function _mjDocSaveNow() {
   await mjSaveSession(_mjSession);
   const ind = document.getElementById('mj-doc-save-ind');
   if (ind) ind.textContent = '✓';
+  // Rafraîchir le libellé dans l'arbre (n'affecte pas l'éditeur)
+  await mjRenderSessionsList();
 }
 
 async function mjNewSession() {
@@ -195,7 +203,9 @@ async function mjNewSession() {
     docs: [{ id: _newDocId(), title: 'Scénario', content: '' }],
   });
   _mjSession = await mjGetSession(id);
-  _mjSessionDoc = _mjSession.docs[0];
+  _mjSessionDoc = null;
+  _mjDocPreview = false;
+  _mjExpanded.add(id);
   await mjRenderSessionsList();
   mjRenderSessionDetail();
   setTimeout(() => document.getElementById('mj-session-title')?.focus(), 80);
@@ -204,20 +214,10 @@ async function mjNewSession() {
 async function mjDeleteSessionConfirm(id) {
   if (!confirm('Supprimer cette session et tous ses documents ?')) return;
   await mjDeleteSession(id);
+  _mjExpanded.delete(id);
   _mjSession = null; _mjSessionDoc = null;
   await mjRenderSessionsList();
   mjRenderSessionDetail();
-}
-
-function mjToggleDocList() {
-  _mjDocListOpen = !_mjDocListOpen;
-  const panel = document.querySelector('.mj-doc-list');
-  if (panel) {
-    panel.style.width    = _mjDocListOpen ? '220px' : '0px';
-    panel.style.minWidth = _mjDocListOpen ? '220px' : '0px';
-  }
-  const btn = document.getElementById('mj-doc-toggle');
-  if (btn) btn.textContent = _mjDocListOpen ? '◀' : '▶';
 }
 
 function mjToggleSessionsList() {
