@@ -6,6 +6,14 @@ const APP_CONFIG = {
   appName : 'LogRPG',
 };
 
+// ═══════════════════════════════════════════════════════════════
+// Webhooks Discord — remplacer par vos URLs en prod (ne pas committer)
+// ═══════════════════════════════════════════════════════════════
+const DISCORD_WEBHOOKS = {
+  bugs  : 'VOTRE_WEBHOOK_BUGS_ICI',
+  ideas : 'VOTRE_WEBHOOK_IDEES_ICI',
+};
+
 // Affichage automatique de la version dans le badge topbar
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('app-version-badge');

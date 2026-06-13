@@ -81,6 +81,9 @@
     <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" onclick="triggerImport()">
       📥 Importer
     </button>
+    <button class="btn btn-secondary" style="font-size:12px;padding:7px 14px;gap:6px;" id="btn-apropos" onclick="aproposOpen()" title="À propos">
+      ℹ️ <span>À propos</span>
+    </button>
   </div>
   <div class="app-body">
     <div class="panel-sidebar" id="panel-sidebar">
@@ -815,7 +818,10 @@
           <svg width="60" height="16" viewBox="0 0 52 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M27.2646 0.754883C28.4646 0.754883 29.39 1.04967 30.04 1.63965C30.7 2.21965 31.0303 3.03031 31.0303 4.07031C31.0302 4.74012 30.88 5.32531 30.5801 5.8252C30.2901 6.3151 29.8646 6.69488 29.3047 6.96484C29.1293 7.04775 28.9401 7.11541 28.7383 7.17188C28.9184 7.22426 29.0877 7.29926 29.2451 7.39941C29.5751 7.59941 29.8503 7.91008 30.0703 8.33008L30.8203 9.67969C30.9803 9.96967 31.0549 10.2552 31.0449 10.5352C31.0348 10.805 30.9248 11.03 30.7148 11.21C30.5149 11.3799 30.2199 11.4648 29.8301 11.4648C29.4401 11.4648 29.1201 11.3846 28.8701 11.2246C28.6301 11.0646 28.4146 10.8146 28.2246 10.4746L26.8604 7.96973C26.7404 7.74973 26.5845 7.59953 26.3945 7.51953C26.2146 7.42968 26.0045 7.38477 25.7646 7.38477H24.9404V9.58984C24.9404 10.8698 24.4143 11.8395 23.6943 12.4795C22.9743 13.1295 21.9445 13.4551 20.6045 13.4551C20.0545 13.4551 19.5395 13.415 19.0596 13.335C18.5796 13.265 18.1644 13.1595 17.8145 13.0195C17.5246 12.9195 17.3192 12.7749 17.1992 12.585C17.0794 12.3951 17.0243 12.1951 17.0342 11.9854C17.0442 11.7755 17.0993 11.585 17.1992 11.415C17.3092 11.245 17.4548 11.12 17.6348 11.04C17.8147 10.9701 18.0145 10.9748 18.2344 11.0547C18.6743 11.2347 19.0746 11.3494 19.4346 11.3994C19.7946 11.4594 20.0996 11.4902 20.3496 11.4902C20.9596 11.4902 21.4148 11.3596 21.7148 11.0996C22.0246 10.8496 22.1797 10.4548 22.1797 9.91504V9.22949C22.0096 9.53383 21.7458 9.79295 21.3848 10.0049C20.9248 10.2649 20.4247 10.3945 19.8848 10.3945C19.2248 10.3945 18.6492 10.2453 18.1592 9.94531C17.6694 9.6354 17.2848 9.20503 17.0049 8.65527C16.7349 8.10527 16.5996 7.45973 16.5996 6.71973C16.5996 6.15983 16.6799 5.65501 16.8398 5.20508C16.9998 4.75508 17.22 4.3698 17.5 4.0498C17.7899 3.72998 18.1344 3.48441 18.5342 3.31445C18.9442 3.13445 19.3948 3.04492 19.8848 3.04492C20.4447 3.04495 20.9448 3.1746 21.3848 3.43457C21.7265 3.632 21.9807 3.87634 22.1494 4.16602C22.1566 4.10422 22.1667 4.04506 22.1797 3.98828V2.14941C22.1798 1.69971 22.3002 1.35515 22.54 1.11523C22.79 0.875234 23.1352 0.754883 23.5752 0.754883H27.2646ZM20.71 5.00977C20.4301 5.00977 20.1799 5.07986 19.96 5.21973C19.74 5.34972 19.5692 5.54469 19.4492 5.80469C19.3392 6.05465 19.2842 6.35979 19.2842 6.71973C19.2842 7.25965 19.4149 7.6795 19.6748 7.97949C19.9348 8.27949 20.28 8.42969 20.71 8.42969C21.0097 8.42964 21.2647 8.36521 21.4746 8.23535C21.6846 8.09535 21.8497 7.89941 21.9697 7.64941C22.0896 7.3895 22.1494 7.07953 22.1494 6.71973C22.1494 6.17987 22.0197 5.75992 21.7598 5.45996C21.4998 5.16004 21.1498 5.00985 20.71 5.00977ZM24.9395 5.43457H26.7695C27.2995 5.43457 27.7054 5.33012 27.9854 5.12012C28.2653 4.91011 28.4053 4.58446 28.4053 4.14453C28.4052 3.72491 28.265 3.41014 27.9854 3.2002C27.7054 2.9802 27.2995 2.87012 26.7695 2.87012H24.9395V5.43457Z" fill="#2C3E50"/><path d="M47.8584 0.589844C48.3582 0.589859 48.8679 0.640299 49.3877 0.740234C49.9076 0.83022 50.418 1.00472 50.918 1.26465C51.1778 1.38459 51.3533 1.55456 51.4434 1.77441C51.5434 1.98441 51.5732 2.21019 51.5332 2.4502C51.5032 2.68001 51.4182 2.89487 51.2783 3.09473C51.1484 3.28466 50.9682 3.41436 50.7383 3.48438C50.5083 3.54437 50.248 3.50988 49.958 3.37988C49.6581 3.23993 49.3333 3.13444 48.9834 3.06445C48.6334 2.98445 48.263 2.94531 47.873 2.94531C47.2032 2.94533 46.6433 3.06478 46.1934 3.30469C45.7534 3.54469 45.4231 3.90012 45.2031 4.37012C44.9832 4.84005 44.8731 5.41489 44.873 6.09473C44.873 7.11473 45.123 7.88527 45.623 8.40527C46.123 8.9251 46.8631 9.1845 47.8428 9.18457C48.1428 9.18457 48.4684 9.15473 48.8184 9.09473C49.0082 9.06309 49.1979 9.02406 49.3877 8.97852V7.30957H48.3379C47.998 7.30952 47.7329 7.22464 47.543 7.05469C47.3631 6.88472 47.2735 6.6448 47.2734 6.33496C47.2734 6.02504 47.3631 5.78988 47.543 5.62988C47.7329 5.45993 47.998 5.37505 48.3379 5.375H50.5586C50.9084 5.37508 51.1736 5.47023 51.3535 5.66016C51.5433 5.84015 51.6377 6.10528 51.6377 6.45508V9.76953C51.6377 10.0695 51.5734 10.3252 51.4434 10.5352C51.3234 10.745 51.1282 10.8944 50.8584 10.9844C50.3884 11.1444 49.8781 11.2694 49.3281 11.3594C48.7781 11.4494 48.2277 11.4951 47.6777 11.4951C46.4679 11.4951 45.4378 11.2703 44.5879 10.8203C43.7479 10.3703 43.108 9.73968 42.668 8.92969C42.228 8.11973 42.0078 7.17463 42.0078 6.09473C42.0078 5.25482 42.1385 4.50002 42.3984 3.83008C42.6684 3.15018 43.0528 2.5698 43.5527 2.08984C44.0527 1.59989 44.6629 1.22949 45.3828 0.979492C46.1128 0.719493 46.9384 0.589844 47.8584 0.589844Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M37.5557 0.754883C38.7557 0.754883 39.6811 1.06457 40.3311 1.68457C40.991 2.29455 41.3203 3.1398 41.3203 4.21973C41.3203 5.29955 40.9908 6.14956 40.3311 6.76953C39.6811 7.37953 38.7557 7.68457 37.5557 7.68457H35.2305V10.0703C35.2304 10.51 35.1155 10.8546 34.8857 11.1045C34.6557 11.3445 34.3106 11.4648 33.8506 11.4648C33.4107 11.4648 33.071 11.3445 32.8311 11.1045C32.5912 10.8546 32.4708 10.5101 32.4707 10.0703V2.14941C32.4708 1.69965 32.5912 1.35516 32.8311 1.11523C33.0811 0.875234 33.4262 0.754883 33.8662 0.754883H37.5557ZM35.2305 5.57031H37.0762C37.5957 5.57025 37.9955 5.45996 38.2754 5.24023C38.5554 5.01023 38.6953 4.66973 38.6953 4.21973C38.6953 3.75979 38.5554 3.42018 38.2754 3.2002C37.9955 2.98028 37.5959 2.87018 37.0762 2.87012H35.2305V5.57031Z" fill="#2C3E50"/><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9561 3.04492C12.7761 3.04492 13.4916 3.19977 14.1016 3.50977C14.7113 3.81971 15.1808 4.26496 15.5107 4.84473C15.8507 5.41462 16.0214 6.09961 16.0215 6.89941C16.0215 7.48939 15.9263 8.0249 15.7363 8.50488C15.5463 8.98488 15.2711 9.39535 14.9111 9.73535C14.5612 10.0652 14.131 10.32 13.6211 10.5C13.1211 10.67 12.566 10.7549 11.9561 10.7549C11.1363 10.7549 10.4214 10.5999 9.81152 10.29C9.20152 9.98004 8.72574 9.53508 8.38574 8.95508C8.04576 8.37509 7.87598 7.6894 7.87598 6.89941C7.87603 6.29962 7.9712 5.76479 8.16113 5.29492C8.35113 4.81493 8.62634 4.41008 8.98633 4.08008C9.34633 3.74008 9.77637 3.48445 10.2764 3.31445C10.7763 3.13454 11.3362 3.04493 11.9561 3.04492ZM11.9561 5.00977C11.6861 5.00978 11.4463 5.07511 11.2363 5.20508C11.0263 5.33508 10.8612 5.54031 10.7412 5.82031C10.6214 6.09018 10.5616 6.44982 10.5615 6.89941C10.5615 7.5594 10.6912 8.03984 10.9512 8.33984C11.2111 8.63982 11.5461 8.79001 11.9561 8.79004C12.226 8.79004 12.4658 8.72464 12.6758 8.59473C12.8858 8.45473 13.0462 8.24949 13.1562 7.97949C13.2761 7.69954 13.3359 7.33923 13.3359 6.89941C13.3359 6.22974 13.2062 5.7499 12.9463 5.45996C12.6863 5.15996 12.3561 5.00977 11.9561 5.00977Z" fill="#2C3E50"/><path d="M1.37988 0C1.82988 0 2.17039 0.120352 2.40039 0.360352C2.64004 0.600272 2.7597 0.944971 2.75977 1.39453V8.29492H6.41992C6.79989 8.29492 7.09004 8.39476 7.29004 8.59473C7.49998 8.78467 7.60541 9.06472 7.60547 9.43457C7.60547 9.80457 7.50004 10.09 7.29004 10.29C7.09004 10.49 6.79988 10.5898 6.41992 10.5898H1.39453C0.954755 10.5898 0.610263 10.4694 0.360352 10.2295C0.120447 9.97958 7.88719e-05 9.63509 0 9.19531V1.39453C6.16112e-05 0.944739 0.120454 0.600287 0.360352 0.360352C0.60033 0.120373 0.93994 2.13056e-05 1.37988 0Z" fill="#2C3E50"/></svg>
           <span id="mob-version-badge" style="font-size:10px;font-weight:800;color:#A8B8C8;opacity:.7;"></span>
         </div>
-        <button onclick="mobTriggerImport()" style="padding:7px 14px;border-radius:99px;background:white;border:1.5px solid #E8ECF0;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#2C3E50;cursor:pointer;">📥 Importer</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="mobTriggerImport()" style="padding:7px 14px;border-radius:99px;background:white;border:1.5px solid #E8ECF0;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#2C3E50;cursor:pointer;">📥 Importer</button>
+          <button class="mob-icon-btn" onclick="aproposOpen()" title="À propos">ℹ️</button>
+        </div>
       </div>
       <div style="font-size:10px;font-weight:900;color:#6B7C8E;letter-spacing:1.2px;">MES PERSONNAGES</div>
     </div>
@@ -864,6 +870,236 @@
 
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     À PROPOS — modales
+════════════════════════════════════════════════════════════ -->
+
+<!-- Release note automatique -->
+<div class="modal-overlay" id="modal-release-note">
+  <div class="modal-sheet" style="max-width:400px;">
+    <div class="modal-handle"></div>
+    <div class="rn-header">
+      <div class="rn-icon">🚀</div>
+      <div>
+        <div class="rn-title">Mise à jour disponible</div>
+        <span class="rn-version-badge" id="rn-version-badge"></span>
+      </div>
+      <button class="modal-close-btn" onclick="aproposCloseReleaseNote()">✕</button>
+    </div>
+    <div class="rn-body" id="rn-body"></div>
+    <div class="rn-footer">
+      <button class="btn btn-secondary" onclick="aproposCloseReleaseNote()">Ignorer</button>
+      <button class="btn btn-primary" onclick="aproposConfirmReleaseNote()">🎉 C'est parti !</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panneau À propos -->
+<div class="modal-overlay" id="panel-apropos">
+  <div class="modal-sheet" style="max-width:420px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+      <div class="modal-title" style="margin-bottom:0;">ℹ️ À propos</div>
+      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposClose()">✕</button>
+    </div>
+
+    <div class="apropos-section-label">Infos</div>
+    <div class="apropos-row" onclick="aproposOpenPatchnotes()">
+      <div class="apropos-row-icon" style="background:var(--green-l);">📋</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Patchnotes</div>
+        <div class="apropos-row-sub">Historique des versions</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
+
+    <div class="apropos-section-label">Retours</div>
+    <div class="apropos-row" onclick="aproposBugReport()">
+      <div class="apropos-row-icon" style="background:var(--red-l);">🐛</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Signaler un bug</div>
+        <div class="apropos-row-sub">Formulaire → Discord</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
+    <div class="apropos-row" onclick="aproposIdeaOpen()">
+      <div class="apropos-row-icon" style="background:var(--orange-l);">💡</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Proposer une idée</div>
+        <div class="apropos-row-sub">Formulaire → Discord</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
+
+    <div class="apropos-section-label">Communauté</div>
+    <a class="apropos-row" href="https://discord.gg/logrpg" target="_blank" rel="noopener" style="text-decoration:none;">
+      <div class="apropos-row-icon" style="background:#EEF0FF;">💬</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Discord</div>
+        <div class="apropos-row-sub">discord.gg/logrpg</div>
+      </div>
+      <div class="apropos-row-arr">↗</div>
+    </a>
+
+    <div class="apropos-section-label">Données</div>
+    <div class="apropos-row" onclick="aproposConfirmDeleteOpen()">
+      <div class="apropos-row-icon" style="background:var(--red-l);">🗑️</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title" style="color:var(--red);">Supprimer toutes les données</div>
+        <div class="apropos-row-sub">Efface tout le contenu local</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
+
+    <div class="apropos-footer" id="apropos-footer-version">LogRPG Web</div>
+  </div>
+</div>
+
+<!-- Patchnotes (historique complet) -->
+<div class="modal-overlay" id="modal-patchnotes">
+  <div class="modal-sheet" style="max-width:440px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;">📋 Patchnotes</div>
+      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposClosePatchnotes()">✕</button>
+    </div>
+    <div id="patchnotes-body"></div>
+    <button class="btn btn-secondary" style="width:100%;margin-top:14px;" onclick="aproposClosePatchnotes()">Fermer</button>
+  </div>
+</div>
+
+<!-- Choix : bugs connus -->
+<div class="modal-overlay" id="modal-known-bugs">
+  <div class="modal-sheet" style="max-width:460px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;margin-bottom:8px;">
+      <div class="modal-title" style="margin-bottom:0;">🐛 Signaler un bug</div>
+      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposBugChooserClose()">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:14px;">
+      Ton problème fait peut-être partie des bugs déjà connus. Clique dessus pour pré-remplir le formulaire, ou déclare un nouveau bug.
+    </div>
+    <div class="kb-list" id="bug-chooser-list" style="margin-bottom:16px;"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="aproposBugChooseNew()">➕ Déclarer un nouveau bug</button>
+  </div>
+</div>
+
+<!-- Formulaire : signaler un bug -->
+<div class="modal-overlay" id="modal-bug-report">
+  <div class="modal-sheet" style="max-width:460px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;">🐛 Signaler un bug</div>
+      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposBugClose()">✕</button>
+    </div>
+
+    <div class="prefilled-notice" id="bug-prefilled-notice" style="display:none;">
+      ✅ Pré-rempli depuis&nbsp;<strong id="bug-prefilled-id"></strong>
+      <span class="change-link" onclick="aproposBugBackToChooser()">← changer</span>
+    </div>
+
+    <div class="input-group">
+      <label class="form-label">Pseudo <span class="opt">optionnel</span></label>
+      <input class="input" id="bug-pseudo" type="text" placeholder="Ton pseudo ou pseudo Discord...">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Titre</label>
+      <input class="input" id="bug-title" type="text" placeholder="Résumé du problème">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Sévérité</label>
+      <div class="chip-row" id="bug-severity-chips">
+        <div class="chip red"    data-sev="Bloquant" onclick="aproposBugSelectSeverity('Bloquant')">Bloquant</div>
+        <div class="chip orange" data-sev="Gênant"   onclick="aproposBugSelectSeverity('Gênant')">Gênant</div>
+        <div class="chip blue"   data-sev="Mineur"   onclick="aproposBugSelectSeverity('Mineur')">Mineur</div>
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="form-label">Description</label>
+      <textarea class="input apropos-textarea" id="bug-description" placeholder="Décris ce qui se passe et comment le reproduire..."></textarea>
+    </div>
+    <div class="input-group" id="bug-precisions-group" style="display:none;">
+      <label class="form-label">Précisions <span class="opt">optionnel</span></label>
+      <input class="input" id="bug-precisions" type="text" placeholder="Ex : ça arrive aussi avec des monstres manuels...">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Navigateur / appareil</label>
+      <input class="input" id="bug-browser" type="text">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Capture d'écran <span class="opt">optionnel</span></label>
+      <div class="screenshot-zone">
+        <div class="screenshot-actions">
+          <div class="screenshot-btn" onclick="aproposBugPickFile()">📎 Ajouter un fichier</div>
+          <div class="screenshot-btn" onclick="aproposBugHintPaste()">📋 Coller (Ctrl+V)</div>
+        </div>
+        <div class="screenshot-preview" id="bug-screenshot-preview" style="display:none;"></div>
+        <div class="screenshot-hint">PNG, JPG, GIF · max 8 Mo</div>
+      </div>
+      <input type="file" id="bug-file-input" accept="image/*" style="display:none;" onchange="aproposBugFileChange(this)">
+    </div>
+
+    <div class="rn-footer">
+      <button class="btn btn-secondary" onclick="aproposBugClose()">Annuler</button>
+      <button class="btn btn-primary" id="bug-submit-btn" onclick="aproposBugSubmit()">📨 Envoyer sur Discord</button>
+    </div>
+  </div>
+</div>
+
+<!-- Formulaire : proposer une idée -->
+<div class="modal-overlay" id="modal-idea">
+  <div class="modal-sheet" style="max-width:440px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;">💡 Proposer une idée</div>
+      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposIdeaClose()">✕</button>
+    </div>
+    <div class="input-group">
+      <label class="form-label">Pseudo <span class="opt">optionnel</span></label>
+      <input class="input" id="idea-pseudo" type="text" placeholder="Ton pseudo ou pseudo Discord...">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Titre</label>
+      <input class="input" id="idea-title" type="text" placeholder="Ton idée en une phrase">
+    </div>
+    <div class="input-group">
+      <label class="form-label">Catégorie</label>
+      <div class="chip-row" id="idea-category-chips">
+        <div class="chip green"  data-cat="Interface" onclick="aproposIdeaSelectCategory('Interface')">Interface</div>
+        <div class="chip blue"   data-cat="Combat"    onclick="aproposIdeaSelectCategory('Combat')">Combat</div>
+        <div class="chip orange" data-cat="Mode MJ"   onclick="aproposIdeaSelectCategory('Mode MJ')">Mode MJ</div>
+        <div class="chip red"    data-cat="Autre"     onclick="aproposIdeaSelectCategory('Autre')">Autre</div>
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="form-label">Description</label>
+      <textarea class="input apropos-textarea" id="idea-description" placeholder="Décris ton idée..."></textarea>
+    </div>
+    <div class="rn-footer">
+      <button class="btn btn-secondary" onclick="aproposIdeaClose()">Annuler</button>
+      <button class="btn btn-primary" id="idea-submit-btn" onclick="aproposIdeaSubmit()">📨 Envoyer sur Discord</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation suppression -->
+<div class="modal-overlay" id="modal-confirm-delete">
+  <div class="modal-sheet" style="max-width:380px;">
+    <div class="modal-handle"></div>
+    <div class="rn-header" style="margin-bottom:8px;">
+      <div class="rn-icon" style="background:var(--red-l);">⚠️</div>
+      <div>
+        <div class="rn-title">Supprimer toutes les données ?</div>
+        <div style="font-size:11.5px;color:var(--text-light);margin-top:3px;">Personnages, MJ, bestiaire — irréversible</div>
+      </div>
+    </div>
+    <div class="rn-footer">
+      <button class="btn btn-secondary" onclick="aproposConfirmDeleteClose()">Annuler</button>
+      <button class="btn" style="flex:1;background:var(--red-l);color:var(--red);" onclick="aproposDeleteAll()">🗑️ Supprimer</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="js/db.js"></script>
@@ -894,5 +1130,6 @@
 <script src="js/mj/assets.js"></script>
 <script src="js/mj/pj.js"></script>
 <script src="js/mj/view.js"></script>
+<script src="js/apropos.js"></script>
 </body>
 </html>

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "kb-001",
+    "title": "Crash à l'ouverture du combat avec 3+ monstres",
+    "severity": "Bloquant",
+    "category": "Combat",
+    "description": "L'app se bloque sur l'écran de chargement quand on lance un combat avec plus de 2 monstres du bestiaire."
+  },
+  {
+    "id": "kb-002",
+    "title": "Avatar dupliqué dans la sidebar après rechargement",
+    "severity": "Gênant",
+    "category": "Interface",
+    "description": "Après un F5, certains avatars apparaissent en double dans le rail de la sidebar."
+  },
+  {
+    "id": "kb-003",
+    "title": "Scroll perdu au retour depuis le Mode MJ",
+    "severity": "Mineur",
+    "category": "Navigation",
+    "description": "La position de défilement n'est pas restaurée quand on quitte le Mode MJ pour revenir à la fiche du personnage."
+  }
+]

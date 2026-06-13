@@ -1040,3 +1040,268 @@ body {
 @media (max-width: 1099px) {
   #panel-detail { display: none !important; }
 }
+
+/* ═══════════════════════════════════════
+   À PROPOS
+═══════════════════════════════════════ */
+
+/* ── Modales centrées sur desktop (bottom-sheet conservé sur mobile < 1100px) ── */
+@keyframes modalPop {
+  from { transform: translateY(12px) scale(.97); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);   opacity: 1; }
+}
+@media (min-width: 1100px) {
+  .modal-overlay { align-items: center; }
+  .modal-sheet {
+    border-radius: 20px;
+    padding: 22px 22px 24px;
+    margin: 16px;
+    max-height: 88vh;
+    max-height: 88dvh;
+    animation: modalPop .2s ease;
+  }
+  .modal-handle { display: none; }
+}
+
+/* ── Bouton topbar mobile ── */
+.mob-icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 99px;
+  background: var(--white);
+  border: 1.5px solid #E8ECF0;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+
+/* ── Release note : en-tête / corps / pied ── */
+.rn-header {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 14px;
+}
+.rn-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--green-l);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 21px; flex-shrink: 0;
+}
+.rn-title { font-size: 16px; font-weight: 900; color: var(--text); }
+.rn-version-badge {
+  display: inline-block; margin-top: 3px;
+  font-size: 11px; font-weight: 800;
+  background: var(--green-l); color: var(--green-d);
+  padding: 2px 8px; border-radius: 99px;
+}
+.modal-close-btn {
+  margin-left: auto; width: 28px; height: 28px;
+  border-radius: 8px; background: #F0F4F3; border: none;
+  color: var(--text-mid); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.modal-close-btn:hover { background: #E4EAE8; }
+.rn-body { margin-bottom: 6px; }
+.rn-footer { display: flex; gap: 8px; margin-top: 16px; }
+.rn-footer .btn { flex: 1; }
+
+/* ── Catégories / items de changelog ── */
+.rn-section { margin-bottom: 12px; }
+.rn-section:last-child { margin-bottom: 0; }
+.rn-cat {
+  display: block; margin-bottom: 5px;
+  font-size: 10px; font-weight: 900; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--green-d);
+}
+.rn-cat.fix    { color: var(--blue); }
+.rn-cat.change { color: var(--orange); }
+.rn-item {
+  position: relative; padding-left: 14px;
+  font-size: 13px; color: var(--text-mid); line-height: 1.7;
+}
+.rn-item::before { content: '•'; position: absolute; left: 3px; color: var(--text-light); }
+.rn-item span { color: var(--green-d); font-weight: 700; }
+
+/* ── Patchnotes (historique) ── */
+.pn-version {
+  padding-bottom: 14px; margin-bottom: 14px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.pn-version:last-child { border-bottom: none; margin-bottom: 0; }
+.pn-version-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.pn-date { font-size: 11px; color: var(--text-light); font-weight: 700; }
+
+/* ── Panneau À propos : lignes de réglages ── */
+.apropos-section-label {
+  font-size: 10.5px; font-weight: 900; letter-spacing: 1.2px;
+  color: var(--text-light); text-transform: uppercase;
+  padding: 14px 2px 6px;
+}
+.apropos-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 4px; cursor: pointer;
+  border-radius: 10px; transition: background .12s;
+}
+.apropos-row:hover { background: var(--bg); }
+.apropos-row-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.apropos-row-text { flex: 1; min-width: 0; }
+.apropos-row-title { font-size: 13.5px; font-weight: 800; color: var(--text); }
+.apropos-row-sub   { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+.apropos-row-arr   { font-size: 13px; color: var(--text-light); }
+.apropos-footer {
+  text-align: center; font-size: 11px; color: var(--text-light);
+  padding: 16px 0 4px; font-weight: 700;
+}
+
+/* ── Bugs connus (liste publique dans le panneau) ── */
+.apropos-kb-box {
+  background: var(--bg); border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.06); overflow: hidden;
+  margin-top: 4px;
+}
+.apropos-kb-intro {
+  font-size: 11px; color: var(--text-mid); line-height: 1.5;
+  padding: 10px 12px; border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.kb-public-row {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 9px 12px; border-bottom: 1px solid rgba(0,0,0,.06);
+  cursor: pointer;
+}
+.kb-public-row:last-child { border-bottom: none; }
+.kb-public-row:hover { background: rgba(0,0,0,.02); }
+.kb-pub-title { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.4; }
+.kb-pub-id    { font-size: 10.5px; color: var(--text-light); margin-top: 1px; }
+.apropos-kb-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px; border-top: 1px solid rgba(0,0,0,.06);
+}
+.apropos-kb-foot .count { font-size: 11px; color: var(--text-light); }
+.apropos-kb-foot .link  { font-size: 11px; font-weight: 800; color: var(--green-d); cursor: pointer; }
+
+/* ── Point coloré sévérité ── */
+.kb-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.kb-dot.bloquant { background: var(--red); }
+.kb-dot.genant   { background: var(--yellow); }
+.kb-dot.mineur   { background: var(--blue); }
+
+/* ── Badge sévérité ── */
+.sev {
+  font-size: 9px; font-weight: 900; padding: 2px 7px;
+  border-radius: 99px; letter-spacing: .3px; flex-shrink: 0;
+  white-space: nowrap;
+}
+.sev.bloquant { background: var(--red-l);    color: var(--red);    }
+.sev.genant   { background: var(--yellow-l); color: #B8860B;       }
+.sev.mineur   { background: var(--blue-l);   color: var(--blue);   }
+
+/* ── Sélecteur de bugs connus (formulaire) ── */
+.kb-selector-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 7px;
+}
+.kb-selector-hint { font-size: 10.5px; color: var(--text-light); }
+.kb-list { display: flex; flex-direction: column; gap: 6px; }
+.kb-card {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 9px 11px; border-radius: 11px;
+  border: 1.5px solid rgba(0,0,0,.08);
+  background: var(--white); cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.kb-card:hover    { border-color: var(--green); }
+.kb-card.selected { border-color: var(--green); background: var(--green-l); }
+.kb-card-body  { flex: 1; min-width: 0; }
+.kb-card-title { font-size: 12px; font-weight: 800; color: var(--text); line-height: 1.4; }
+.kb-card-desc  {
+  font-size: 11px; color: var(--text-light); margin-top: 2px; line-height: 1.4;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kb-card-id    { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+.kb-other {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: 11px;
+  border: 1.5px dashed rgba(0,0,0,.12);
+  background: var(--white); cursor: pointer;
+}
+.kb-other:hover     { border-color: var(--green); }
+.kb-other-label { font-size: 12px; font-weight: 800; color: var(--text-mid); }
+.kb-other-sub   { font-size: 10.5px; color: var(--text-light); }
+
+/* ── Chips ── */
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 5px 12px; border-radius: 99px; font-size: 11px;
+  font-weight: 800; cursor: pointer; border: 1.5px solid transparent;
+  user-select: none;
+}
+.chip.red    { background: var(--red-l);    color: var(--red);    }
+.chip.orange { background: var(--orange-l); color: var(--orange); }
+.chip.blue   { background: var(--blue-l);   color: var(--blue);   }
+.chip.green  { background: var(--green-l);  color: var(--green-d);}
+.chip.sel    { border-color: currentColor; }
+
+/* ── Zone capture d'écran ── */
+.screenshot-zone {
+  border: 1.5px dashed rgba(0,0,0,.14); border-radius: 11px; padding: 9px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.screenshot-actions { display: flex; gap: 7px; width: 100%; }
+.screenshot-btn {
+  flex: 1; padding: 8px 6px; border-radius: 9px;
+  border: 1.5px solid #E8ECF0; background: var(--white);
+  font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800;
+  color: var(--text-mid); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.screenshot-btn:hover { border-color: var(--green); }
+.screenshot-hint { font-size: 10.5px; color: var(--text-light); text-align: center; }
+.screenshot-preview {
+  width: 100%; border-radius: 9px; overflow: hidden;
+  border: 1px solid rgba(0,0,0,.08); position: relative;
+}
+.screenshot-preview img { width: 100%; display: block; max-height: 220px; object-fit: cover; }
+.screenshot-preview-label {
+  position: absolute; bottom: 6px; right: 6px;
+  font-size: 10px; font-weight: 800; color: #fff;
+  background: rgba(0,0,0,.55); padding: 3px 8px; border-radius: 7px;
+  cursor: pointer;
+}
+
+/* ── Bandeau pré-rempli ── */
+.prefilled-notice {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--green-l); border-radius: 10px;
+  padding: 9px 11px; margin-bottom: 12px;
+  font-size: 11.5px; font-weight: 800; color: var(--green-d);
+}
+.prefilled-notice .change-link {
+  margin-left: auto; cursor: pointer; opacity: .7;
+  font-size: 11px; font-weight: 800;
+}
+.prefilled-notice .change-link:hover { opacity: 1; }
+
+/* ── Label de champ compact ── */
+.form-label {
+  font-size: 10px; font-weight: 900; color: var(--text-mid);
+  letter-spacing: .5px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+}
+.form-label .opt {
+  font-size: 9px; font-weight: 700; color: var(--text-light);
+  background: var(--bg); padding: 1px 6px; border-radius: 10px;
+  letter-spacing: 0; text-transform: none;
+}
+
+/* ── Textarea dans les formulaires À propos ── */
+.apropos-textarea {
+  min-height: 70px; resize: vertical; line-height: 1.5; padding-top: 9px;
+}
