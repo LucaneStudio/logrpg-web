@@ -493,6 +493,13 @@ body {
   margin: 0 auto 18px;
 }
 .modal-title { font-size: 16px; font-weight: 900; margin-bottom: 16px; }
+/* Pied de modale unifié : Annuler à gauche / action à droite, largeur égale */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.modal-actions .btn { flex: 1; }
 .modal-error {
   color: var(--red);
   font-size: 12px;
@@ -1092,17 +1099,7 @@ body {
   background: var(--green-l); color: var(--green-d);
   padding: 2px 8px; border-radius: 99px;
 }
-.modal-close-btn {
-  margin-left: auto; width: 28px; height: 28px;
-  border-radius: 8px; background: #F0F4F3; border: none;
-  color: var(--text-mid); font-size: 13px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.modal-close-btn:hover { background: #E4EAE8; }
 .rn-body { margin-bottom: 6px; }
-.rn-footer { display: flex; gap: 8px; margin-top: 16px; }
-.rn-footer .btn { flex: 1; }
 
 /* ── Catégories / items de changelog ── */
 .rn-section { margin-bottom: 12px; }

@@ -19,7 +19,7 @@
         <button onclick="selectAllPrintNotes()" style="font-size:11px;font-weight:800;color:var(--green-d);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;">Tout sélectionner</button>
       </div>
       <div id="print-notes-list" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('modal-print-notes')">Annuler</button>
         <button class="btn btn-primary" id="print-confirm-btn" onclick="confirmPrint()">🖨️ Générer sans notes</button>
       </div>
@@ -153,8 +153,10 @@
       </div>
     </div>
     <div class="modal-error" id="form-char-error"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="submitCreateChar()">Créer le personnage</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-create-char')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-create-char')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitCreateChar()">Créer le personnage</button>
+    </div>
   </div>
 </div>
 
@@ -190,8 +192,10 @@
       <label class="input-label">Montant (en crédits)</label>
       <input class="input" id="currency-add-input" type="number" min="1" placeholder="100" onkeydown="if(event.key==='Enter')submitAddCredits()"/>
     </div>
-    <button class="btn btn-primary" style="width:100%;" onclick="submitAddCredits()">Ajouter</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-currency-add')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-currency-add')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitAddCredits()">Ajouter</button>
+    </div>
   </div>
 </div>
 
@@ -204,8 +208,10 @@
       <label class="input-label">Montant (en crédits)</label>
       <input class="input" id="currency-spend-input" type="number" min="1" placeholder="50" onkeydown="if(event.key==='Enter')submitSpendCredits()"/>
     </div>
-    <button class="btn btn-primary" style="width:100%;background:var(--orange);box-shadow:none;" onclick="submitSpendCredits()">Dépenser</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-currency-spend')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-currency-spend')">Annuler</button>
+      <button class="btn btn-primary" style="background:var(--orange);box-shadow:none;" onclick="submitSpendCredits()">Dépenser</button>
+    </div>
   </div>
 </div>
 
@@ -229,7 +235,7 @@
                   color:var(--purple);border:2.5px solid var(--purple-l);border-radius:14px;
                   padding:12px;background:var(--purple-l);outline:none;margin-bottom:16px;"
            onkeydown="if(event.key==='Enter')confirmSlotEdit()"/>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-slot-edit')">Annuler</button>
       <button class="btn btn-primary" style="background:var(--purple);box-shadow:none;" onclick="confirmSlotEdit()">Valider</button>
     </div>
@@ -247,7 +253,7 @@
              style="font-size:24px;font-weight:900;text-align:center;"
              onkeydown="if(event.key==='Enter')confirmEditMax()"/>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-max')">Annuler</button>
       <button class="btn btn-primary" onclick="confirmEditMax()">Valider</button>
     </div>
@@ -364,7 +370,7 @@
         <div class="pdf-option-desc">Revenir à l'initiale colorée</div>
       </div>
     </button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-profile-photo')">Annuler</button>
       <button class="btn btn-primary" onclick="confirmProfilePhoto()">Valider</button>
     </div>
@@ -466,7 +472,7 @@
     </div>
     <input type="hidden" id="rename-char-id"/>
     <div class="modal-error" id="rename-char-error"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-rename-char')">Annuler</button>
       <button class="btn btn-primary" onclick="submitRenameChar()">Valider</button>
     </div>
@@ -516,7 +522,7 @@
              onkeydown="if(event.key==='Enter')document.getElementById('note-dialog-submit').click()"/>
     </div>
     <div class="modal-error" id="note-dialog-error"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-note-dialog')">Annuler</button>
       <button class="btn btn-primary" id="note-dialog-submit">Créer</button>
     </div>
@@ -586,7 +592,7 @@
       </label>
     </div>
     <div class="modal-error" id="it-error"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-item')">Annuler</button>
       <button class="btn btn-primary" id="it-submit-btn">Ajouter</button>
     </div>
@@ -636,7 +642,7 @@
       </div>
     </div>
     <div class="modal-error" id="ab-error"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-ability')">Annuler</button>
       <button class="btn btn-primary" id="ab-submit-btn">Créer</button>
     </div>
@@ -663,7 +669,7 @@
     </div>
     <input type="hidden" id="edit-val-section"/>
     <input type="hidden" id="edit-val-widget"/>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-value')">Annuler</button>
       <button class="btn btn-primary" onclick="submitEditWidgetValue()">Valider</button>
     </div>
@@ -697,8 +703,10 @@
       <input class="input" id="add-section-input" placeholder="Ex : Caractéristiques" onkeydown="if(event.key==='Enter')submitAddSection()"/>
     </div>
     <div class="modal-error" id="add-section-error"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="submitAddSection()">Créer</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-add-section')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-section')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitAddSection()">Créer</button>
+    </div>
   </div>
 </div>
 
@@ -712,8 +720,10 @@
       <input class="input" id="rename-section-input" onkeydown="if(event.key==='Enter')submitRenameSection()"/>
     </div>
     <div class="modal-error" id="rename-section-error"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="submitRenameSection()">Valider</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-rename-section')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-rename-section')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitRenameSection()">Valider</button>
+    </div>
   </div>
 </div>
 
@@ -754,8 +764,10 @@
       <input type="hidden" id="add-widget-color" value="PURPLE"/>
     </div>
     <div class="modal-error" id="add-widget-error"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="submitAddWidget()">Ajouter</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeModal('modal-add-widget')">Annuler</button>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-widget')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitAddWidget()">Ajouter</button>
+    </div>
   </div>
 </div>
 
@@ -796,7 +808,7 @@
       <input type="hidden" id="edit-widget-color" value="PURPLE"/>
     </div>
     <div class="modal-error" id="edit-widget-error"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-widget')">Annuler</button>
       <button class="btn btn-primary" onclick="submitEditWidget()">Valider</button>
     </div>
@@ -819,7 +831,7 @@
           <span id="mob-version-badge" style="font-size:10px;font-weight:800;color:#A8B8C8;opacity:.7;"></span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button onclick="mobTriggerImport()" style="padding:7px 14px;border-radius:99px;background:white;border:1.5px solid #E8ECF0;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#2C3E50;cursor:pointer;">📥 Importer</button>
+          <button class="mob-icon-btn" onclick="mobTriggerImport()" title="Importer">📥</button>
           <button class="mob-icon-btn" onclick="aproposOpen()" title="À propos">ℹ️</button>
         </div>
       </div>
@@ -884,10 +896,10 @@
         <div class="rn-title">Mise à jour disponible</div>
         <span class="rn-version-badge" id="rn-version-badge"></span>
       </div>
-      <button class="modal-close-btn" onclick="aproposCloseReleaseNote()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposCloseReleaseNote()">✕</button>
     </div>
     <div class="rn-body" id="rn-body"></div>
-    <div class="rn-footer">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="aproposCloseReleaseNote()">Ignorer</button>
       <button class="btn btn-primary" onclick="aproposConfirmReleaseNote()">🎉 C'est parti !</button>
     </div>
@@ -900,7 +912,7 @@
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
       <div class="modal-title" style="margin-bottom:0;">ℹ️ À propos</div>
-      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposClose()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposClose()">✕</button>
     </div>
 
     <div class="apropos-section-label">Infos</div>
@@ -961,7 +973,7 @@
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;margin-bottom:14px;">
       <div class="modal-title" style="margin-bottom:0;">📋 Patchnotes</div>
-      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposClosePatchnotes()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposClosePatchnotes()">✕</button>
     </div>
     <div id="patchnotes-body"></div>
     <button class="btn btn-secondary" style="width:100%;margin-top:14px;" onclick="aproposClosePatchnotes()">Fermer</button>
@@ -974,7 +986,7 @@
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;margin-bottom:8px;">
       <div class="modal-title" style="margin-bottom:0;">🐛 Signaler un bug</div>
-      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposBugChooserClose()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposBugChooserClose()">✕</button>
     </div>
     <div style="font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:14px;">
       Ton problème fait peut-être partie des bugs déjà connus. Clique dessus pour pré-remplir le formulaire, ou déclare un nouveau bug.
@@ -990,7 +1002,7 @@
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;margin-bottom:14px;">
       <div class="modal-title" style="margin-bottom:0;">🐛 Signaler un bug</div>
-      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposBugClose()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposBugClose()">✕</button>
     </div>
 
     <div class="prefilled-notice" id="bug-prefilled-notice" style="display:none;">
@@ -1039,7 +1051,7 @@
       <input type="file" id="bug-file-input" accept="image/*" style="display:none;" onchange="aproposBugFileChange(this)">
     </div>
 
-    <div class="rn-footer">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="aproposBugClose()">Annuler</button>
       <button class="btn btn-primary" id="bug-submit-btn" onclick="aproposBugSubmit()">📨 Envoyer sur Discord</button>
     </div>
@@ -1052,7 +1064,7 @@
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;margin-bottom:14px;">
       <div class="modal-title" style="margin-bottom:0;">💡 Proposer une idée</div>
-      <button class="modal-close-btn" style="margin-left:auto;" onclick="aproposIdeaClose()">✕</button>
+      <button class="btn-icon" style="margin-left:auto;" onclick="aproposIdeaClose()">✕</button>
     </div>
     <div class="input-group">
       <label class="form-label">Pseudo <span class="opt">optionnel</span></label>
@@ -1075,7 +1087,7 @@
       <label class="form-label">Description</label>
       <textarea class="input apropos-textarea" id="idea-description" placeholder="Décris ton idée..."></textarea>
     </div>
-    <div class="rn-footer">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="aproposIdeaClose()">Annuler</button>
       <button class="btn btn-primary" id="idea-submit-btn" onclick="aproposIdeaSubmit()">📨 Envoyer sur Discord</button>
     </div>
@@ -1093,7 +1105,7 @@
         <div style="font-size:11.5px;color:var(--text-light);margin-top:3px;">Personnages, MJ, bestiaire — irréversible</div>
       </div>
     </div>
-    <div class="rn-footer">
+    <div class="modal-actions">
       <button class="btn btn-secondary" onclick="aproposConfirmDeleteClose()">Annuler</button>
       <button class="btn" style="flex:1;background:var(--red-l);color:var(--red);" onclick="aproposDeleteAll()">🗑️ Supprimer</button>
     </div>
