@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.1] — 2026-06-14
+
+### Corrections
+- Version mobile : refonte des correctifs pour Safari iOS
+- Plus de zoom intempestif lors d'appuis rapides sur les boutons et onglets
+- Appui long fiabilisé, et nouveau bouton « ⋯ » sur les cartes et la fiche pour accéder au menu (renommer, PDF, exporter, supprimer)
+- Génération du PDF réparée sur mobile (impression native iOS → « Enregistrer dans Fichiers »)
+- Contenu qui n'est plus coupé en bas de l'écran (encoche et barre d'adresse)
+
 ## [1.4.0] — 2026-06-14
 
 ### Nouveau
