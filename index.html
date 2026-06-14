@@ -925,33 +925,36 @@
       <div class="apropos-row-arr">›</div>
     </div>
 
-    <div class="apropos-section-label">Retours</div>
-    <div class="apropos-row" onclick="aproposBugReport()">
-      <div class="apropos-row-icon" style="background:var(--red-l);">🐛</div>
-      <div class="apropos-row-text">
-        <div class="apropos-row-title">Signaler un bug</div>
-        <div class="apropos-row-sub">Formulaire → Discord</div>
+    <!-- Masqué tant que le Discord n'est pas en ligne (Retours + Communauté) -->
+    <div style="display:none;">
+      <div class="apropos-section-label">Retours</div>
+      <div class="apropos-row" onclick="aproposBugReport()">
+        <div class="apropos-row-icon" style="background:var(--red-l);">🐛</div>
+        <div class="apropos-row-text">
+          <div class="apropos-row-title">Signaler un bug</div>
+          <div class="apropos-row-sub">Formulaire → Discord</div>
+        </div>
+        <div class="apropos-row-arr">›</div>
       </div>
-      <div class="apropos-row-arr">›</div>
-    </div>
-    <div class="apropos-row" onclick="aproposIdeaOpen()">
-      <div class="apropos-row-icon" style="background:var(--orange-l);">💡</div>
-      <div class="apropos-row-text">
-        <div class="apropos-row-title">Proposer une idée</div>
-        <div class="apropos-row-sub">Formulaire → Discord</div>
+      <div class="apropos-row" onclick="aproposIdeaOpen()">
+        <div class="apropos-row-icon" style="background:var(--orange-l);">💡</div>
+        <div class="apropos-row-text">
+          <div class="apropos-row-title">Proposer une idée</div>
+          <div class="apropos-row-sub">Formulaire → Discord</div>
+        </div>
+        <div class="apropos-row-arr">›</div>
       </div>
-      <div class="apropos-row-arr">›</div>
-    </div>
 
-    <div class="apropos-section-label">Communauté</div>
-    <a class="apropos-row" href="https://discord.gg/logrpg" target="_blank" rel="noopener" style="text-decoration:none;">
-      <div class="apropos-row-icon" style="background:#EEF0FF;">💬</div>
-      <div class="apropos-row-text">
-        <div class="apropos-row-title">Discord</div>
-        <div class="apropos-row-sub">discord.gg/logrpg</div>
-      </div>
-      <div class="apropos-row-arr">↗</div>
-    </a>
+      <div class="apropos-section-label">Communauté</div>
+      <a class="apropos-row" href="https://discord.gg/logrpg" target="_blank" rel="noopener" style="text-decoration:none;">
+        <div class="apropos-row-icon" style="background:#EEF0FF;">💬</div>
+        <div class="apropos-row-text">
+          <div class="apropos-row-title">Discord</div>
+          <div class="apropos-row-sub">discord.gg/logrpg</div>
+        </div>
+        <div class="apropos-row-arr">↗</div>
+      </a>
+    </div>
 
     <div class="apropos-section-label">Données</div>
     <div class="apropos-row" onclick="aproposConfirmDeleteOpen()">
@@ -963,7 +966,10 @@
       <div class="apropos-row-arr">›</div>
     </div>
 
-    <div class="apropos-footer" id="apropos-footer-version">LogRPG Web</div>
+    <div class="apropos-footer">
+      <div id="apropos-footer-version">LogRPG Web</div>
+      <div style="margin-top:2px;">Développé par Lucane Studio</div>
+    </div>
   </div>
 </div>
 
