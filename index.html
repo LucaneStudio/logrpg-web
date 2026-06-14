@@ -39,7 +39,26 @@
       #app { display: none !important; }
       .mobile-wip { display: none !important; }
       /* Montrer l'app mobile */
-      #mobile-app { display: flex !important; }
+      #mobile-app {
+        display: flex !important;
+        height: 100vh;            /* fallback navigateurs sans dvh */
+        height: 100dvh;           /* Safari iOS : évite que la barre d'adresse coupe le bas */
+        touch-action: manipulation; /* supprime le double-tap zoom + délai 300ms */
+        -webkit-text-size-adjust: 100%;
+      }
+      /* Pas de double-tap zoom sur les éléments interactifs */
+      #mobile-app button,
+      #mobile-app .mob-tab,
+      #mobile-app .mob-char-card,
+      #mobile-app [onclick],
+      #mobile-app [ontouchstart] { touch-action: manipulation; }
+      /* Supprime sélection/loupe iOS parasite sur les cibles d'appui long */
+      #mobile-app .mob-char-card,
+      #mobile-app #mob-detail-char-info,
+      #mobile-app .mob-tab {
+        -webkit-user-select: none; user-select: none;
+        -webkit-touch-callout: none;
+      }
     }
     @media (min-width: 1100px) {
       .mobile-wip { display: none !important; }
@@ -819,7 +838,7 @@
 <!-- ═══════════════════════════════════════════════════════════
      APP MOBILE (< 1100px)
 ════════════════════════════════════════════════════════════ -->
-<div id="mobile-app" style="display:none;flex-direction:column;height:100vh;background:#EEF6F4;font-family:'Nunito',sans-serif;overflow:hidden;">
+<div id="mobile-app" style="display:none;flex-direction:column;background:#EEF6F4;font-family:'Nunito',sans-serif;overflow:hidden;">
 
   <!-- ── Écran Liste ─────────────────────────────────────── -->
   <div id="mob-screen-list" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
@@ -854,12 +873,13 @@
         <div id="mob-detail-char-info" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;"
              ontouchstart="mobDetailLongPressStart(event)"
              ontouchend="mobDetailLongPressEnd()"
-             ontouchmove="mobDetailLongPressEnd()">
+             ontouchmove="mobDetailLongPressMove(event)">
           <div id="mob-avatar" style="width:46px;height:46px;border-radius:13px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;flex-shrink:0;"></div>
           <div style="flex:1;min-width:0;">
             <div id="mob-char-name" style="font-size:17px;font-weight:900;color:#2C3E50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
           </div>
         </div>
+        <button onclick="mobDetailOpenMenu(event)" title="Options" style="width:36px;height:36px;border-radius:12px;background:#F5F7F8;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#6B7C8E;">⋯</button>
       </div>
       <!-- Tabs scrollables -->
       <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;" id="mob-tabs">
@@ -877,7 +897,7 @@
       <div id="counters-content"></div>
     </div>
     <!-- Zone contenu : utilise directement content-area pour réutiliser les renders desktop -->
-    <div id="content-area-mobile" style="flex:1;overflow-y:auto;min-height:0;padding:16px 16px 80px;"></div>
+    <div id="content-area-mobile" style="flex:1;overflow-y:auto;min-height:0;padding:16px 16px calc(80px + env(safe-area-inset-bottom));"></div>
   </div>
 
 </div>

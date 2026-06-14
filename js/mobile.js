@@ -69,7 +69,7 @@ async function mobLoadCharList() {
     <div class="mob-char-card" data-id="${char.id}"
          ontouchstart="mobLongPressStart(event,${char.id},'${escapeHtml(char.name)}')"
          ontouchend="mobLongPressCancel(event,${char.id})"
-         ontouchmove="mobLongPressEnd()"
+         ontouchmove="mobLongPressMove(event)"
          onclick="mobSelectChar(${char.id})">
       <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;background:${getAvatarColor(char.id)};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${avatarContent}</div>
       <div style="flex:1;min-width:0;">
@@ -82,7 +82,7 @@ async function mobLoadCharList() {
         </div>
         ${manaRow}
       </div>
-      <span style="font-size:18px;color:#C8D0D8;">›</span>
+      <button onclick="mobCardOpenMenu(event,${char.id},'${escapeHtml(char.name)}')" title="Options" style="width:34px;height:34px;border-radius:10px;background:#F5F7F8;border:none;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#6B7C8E;">⋯</button>
     </div>`;
   }).join('') + addBtn;
 }
@@ -245,18 +245,40 @@ async function refreshCapacitesTab()  { if (_isMobile()) await mobRefreshCurrent
 async function refreshInventaireTab() { if (_isMobile()) await mobRefreshCurrentTab(); else await renderInventaireTab(); }
 async function refreshNotesTab()      { if (_isMobile()) await mobRefreshCurrentTab(); else await renderNotesTab(); }
 
-// ── Long press → menu contextuel ─────────────────────────────────────────────
+// ── Menu contextuel : helper d'ouverture ──────────────────────────────────────
+// openCharContextMenu attend un event avec clientX/clientY ; on lui fournit un
+// faux event positionné sur les coordonnées fournies (touch ou bouton).
+function _mobOpenMenuAt(x, y, id, name) {
+  openCharContextMenu({
+    clientX: x, clientY: y,
+    preventDefault: ()=>{}, stopPropagation: ()=>{}
+  }, id, name);
+}
+
+// ── Appui long → menu contextuel (avec seuil de mouvement) ────────────────────
+// iOS émet des touchmove en permanence : on n'annule que si le doigt bouge
+// vraiment (> MOVE_THRESHOLD px), sinon l'appui long ne se déclenche jamais.
+const MOVE_THRESHOLD = 10;
 let _mobLongPressed = false;
+let _lpStartX = 0, _lpStartY = 0;
+
 function mobLongPressStart(e, id, name) {
   _mobLongPressed = false;
+  const t = e.touches[0];
+  _lpStartX = t.clientX; _lpStartY = t.clientY;
+  mobLongPressEnd();
   _mobLongPressTimer = setTimeout(() => {
     _mobLongPressed = true;
-    const touch = e.touches[0];
-    openCharContextMenu({
-      clientX: touch.clientX, clientY: touch.clientY,
-      preventDefault: ()=>{}, stopPropagation: ()=>{}
-    }, id, name);
+    _mobOpenMenuAt(_lpStartX, _lpStartY, id, name);
   }, 500);
+}
+function mobLongPressMove(e) {
+  if (!_mobLongPressTimer) return;
+  const t = e.touches[0];
+  if (Math.abs(t.clientX - _lpStartX) > MOVE_THRESHOLD ||
+      Math.abs(t.clientY - _lpStartY) > MOVE_THRESHOLD) {
+    mobLongPressEnd();
+  }
 }
 function mobLongPressEnd() {
   if (_mobLongPressTimer) { clearTimeout(_mobLongPressTimer); _mobLongPressTimer = null; }
@@ -266,20 +288,49 @@ function mobLongPressCancel(e, id) {
   mobLongPressEnd();
 }
 
+// Bouton ⋯ d'une carte perso (écran liste)
+function mobCardOpenMenu(e, id, name) {
+  e.stopPropagation();           // ne pas sélectionner le perso
+  mobLongPressEnd();
+  const r = e.currentTarget.getBoundingClientRect();
+  _mobOpenMenuAt(r.left, r.bottom, id, name);
+}
+
+// ── Appui long sur le header détail ───────────────────────────────────────────
 let _mobDetailLpTimer = null;
+let _dlpStartX = 0, _dlpStartY = 0;
+
 function mobDetailLongPressStart(e) {
+  const t = e.touches[0];
+  _dlpStartX = t.clientX; _dlpStartY = t.clientY;
+  mobDetailLongPressEnd();
   _mobDetailLpTimer = setTimeout(async () => {
     const char = await getCharacter(_mobCharId);
     if (!char) return;
-    const touch = e.touches[0];
-    openCharContextMenu({
-      clientX: touch.clientX, clientY: touch.clientY,
-      preventDefault: ()=>{}, stopPropagation: ()=>{}
-    }, _mobCharId, char.name);
+    _mobOpenMenuAt(_dlpStartX, _dlpStartY, _mobCharId, char.name);
   }, 500);
+}
+function mobDetailLongPressMove(e) {
+  if (!_mobDetailLpTimer) return;
+  const t = e.touches[0];
+  if (Math.abs(t.clientX - _dlpStartX) > MOVE_THRESHOLD ||
+      Math.abs(t.clientY - _dlpStartY) > MOVE_THRESHOLD) {
+    mobDetailLongPressEnd();
+  }
 }
 function mobDetailLongPressEnd() {
   if (_mobDetailLpTimer) { clearTimeout(_mobDetailLpTimer); _mobDetailLpTimer = null; }
+}
+
+// Bouton ⋯ du header détail
+async function mobDetailOpenMenu(e) {
+  e.stopPropagation();
+  mobDetailLongPressEnd();
+  if (!_mobCharId) return;
+  const char = await getCharacter(_mobCharId);
+  if (!char) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  _mobOpenMenuAt(r.left, r.bottom, _mobCharId, char.name);
 }
 
 // ── Create / Import mobile ────────────────────────────────────────────────────

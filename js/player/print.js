@@ -83,6 +83,7 @@ function _generatePDF(char, selectedNotes) {
   const today     = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
   const avatarColor = getAvatarColor(char.id);
   const safeName  = escapeHtml(char.name);
+  const onMobile  = (typeof _isMobile === 'function') ? _isMobile() : window.innerWidth < 1100;
 
   // Avatar : photo base64 ou lettre colorée
   const avatarHtml = char.profilePhoto
@@ -289,8 +290,14 @@ body{font-family:'Nunito',sans-serif;background:#C8D8D4;min-height:100vh;display
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+// AUTO_PRINT : sur mobile, on imprime automatiquement après pagination
+// (impression native iOS → « Enregistrer dans Fichiers / PDF »).
+const AUTO_PRINT = ${onMobile ? 'true' : 'false'};
 // Paginer dès que la police est chargée et le DOM rendu
-document.fonts.ready.then(() => requestAnimationFrame(paginateSheet));
+document.fonts.ready.then(() => requestAnimationFrame(() => {
+  paginateSheet();
+  if (AUTO_PRINT) requestAnimationFrame(() => setTimeout(() => { window.focus(); window.print(); }, 80));
+}));
 </script>
 <script>
 // ── Pagination : découpe le contenu en pages A4 ─────────────────────────────
@@ -403,6 +410,26 @@ async function downloadPDF() {
 </script>
 </body></html>`;
 
+  // ── Mobile (Safari) : iframe caché + impression native ──────────────────────
+  // window.open est bloqué par Safari iOS (geste utilisateur perdu après l'await,
+  // popup-blocker). L'iframe ne déclenche pas le blocage et l'impression native
+  // permet « Enregistrer dans Fichiers / PDF ». L'auto-print est géré par AUTO_PRINT.
+  if (onMobile) {
+    const old = document.getElementById('_print-iframe');
+    if (old) old.remove();
+    const iframe = document.createElement('iframe');
+    iframe.id = '_print-iframe';
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0;';
+    document.body.appendChild(iframe);
+    const idoc = iframe.contentWindow.document;
+    idoc.open(); idoc.write(html); idoc.close();
+    const cleanup = () => { if (iframe.parentNode) iframe.remove(); };
+    iframe.contentWindow.addEventListener('afterprint', () => setTimeout(cleanup, 300));
+    setTimeout(cleanup, 60000); // filet de sécurité si afterprint ne se déclenche pas
+    return;
+  }
+
+  // ── Desktop : nouvelle fenêtre avec téléchargement html2canvas/jsPDF ────────
   const win = window.open('', '_blank');
   if (!win) { showToast('⚠️ Autorisez les popups pour générer le PDF'); return; }
   win.document.write(html);
