@@ -281,7 +281,7 @@ function showWelcomeScreen() {
         ${[
           ['🎭', 'Plusieurs personnages', 'Crée et gère autant de personnages que tu veux'],
           ['📊', 'Suivi complet', 'PV, mana, emplacements de sorts, monnaie en temps réel'],
-          ['⚔️', 'Caractéristiques & Capacités', 'Sections personnalisables, templates D&D, CoC, Cyberpunk…'],
+          ['⚔️️', 'Caractéristiques & Capacités', 'Sections personnalisables, templates D&D, CoC, Cyberpunk…'],
           ['🎒', 'Inventaire', 'Objets, consommables, équipements avec filtres'],
           ['📝', 'Notes', 'Éditeur markdown avec auto-sauvegarde'],
           ['🔒', '100% local & privé', 'Aucune pub, aucun serveur, tes données restent sur ton appareil'],

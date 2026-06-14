@@ -49,7 +49,7 @@ async function _renderSetup() {
     <div class="cbt-setup-wrap">
       <div class="cbt-setup-hdr">
         <div>
-          <div style="font-size:18px;font-weight:900;color:var(--text);">⚔️ Préparer le combat</div>
+          <div style="font-size:18px;font-weight:900;color:var(--text);">⚔️️ Préparer le combat</div>
           <div style="font-size:11px;color:var(--text-light);margin-top:2px;">${_combat.participants.length} participant(s) ajouté(s)</div>
         </div>
         <button class="cbt-cancel-btn cbt-hover-cancel" onclick="closeCombatOverlay()">✕ Annuler</button>
@@ -65,7 +65,7 @@ async function _renderSetup() {
           ${_combat.participants.length === 1 ? '<div style="font-size:11px;color:var(--text-light);font-weight:700;text-align:center;margin-bottom:6px;">Il faut au moins 2 participants</div>' : ''}
           <button onclick="launchCombat()" ${_combat.participants.length < 2 ? 'disabled' : ''}
             class="cbt-launch-btn ${_combat.participants.length >= 2 ? 'active' : ''}">
-            ⚔️ Lancer le combat
+            ⚔️️ Lancer le combat
           </button>
         </div>
       </div>
@@ -143,7 +143,7 @@ function _renderParticipantsList() {
   if (_combat.participants.length === 0) {
     return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
         gap:8px;padding:48px 20px;text-align:center;color:var(--text-light);font-size:13px;font-weight:700;">
-      <div style="font-size:36px;">⚔️</div>
+      <div style="font-size:36px;">⚔️️</div>
       Aucun participant encore.<br>Ajoute des combattants depuis la gauche.
     </div>`;
   }

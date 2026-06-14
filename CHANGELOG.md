@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0] — 2026-06-14
+
+### Nouveau
+- Section « À propos » : note de version au lancement, historique des patchnotes, signalement de bug et proposition d'idées (vers Discord), liste des bugs connus et suppression des données locales
+- Mode MJ — tags `@ref` dans les scénarios : liens cliquables vers les images, combats, PNJ et autres scénarios
+- Autocomplétion des tags en tapant `@`, et aperçu au survol (image, participants d'un combat, fiche PNJ, extrait de scénario)
+
+### Changements
+- Mode MJ : sessions réorganisées en arborescence unique (dossiers dépliables avec leurs scénarios)
+- Modales centrées sur desktop (bottom-sheet conservée sur mobile) et boutons d'action harmonisés
+
 ## [1.3.0] — 2026-06-04
 
 ### Nouveau

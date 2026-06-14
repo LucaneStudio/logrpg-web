@@ -161,7 +161,7 @@ function _renderLeftPanel() {
       </div>
     </div>
 
-    <button class="next-turn-btn" onclick="combatNextTurn();renderCombatView();">⚔️ Tour suivant →</button>`;
+    <button class="next-turn-btn" onclick="combatNextTurn();renderCombatView();">⚔️️ Tour suivant →</button>`;
 }
 
 // ── Panneau droit ─────────────────────────────────────────────

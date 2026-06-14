@@ -472,7 +472,7 @@ function _buildAbilities(abilities) {
       a.category ? `<span class="ab-badge" style="background:${accent.light};color:${accent.main};">${escapeHtml(a.category)}</span>` : '',
       a.cost     ? `<span class="ab-badge" style="background:var(--orange-l);color:var(--orange);">${escapeHtml(a.cost)}</span>`      : '',
       a.range    ? `<span class="ab-badge" style="background:#F0F3F2;color:var(--text-mid);">🎯 ${escapeHtml(a.range)}</span>`          : '',
-      a.damage   ? `<span class="ab-badge" style="background:#F0F3F2;color:var(--text-mid);">⚔️ ${escapeHtml(a.damage)}</span>`         : '',
+      a.damage   ? `<span class="ab-badge" style="background:#F0F3F2;color:var(--text-mid);">⚔️️ ${escapeHtml(a.damage)}</span>`         : '',
     ].filter(Boolean).join('');
     return `<div class="ab-item">
       <div class="ab-bar" style="background:${accent.main};"></div>

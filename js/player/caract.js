@@ -540,7 +540,7 @@ async function submitEditWidgetValue() {
 const STAT_TEMPLATES = {
   dnd5e: {
     name: 'D&D 5e / Pathfinder',
-    emoji: '⚔️',
+    emoji: '⚔️️',
     sections: [
       { title: 'Caractéristiques', widgets: [
         { title: 'Force',        type:'CAR_MOD', accentColor:'RED'    },

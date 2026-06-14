@@ -7,6 +7,7 @@ let _mjSection = 'sessions';   // 'sessions' | 'encounters' | 'npcs'
 async function openMjMode() {
   if (window.innerWidth < 1100) return;
   document.getElementById('mj-overlay').style.display = 'flex';
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
   await _mjRenderAll();
 }
 
@@ -40,7 +41,7 @@ function _mjRenderShell() {
         <button class="mj-nav-btn ${_mjSection==='sessions'?'on':''}"
           onclick="mjSwitchSection('sessions')">📅 Sessions</button>
         <button class="mj-nav-btn ${_mjSection==='encounters'?'on':''}"
-          onclick="mjSwitchSection('encounters')">⚔ Rencontres</button>
+          onclick="mjSwitchSection('encounters')">⚔️ Rencontres</button>
         <div class="mj-nav-hr"></div>
         <div class="mj-nav-group">RESSOURCES</div>
         <button class="mj-nav-btn ${_mjSection==='npcs'?'on':''}"
@@ -112,6 +113,8 @@ async function mjSwitchSection(section) {
   if (section === 'npcs')       { _mjNpc       = null; }
   _mjRenderShell();
   await _mjRenderSection();
+  // Garder l'index des @tags à jour au fil de la navigation
+  if (typeof mjBuildTagIndex === 'function') mjBuildTagIndex();
 }
 
 function mjAddNew() {

@@ -114,7 +114,7 @@
     <div class="panel-content">
       <div class="panel-tabs" id="main-tabs" style="display:none;">
         <button class="tab-btn active" onclick="switchTab('tab-fiche')">📄 Fiche</button>
-        <button class="tab-btn" onclick="switchTab('tab-caract')">⚔️ Caract.</button>
+        <button class="tab-btn" onclick="switchTab('tab-caract')">⚔️️ Caract.</button>
         <button class="tab-btn" onclick="switchTab('tab-capacites')">✨ Capacités</button>
         <button class="tab-btn" onclick="switchTab('tab-inventaire')">🎒 Inventaire</button>
         <button class="tab-btn" onclick="switchTab('tab-notes')">📝 Notes</button>
@@ -319,7 +319,7 @@
     </p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
       <button class="template-option" onclick="applyTemplate('dnd5e')">
-        <span class="template-emoji">⚔️</span>
+        <span class="template-emoji">⚔️️</span>
         <div><div class="template-name">D&D 5e / Pathfinder</div><div class="template-desc">6 caractéristiques + modificateurs, combat, jets de sauvegarde</div></div>
       </button>
       <button class="template-option" onclick="applyTemplate('coc')">
@@ -583,7 +583,7 @@
     <!-- Toggle Équipé (masqué si consommable) -->
     <div class="item-toggle-row" id="it-equipped-row" onclick="document.getElementById('it-equipped').click()">
       <div>
-        <div style="font-size:13.5px;font-weight:800;color:var(--text);">⚔️ Équipé</div>
+        <div style="font-size:13.5px;font-weight:800;color:var(--text);">⚔️️ Équipé</div>
         <div style="font-size:11px;color:var(--text-mid);">L'objet est actuellement porté</div>
       </div>
       <label class="toggle-switch" onclick="event.stopPropagation()">
@@ -637,7 +637,7 @@
         <input class="input" id="ab-duration" placeholder="Ex : 1 round, Instantané…"/>
       </div>
       <div class="input-group">
-        <label class="input-label">Dégâts ⚔️</label>
+        <label class="input-label">Dégâts ⚔️️</label>
         <input class="input" id="ab-damage" placeholder="Ex : 2d6+3…"/>
       </div>
     </div>
@@ -865,7 +865,7 @@
       <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;" id="mob-tabs">
         <button class="mob-tab active" onclick="mobSwitchTab('tab-fiche')">📄 Fiche</button>
         <button class="mob-tab" onclick="mobSwitchTab('tab-compteurs')">🎲 Compteurs</button>
-        <button class="mob-tab" onclick="mobSwitchTab('tab-caract')">⚔️ Caract.</button>
+        <button class="mob-tab" onclick="mobSwitchTab('tab-caract')">⚔️️ Caract.</button>
         <button class="mob-tab" onclick="mobSwitchTab('tab-capacites')">✨ Capacités</button>
         <button class="mob-tab" onclick="mobSwitchTab('tab-inventaire')">🎒 Inventaire</button>
         <button class="mob-tab" onclick="mobSwitchTab('tab-notes')">📝 Notes</button>
@@ -1141,6 +1141,7 @@
 <script src="js/mj/npcs.js"></script>
 <script src="js/mj/assets.js"></script>
 <script src="js/mj/pj.js"></script>
+<script src="js/mj/tags.js"></script>
 <script src="js/mj/view.js"></script>
 <script src="js/apropos.js"></script>
 </body>

@@ -12,7 +12,7 @@ async function mjRenderEncountersList() {
   if (!list) return;
 
   list.innerHTML = encounters.length === 0
-    ? `<div class="mj-empty">⚔<br>Aucune rencontre.<br>Prépare la première !</div>`
+    ? `<div class="mj-empty">⚔️<br>Aucune rencontre.<br>Prépare la première !</div>`
     : encounters.map(e => {
         const total = (e.participants || []).reduce((s, p) => s + (p.qty || 1), 0);
         return `
@@ -40,7 +40,7 @@ function mjRenderEncounterDetail() {
   if (!detail) return;
 
   if (!_mjEncounter) {
-    detail.innerHTML = `<div class="mj-detail-empty">⚔<br>Sélectionne ou crée une rencontre</div>`;
+    detail.innerHTML = `<div class="mj-detail-empty">⚔️<br>Sélectionne ou crée une rencontre</div>`;
     return;
   }
 
@@ -58,13 +58,13 @@ function mjRenderEncounterDetail() {
           onchange="mjSaveEncounterField('location', this.value)"/>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
-        <button class="mj-btn-launch" onclick="mjLaunchEncounterCombat(${e.id})">⚔ Lancer le combat</button>
+        <button class="mj-btn-launch" onclick="mjLaunchEncounterCombat(${e.id})">⚔️ Lancer le combat</button>
         <button class="mj-btn-danger" onclick="mjDeleteEncounterConfirm(${e.id})">🗑️</button>
       </div>
     </div>
 
     <div class="mj-tabs">
-      <button class="mj-tab ${tab==='participants'?'on':''}" onclick="mjEncTab('participants')">⚔ Participants</button>
+      <button class="mj-tab ${tab==='participants'?'on':''}" onclick="mjEncTab('participants')">⚔️ Participants</button>
       <button class="mj-tab ${tab==='notes'?'on':''}" onclick="mjEncTab('notes')">📝 Notes de prep</button>
     </div>
 

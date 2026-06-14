@@ -81,7 +81,7 @@ function renderAbilityCard(a) {
       <div style="display:flex;gap:14px;flex-wrap:wrap;">
         ${a.range    ? `<span class="ability-detail-row">🎯 <b>Portée</b> ${escapeHtml(a.range)}</span>` : ''}
         ${a.duration ? `<span class="ability-detail-row">⏱️ <b>Durée</b> ${escapeHtml(a.duration)}</span>` : ''}
-        ${a.damage   ? `<span class="ability-detail-row">⚔️ <b>Dégâts</b> ${escapeHtml(a.damage)}</span>` : ''}
+        ${a.damage   ? `<span class="ability-detail-row">⚔️️ <b>Dégâts</b> ${escapeHtml(a.damage)}</span>` : ''}
       </div>
     </div>` : '';
 

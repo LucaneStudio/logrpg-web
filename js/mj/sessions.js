@@ -11,6 +11,12 @@ let _mjExpanded        = new Set();   // ids des sessions dépliées dans l'arbr
 
 function _newDocId() { return 'doc_' + Math.random().toString(36).slice(2, 9); }
 
+// Rendu Markdown + transformation des @tags en liens (si le module est chargé)
+function _mjMarkdownWithTags(content) {
+  const html = renderMarkdown(content || '');
+  return (typeof mjLinkifyTags === 'function') ? mjLinkifyTags(html) : html;
+}
+
 // ── Arborescence des sessions (dossiers > documents) ──────────
 async function mjRenderSessionsList() {
   const sessions = await mjGetSessions();
@@ -73,6 +79,8 @@ async function mjSelectSession(id) {
 function mjRenderSessionDetail() {
   const detail = document.getElementById('mj-detail');
   if (!detail) return;
+  if (typeof mjAcClose === 'function') mjAcClose();
+  if (typeof mjTagPreviewHide === 'function') mjTagPreviewHide();
 
   if (!_mjSession) {
     detail.innerHTML = `<div class="mj-detail-empty">📁<br>Sélectionne ou crée une session</div>`;
@@ -113,13 +121,17 @@ function mjRenderSessionDetail() {
         </div>
         ${_mjDocPreview
           ? `<div style="flex:1;overflow-y:auto;border:1.5px solid var(--divider);border-radius:12px;
-              padding:14px 18px;background:var(--white);">${renderMarkdown(_mjSessionDoc.content || '')}</div>`
+              padding:14px 18px;background:var(--white);">${_mjMarkdownWithTags(_mjSessionDoc.content || '')}</div>`
           : `<textarea id="mj-doc-content"
               style="width:100%;flex:1;min-height:calc(100vh - 300px);border:1.5px solid var(--divider);
               border-radius:12px;padding:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;
               color:var(--text);line-height:1.7;resize:none;background:var(--white);outline:none;box-sizing:border-box;"
-              placeholder="Accroche, lieux, événements, dialogues importants… (supporte le Markdown)"
-              oninput="_mjDocChanged()">${escapeHtml(_mjSessionDoc.content || '')}</textarea>`}
+              placeholder="Accroche, lieux, événements, dialogues importants… (@ pour lier une ressource, supporte le Markdown)"
+              oninput="_mjDocChanged();mjAcUpdate()"
+              onkeydown="mjAcKeydown(event)"
+              onkeyup="mjAcKeyup(event)"
+              onclick="mjAcUpdate()"
+              onblur="mjAcBlur()">${escapeHtml(_mjSessionDoc.content || '')}</textarea>`}
       </div>`
     : `<div class="mj-doc-editor" style="display:flex;align-items:center;justify-content:center;">
         <div class="mj-empty-sm">📄 Sélectionne ou crée un document<br>dans l'arborescence à gauche</div>
@@ -143,6 +155,7 @@ async function mjSelectDocFromTree(sessionId, docId) {
   const docs = _mjSession?.docs || [];
   _mjSessionDoc = docs.find(d => d.id === docId) || null;
   _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
+  if (_mjDocPreview && typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
   await mjRenderSessionsList();
   mjRenderSessionDetail();
 }
@@ -246,7 +259,7 @@ function mjCloseSession() {
 }
 
 
-function mjDocTogglePreview() {
+async function mjDocTogglePreview() {
   if (!_mjDocPreview) {
     // Sauvegarder avant d'afficher l'aperçu
     const titleEl   = document.getElementById('mj-doc-title');
@@ -256,8 +269,10 @@ function mjDocTogglePreview() {
       _mjSessionDoc.content = contentEl.value;
       const idx = (_mjSession.docs||[]).findIndex(d=>d.id===_mjSessionDoc.id);
       if (idx !== -1) _mjSession.docs[idx] = {..._mjSessionDoc};
-      mjSaveSession(_mjSession);
+      await mjSaveSession(_mjSession);
     }
+    // Index frais pour résoudre les @tags à l'affichage
+    if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
   }
   _mjDocPreview = !_mjDocPreview;
   mjRenderSessionDetail();

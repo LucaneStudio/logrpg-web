@@ -51,7 +51,7 @@ async function mjRenderPjDetail() {
 
   // Onglets (mêmes que le mode joueur, sans Compteurs)
   const tabs = [
-    { key:'caract',   label:'⚔ Caract.'    },
+    { key:'caract',   label:'⚔️ Caract.'    },
     { key:'capacites',label:'✨ Capacités'  },
     { key:'inventaire',label:'🎒 Inventaire'},
     { key:'notes',    label:'📝 Notes'      },
