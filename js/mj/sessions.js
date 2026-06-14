@@ -13,7 +13,14 @@ function _newDocId() { return 'doc_' + Math.random().toString(36).slice(2, 9); }
 
 // Rendu Markdown + transformation des @tags en liens et des widgets /switch…
 function _mjMarkdownWithTags(content) {
-  let html = renderMarkdown(content || '');
+  // Les /details (potentiellement multi-lignes, contenu Markdown) sont extraits
+  // AVANT le rendu Markdown pour ne pas casser leur HTML, puis réinjectés.
+  let pre = content || '', blocks = [];
+  if (typeof mjExtractDetails === 'function') {
+    const r = mjExtractDetails(pre); pre = r.text; blocks = r.blocks;
+  }
+  let html = renderMarkdown(pre);
+  blocks.forEach((b, i) => { html = html.split('§§DETAILS' + i + '§§').join(b); });
   if (typeof mjLinkifyTags    === 'function') html = mjLinkifyTags(html);
   if (typeof mjLinkifyWidgets === 'function') html = mjLinkifyWidgets(html);
   return html;

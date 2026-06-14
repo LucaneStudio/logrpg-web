@@ -592,20 +592,35 @@ function mjTagPreviewHide() {
 // Interactifs en mode Aperçu (👁). Le changement réécrit le token dans
 // le contenu du document puis re-rend. Regex recréée à chaque appel
 // pour éviter les soucis de lastIndex avec le flag /g.
+// Widgets « inline » (une ligne, état dans [ ]). /details est traité à part
+// (multi-lignes) par mjExtractDetails, donc absent d'ici : ainsi les index de
+// widgets restent cohérents entre le rendu et les handlers de clic.
 function _mjWidgetRe() {
-  return /\/(switch|todo|combo|compteur|jauge|details)(?:\[([^\]]*)\])?\{([^}]*)\}/g;
+  return /\/(switch|todo|combo|compteur|jauge)(?:\[([^\]]*)\])?\{([^}]*)\}/g;
+}
+
+// Extrait les /details (multi-lignes / Markdown) AVANT renderMarkdown : rend le
+// contenu proprement et renvoie un placeholder à réinjecter après le Markdown.
+function mjExtractDetails(content) {
+  const blocks = [];
+  const re = /\/details(?:\[[^\]]*\])?\{([\s\S]*?)\}/g;
+  const text = (content || '').replace(re, (full, body) => {
+    const pi      = body.indexOf('|');
+    const summary = (pi >= 0 ? body.slice(0, pi) : body).trim();
+    const inner   = (pi >= 0 ? body.slice(pi + 1) : '').trim();   // trim → saut de ligne initial ignoré
+    let innerHtml = inner && typeof renderMarkdown === 'function' ? renderMarkdown(inner) : '';
+    if (inner && typeof mjLinkifyTags === 'function') innerHtml = mjLinkifyTags(innerHtml);
+    blocks.push(`<details class="mj-wdg-details"><summary>${escapeHtml(summary || 'Détails')}</summary>`
+      + `<div class="mj-wdg-details-body">${innerHtml}</div></details>`);
+    return '§§DETAILS' + (blocks.length - 1) + '§§';
+  });
+  return { text, blocks };
 }
 
 function _mjParseWidget(type, stateStr, body) {
   body = body || '';
   if (type === 'switch' || type === 'todo') {
     return { type, label: body.trim(), on: (stateStr || '').trim().toLowerCase() === 'x' };
-  }
-  if (type === 'details') {
-    const pi = body.indexOf('|');
-    return { type,
-      label:   (pi >= 0 ? body.slice(0, pi) : body).trim(),
-      content: (pi >= 0 ? body.slice(pi + 1) : '').trim() };
   }
   if (type === 'jauge') {
     const ci    = body.indexOf(':');
@@ -652,11 +667,6 @@ function _mjRenderWidget(w, wi) {
     return `<span class="mj-wdg mj-wdg-todo ${w.on ? 'done' : ''}" onclick="mjWidgetToggle(${wi})"`
          + ` title="Tâche — cliquer pour cocher"><span class="mj-wdg-label">${w.label}</span>`
          + `<span class="mj-wdg-box">${w.on ? '✓' : ''}</span></span>`;
-  }
-  if (w.type === 'details') {
-    // Bloc repliable natif (ouverture/fermeture sans état dans le texte)
-    return `<details class="mj-wdg-details"><summary>${w.label || 'Détails'}</summary>`
-         + `<div class="mj-wdg-details-body">${w.content}</div></details>`;
   }
   if (w.type === 'jauge') {
     // Horloge segmentée : clic sur un segment → remplit/vide jusqu'à lui
