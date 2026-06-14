@@ -694,6 +694,16 @@ body {
 .ctr-action-btn.spend { color: var(--text-mid); border-color: #E0E8EC; }
 .ctr-action-btn.spend:hover { background: #EEF2F5; }
 
+/* Compteur perso type « cases » (pips) */
+.cc-pips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 6px 2px 2px; }
+.cc-pip {
+  width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box;
+  border: 2px solid var(--cc, #CDD6DE); background: transparent;
+  cursor: pointer; transition: background .12s, transform .1s;
+}
+.cc-pip.on { background: var(--cc, #5CC8A8); }
+.cc-pip:active { transform: scale(.9); }
+
 /* ═══════════════════════════════════════
    EMPLACEMENTS DE SORTS
 ═══════════════════════════════════════ */

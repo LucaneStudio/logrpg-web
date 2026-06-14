@@ -279,6 +279,58 @@
   </div>
 </div>
 
+<!-- Compteur personnalisé : créer / modifier -->
+<div class="modal-overlay" id="modal-counter-edit">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="counter-edit-title">Nouveau compteur</div>
+    <div class="input-group">
+      <label class="input-label">Nom</label>
+      <input class="input" id="counter-edit-label" type="text" maxlength="40"
+             placeholder="Ex. Charges, Inspiration, Flèches…"
+             onkeydown="if(event.key==='Enter')confirmCustomCounter()"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Type</label>
+      <div id="counter-type-row" style="display:flex;gap:8px;"></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="input-group" style="flex:1;">
+        <label class="input-label">Valeur</label>
+        <input class="input" id="counter-edit-value" type="number"
+               style="text-align:center;font-weight:900;"/>
+      </div>
+      <div class="input-group" style="flex:1;" id="counter-max-group">
+        <label class="input-label" id="counter-max-label">Max (vide = illimité)</label>
+        <input class="input" id="counter-edit-max" type="number" min="0" placeholder="∞"
+               style="text-align:center;font-weight:900;"/>
+      </div>
+    </div>
+    <div class="input-group" id="counter-step-group" style="display:none;">
+      <label class="input-label">Incrément des boutons (±)</label>
+      <input class="input" id="counter-edit-step" type="number" min="1" value="1"
+             style="text-align:center;font-weight:900;"/>
+    </div>
+    <div class="input-group" id="counter-rest-group" style="display:none;">
+      <label class="input-label">Recharge au repos</label>
+      <select class="input" id="counter-edit-recharge">
+        <option value="long">🌙 Repos long</option>
+        <option value="short">☀️ Repos court</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Couleur</label>
+      <div id="counter-color-row" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="counter-delete-btn" onclick="deleteCustomCounter()"
+              style="display:none;margin-right:auto;color:var(--red);">🗑️ Supprimer</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-counter-edit')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmCustomCounter()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- Context menu personnage -->
 <div id="char-context-menu" style="
   display:none; position:fixed; z-index:2000;

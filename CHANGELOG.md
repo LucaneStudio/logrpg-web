@@ -3,6 +3,11 @@
 ## [1.5.0] — 2026-06-14
 
 ### Nouveau
+- Compteurs personnalisés côté joueur : ajout / modification / suppression dans l'onglet Compteurs, avec couleur au choix et bouton de réinitialisation. Types disponibles :
+  - Simple / Jauge (valeur libre, ou bornée avec barre de progression)
+  - Cases `●●○○` (pastilles cliquables, pour les utilisations limitées)
+  - Repos (utilisations qui se rechargent au repos court ☀️ ou long 🌙)
+  - Pas (boutons −/＋ par incrément choisi, ex. ±5)
 - Mode MJ — widgets interactifs dans les scénarios, cliquables en mode Aperçu (état conservé dans le texte, donc exporté avec la campagne) :
   - `/switch{…}` interrupteur on/off
   - `/todo{…}` case à cocher (texte barré quand cochée)
@@ -12,8 +17,6 @@
   - `/details{Titre | contenu}` bloc repliable
 - Autocomplétion des widgets en tapant `/` (comme `@` pour les tags)
 - Mode MJ — menu « créer depuis un tag cassé » : cliquer un `@tag` inexistant propose de créer la ressource (scénario, combat, PNJ, image)
-
-## [1.4.1] — 2026-06-14
 
 ### Corrections
 - Version mobile : refonte des correctifs pour Safari iOS

@@ -17,6 +17,7 @@ function initCounterState(char) {
     slots:         char.spellSlots   || defaultSlots(),
     currencyMode:  char.currencyMode || 'SINGLE',
     credits:       char.credits      || 0,
+    customCounters: char.customCounters || [],
   };
 }
 
@@ -34,7 +35,7 @@ function renderCountersPanel(char) {
 
 function renderCountersContent() {
   document.getElementById('counters-content').innerHTML =
-    renderHpBlock() + renderManaBlock() + renderCurrencyBlock();
+    renderHpBlock() + renderManaBlock() + renderCurrencyBlock() + renderCustomCountersBlock();
   bindSlotEvents();
 }
 
@@ -330,7 +331,7 @@ function renderCurrencyBlock(){
         <div class="coin"><div class="coin-val" style="color:var(--text-mid);">${d.silver}</div><div class="coin-lbl">ARGENT</div></div>
         <div class="coin"><div class="coin-val" style="color:var(--orange);">${d.copper}</div><div class="coin-lbl">CUIVRE</div></div>
       </div><div class="coin-total">Total : ${credits} crédits</div>`;
-  return`<div class="card ctr-card">
+  return`<div class="card ctr-card" style="margin-bottom:10px;">
     <div class="ctr-label-row"><span class="ctr-label-text">💰 MONNAIE</span>
       <div class="ctr-actions"><button class="ctr-icon-btn" onclick="openModal('modal-currency-mode')">⚙️</button></div>
     </div>
@@ -379,6 +380,229 @@ function confirmEditMax() {
   }
   renderCountersContent(); // re-render complet pour tout mettre à jour
   closeModal('modal-edit-max');
+}
+
+// ── Compteurs personnalisés ───────────────────────────────────────────────────
+const CTR_COLORS = {
+  red:    { main: '#FF6B6B', light: '#FFE0E0' },
+  blue:   { main: '#5B9CF6', light: '#DDEAFF' },
+  green:  { main: '#5CC8A8', light: '#D4F2EA' },
+  purple: { main: '#A78BFA', light: '#EDE9FF' },
+  orange: { main: '#FF8C42', light: '#FFEDE0' },
+};
+function _ccCol(c) { return CTR_COLORS[c] || CTR_COLORS.green; }
+function _findCC(id) { return (CS.customCounters || []).find(c => c.id === id); }
+
+function renderCustomCountersBlock() {
+  const cards = (CS.customCounters || []).map(_renderCounterCard).join('');
+  return cards
+    + `<button class="add-pill green" style="margin-top:2px;" onclick="openCreateCustomCounter()">＋ Nouveau compteur</button>`;
+}
+
+// Rendu d'un compteur selon son type : simple/jauge, pips (cases), repos, pas
+function _renderCounterCard(c) {
+  const col  = _ccCol(c.color);
+  const type = c.type || 'simple';
+  const bounded = c.max > 0;
+
+  // En-tête : bouton recharge (repos) ou réinitialisation + modifier
+  const headerAction = type === 'rest'
+    ? `<button class="ctr-icon-btn" onclick="rechargeCustomCounter('${c.id}')" title="Recharger (repos)">${c.recharge === 'short' ? '☀️' : '🌙'}</button>`
+    : `<button class="ctr-icon-btn" onclick="resetCustomCounter('${c.id}')" title="Réinitialiser">↺</button>`;
+  const header = `<div class="ctr-label-row">
+      <span class="ctr-label-text" style="color:${col.main};">${escapeHtml((c.label || 'Compteur').toUpperCase())}</span>
+      <div class="ctr-actions">${headerAction}
+        <button class="ctr-icon-btn" onclick="openEditCustomCounter('${c.id}')" title="Modifier">✏️</button>
+      </div>
+    </div>`;
+
+  // Type « cases » : pastilles cliquables
+  if (type === 'pips') {
+    let pips = '';
+    for (let i = 0; i < c.max; i++)
+      pips += `<span class="cc-pip${i < c.value ? ' on' : ''}" style="--cc:${col.main};" onclick="pipsSetCustomCounter('${c.id}',${i})"></span>`;
+    return `<div class="card ctr-card" style="margin-bottom:10px;">${header}
+      <div class="cc-pips" id="cc-pips-${c.id}">${pips}</div>
+      <div class="ctr-bar-legend" style="justify-content:center;margin-top:8px;">
+        <span class="ctr-legend-item"><span class="ctr-legend-dot" style="background:${col.main};"></span><span id="cc-legend-${c.id}">${c.value} / ${c.max}</span></span>
+      </div></div>`;
+  }
+
+  // Types simple / jauge / repos / pas : barre éventuelle + boutons −/＋
+  const pct = bounded ? Math.min(c.value, c.max) / c.max * 100 : 0;
+  const bar = bounded ? `
+    <div class="ctr-bar-wrap">
+      <div class="ctr-bar-track"><div class="ctr-bar-base" id="cc-bar-${c.id}" style="width:${pct}%;background:${col.main};"></div></div>
+      <div class="ctr-bar-legend"><span class="ctr-legend-item"><span class="ctr-legend-dot" style="background:${col.main};"></span><span id="cc-legend-${c.id}">${c.value} / ${c.max}</span></span></div>
+    </div>` : '';
+  const sub = (type === 'step' && (c.step || 1) !== 1)
+    ? `<div class="ctr-sub">±${c.step}</div>`
+    : (bounded ? `<div class="ctr-sub">/ ${c.max}</div>` : '');
+  return `<div class="card ctr-card" style="margin-bottom:10px;">${header}
+    ${bar}
+    <div class="ctr-controls">
+      <button class="ctr-btn" style="background:${col.light};color:${col.main};" onclick="adjCustomCounter('${c.id}',-1)">−</button>
+      <div class="ctr-val-block"><div class="ctr-big" id="cc-val-${c.id}" style="color:${col.main};">${c.value}</div>${sub}</div>
+      <button class="ctr-btn" style="background:${col.light};color:${col.main};" onclick="adjCustomCounter('${c.id}',1)">＋</button>
+    </div></div>`;
+}
+
+function _updateCCUI(c) {
+  const v = document.getElementById('cc-val-' + c.id); if (v) v.textContent = c.value;
+  if ((c.type || 'simple') === 'pips') {
+    const wrap = document.getElementById('cc-pips-' + c.id);
+    if (wrap) Array.from(wrap.children).forEach((el, i) => el.classList.toggle('on', i < c.value));
+  }
+  if (c.max > 0) {
+    const pct = Math.min(c.value, c.max) / c.max * 100;
+    const bar = document.getElementById('cc-bar-' + c.id); if (bar) bar.style.width = pct + '%';
+  }
+  const leg = document.getElementById('cc-legend-' + c.id); if (leg) leg.textContent = `${c.value} / ${c.max}`;
+}
+function adjCustomCounter(id, dir) {
+  const c = _findCC(id); if (!c) return;
+  const step = (c.type === 'step') ? (c.step || 1) : 1;
+  let v = c.value + dir * step;
+  if (v < 0) v = 0;
+  if (c.max > 0 && v > c.max) v = c.max;
+  c.value = v;
+  _updateCCUI(c);
+  saveCS({ customCounters: CS.customCounters });
+}
+function pipsSetCustomCounter(id, i) {
+  const c = _findCC(id); if (!c) return;
+  c.value = (i < c.value) ? i : i + 1;   // case pleine → on enlève ; vide → on remplit
+  if (c.value < 0) c.value = 0;
+  if (c.max > 0 && c.value > c.max) c.value = c.max;
+  _updateCCUI(c);
+  saveCS({ customCounters: CS.customCounters });
+}
+function resetCustomCounter(id) {
+  const c = _findCC(id); if (!c) return;
+  c.value = c.max > 0 ? c.max : 0;
+  _updateCCUI(c);
+  saveCS({ customCounters: CS.customCounters });
+}
+function rechargeCustomCounter(id) { resetCustomCounter(id); }   // repos → recharge au max
+
+// ── Création / édition / suppression (modale complète) ──
+let _editingCounterId = null;
+let _ccPickedColor    = 'green';
+let _ccPickedType     = 'simple';
+
+const _CC_TYPES = [
+  { key: 'simple', label: 'Simple' },
+  { key: 'pips',   label: 'Cases'  },
+  { key: 'rest',   label: 'Repos'  },
+  { key: 'step',   label: 'Pas'    },
+];
+
+function _renderCounterSwatches() {
+  const row = document.getElementById('counter-color-row');
+  if (!row) return;
+  row.innerHTML = Object.keys(CTR_COLORS).map(k => {
+    const sel = k === _ccPickedColor;
+    return `<button type="button" onclick="pickCounterColor('${k}')"
+      style="width:34px;height:34px;border-radius:50%;cursor:pointer;background:${CTR_COLORS[k].main};
+      border:3px solid ${sel ? '#2C3E50' : 'transparent'};box-shadow:0 0 0 1.5px #E8ECF0;"></button>`;
+  }).join('');
+}
+function pickCounterColor(k) { _ccPickedColor = k; _renderCounterSwatches(); }
+
+function _renderCounterTypes() {
+  const row = document.getElementById('counter-type-row');
+  if (!row) return;
+  row.innerHTML = _CC_TYPES.map(t => {
+    const sel = t.key === _ccPickedType;
+    return `<button type="button" onclick="pickCounterType('${t.key}')"
+      style="flex:1;padding:8px 4px;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;
+      border:1.5px solid ${sel ? 'var(--green)' : '#E8ECF0'};background:${sel ? 'var(--green-l)' : 'var(--white)'};color:${sel ? 'var(--green-d)' : 'var(--text-mid)'};">${t.label}</button>`;
+  }).join('');
+}
+function pickCounterType(t) { _ccPickedType = t; _renderCounterTypes(); _syncCounterModalFields(); }
+
+// Affiche les champs pertinents selon le type choisi
+function _syncCounterModalFields() {
+  const t = _ccPickedType;
+  document.getElementById('counter-step-group').style.display = (t === 'step') ? '' : 'none';
+  document.getElementById('counter-rest-group').style.display = (t === 'rest') ? '' : 'none';
+  const maxLabel = document.getElementById('counter-max-label');
+  const maxInput = document.getElementById('counter-edit-max');
+  if (t === 'pips' || t === 'rest') {
+    maxLabel.textContent = (t === 'pips') ? 'Nombre de cases' : 'Utilisations max';
+    maxInput.placeholder = '';
+  } else {
+    maxLabel.textContent = 'Max (vide = illimité)';
+    maxInput.placeholder = '∞';
+  }
+}
+
+function openCreateCustomCounter() {
+  _editingCounterId = null;
+  _ccPickedColor    = 'green';
+  _ccPickedType     = 'simple';
+  document.getElementById('counter-edit-title').textContent = '＋ Nouveau compteur';
+  document.getElementById('counter-edit-label').value    = '';
+  document.getElementById('counter-edit-value').value    = 0;
+  document.getElementById('counter-edit-max').value      = '';
+  document.getElementById('counter-edit-step').value     = 1;
+  document.getElementById('counter-edit-recharge').value = 'long';
+  document.getElementById('counter-delete-btn').style.display = 'none';
+  _renderCounterTypes(); _renderCounterSwatches(); _syncCounterModalFields();
+  openModal('modal-counter-edit');
+  setTimeout(() => document.getElementById('counter-edit-label').focus(), 120);
+}
+function openEditCustomCounter(id) {
+  const c = _findCC(id); if (!c) return;
+  _editingCounterId = id;
+  _ccPickedColor    = c.color || 'green';
+  _ccPickedType     = c.type  || 'simple';
+  document.getElementById('counter-edit-title').textContent = 'Modifier le compteur';
+  document.getElementById('counter-edit-label').value    = c.label || '';
+  document.getElementById('counter-edit-value').value    = c.value;
+  document.getElementById('counter-edit-max').value      = c.max > 0 ? c.max : '';
+  document.getElementById('counter-edit-step').value     = c.step || 1;
+  document.getElementById('counter-edit-recharge').value = c.recharge || 'long';
+  document.getElementById('counter-delete-btn').style.display = '';
+  _renderCounterTypes(); _renderCounterSwatches(); _syncCounterModalFields();
+  openModal('modal-counter-edit');
+}
+function confirmCustomCounter() {
+  const label = (document.getElementById('counter-edit-label').value || '').trim();
+  if (!label) { document.getElementById('counter-edit-label').focus(); return; }
+  const type = _ccPickedType;
+  let max = parseInt(document.getElementById('counter-edit-max').value, 10);
+  if (isNaN(max) || max < 0) max = 0;
+  if (type === 'pips') max = Math.max(1, Math.min(20, max || 1));   // cases : 1..20
+  if (type === 'rest') max = Math.max(1, max || 1);                 // repos : ≥ 1
+  let step = parseInt(document.getElementById('counter-edit-step').value, 10);
+  if (isNaN(step) || step < 1) step = 1;
+  let value = parseInt(document.getElementById('counter-edit-value').value, 10);
+  if (isNaN(value) || value < 0) value = 0;
+  if (max > 0 && value > max) value = max;
+
+  if (!CS.customCounters) CS.customCounters = [];
+  const data = { label, type, value, max, color: _ccPickedColor };
+  if (type === 'step') data.step = step;
+  if (type === 'rest') data.recharge = document.getElementById('counter-edit-recharge').value || 'long';
+
+  if (_editingCounterId) {
+    const c = _findCC(_editingCounterId);
+    if (c) { delete c.step; delete c.recharge; Object.assign(c, data); }
+  } else {
+    CS.customCounters.push({ id: 'cc_' + Math.random().toString(36).slice(2, 9), ...data });
+  }
+  saveCS({ customCounters: CS.customCounters });
+  renderCountersContent();
+  closeModal('modal-counter-edit');
+}
+function deleteCustomCounter() {
+  if (!_editingCounterId) return;
+  if (!confirm('Supprimer ce compteur ?')) return;
+  CS.customCounters = (CS.customCounters || []).filter(c => c.id !== _editingCounterId);
+  saveCS({ customCounters: CS.customCounters });
+  renderCountersContent();
+  closeModal('modal-counter-edit');
 }
 
 // ═══════════════════════════════════════════════════════════════
