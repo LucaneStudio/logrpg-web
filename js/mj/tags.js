@@ -4,6 +4,7 @@
 // MJ par nom : image, rencontre (combat), PNJ ou session.
 
 let _mjTagIndex = [];   // [{ name, lname, type, id, icon }]
+let _mjBacklinks = {};  // 'type:id' -> [{ sessionId, docId, docTitle, sessionTitle }]
 
 const _MJ_TAG_META = {
   scenario:  { icon: '📄', section: 'sessions',   label: 'Scénario' },
@@ -54,13 +55,37 @@ async function mjBuildTagIndex() {
     });
 
     assets.forEach(a => idx.push({ name: a.name || 'image', type: 'asset', id: a.id, url: _mjAssetUrl(a) }));
-  } catch (e) { console.error('Index tags MJ', e); }
-  idx.forEach(r => {
-    r.name  = (r.name || '').trim();          // ignore les espaces parasites des noms
-    r.icon  = _MJ_TAG_META[r.type].icon;
-    r.lname = r.name.toLowerCase();
-  });
-  _mjTagIndex = idx;
+
+    // Normaliser puis publier l'index direct
+    idx.forEach(r => {
+      r.name  = (r.name || '').trim();          // ignore les espaces parasites des noms
+      r.icon  = _MJ_TAG_META[r.type].icon;
+      r.lname = r.name.toLowerCase();
+    });
+    _mjTagIndex = idx;
+
+    // Index inverse : quels scénarios référencent chaque ressource
+    const backlinks = {};
+    sessions.forEach(s => (s.docs || []).forEach(d => {
+      const seen = new Set();
+      _mjScanTags(d.content || '').forEach(name => {
+        const res = _mjTagFind(name.toLowerCase());
+        if (!res || res.type === 'scenario') return;   // pas de lien scénario→scénario ici
+        const key = res.type + ':' + res.id;
+        if (seen.has(key)) return;
+        seen.add(key);
+        (backlinks[key] = backlinks[key] || []).push({
+          sessionId: s.id, docId: d.id,
+          docTitle: (d.title || 'Sans titre').trim(),
+          sessionTitle: (s.title || 'Session').trim(),
+        });
+      });
+    }));
+    _mjBacklinks = backlinks;
+  } catch (e) {
+    console.error('Index tags MJ', e);
+    _mjTagIndex = idx;
+  }
   return idx;
 }
 
@@ -91,6 +116,73 @@ function mjLinkifyTags(html) {
       }
       return `${pre}<span class="mj-tag broken" title="Référence introuvable">@${shown}</span>`;
     });
+}
+
+// ── Index inverse : rétroliens ────────────────────────────────
+// Extrait les noms tagués (@Mot / @{Nom}) du texte brut d'un scénario
+function _mjScanTags(content) {
+  const names = [];
+  const re = /(^|[^\wÀ-ÿ])@(\{([^}]+)\}|([\wÀ-ÿ\-]+))/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    const name = (m[3] != null ? m[3] : m[4]).trim();
+    if (name) names.push(name);
+  }
+  return names;
+}
+
+function mjBacklinksFor(type, id) {
+  return _mjBacklinks[type + ':' + id] || [];
+}
+
+// Bouton compact "🔗 N" pour l'en-tête de fiche (vide si aucun rétrolien)
+function mjRenderBacklinksButton(type, id) {
+  const n = mjBacklinksFor(type, id).length;
+  if (!n) return '';
+  return `<button class="mj-btn-refs" onclick="mjShowRefs('${type}',${id})"`
+       + ` title="Scénarios qui référencent cet élément">🔗 ${n}</button>`;
+}
+
+// Sidebar latérale listant les scénarios qui référencent la ressource
+function _mjRefsEl() {
+  let el = document.getElementById('mj-refs');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mj-refs';
+    el.innerHTML = `
+      <div class="mj-refs-backdrop" onclick="mjCloseRefs()"></div>
+      <div class="mj-refs-panel">
+        <div class="mj-refs-hdr">
+          <span id="mj-refs-title">🔗 Référencé par</span>
+          <button class="btn-icon" onclick="mjCloseRefs()">✕</button>
+        </div>
+        <div class="mj-refs-list" id="mj-refs-list"></div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function mjShowRefs(type, id) {
+  const list = mjBacklinksFor(type, id);
+  const el = _mjRefsEl();
+  el.querySelector('#mj-refs-title').textContent = `🔗 Référencé par (${list.length})`;
+  el.querySelector('#mj-refs-list').innerHTML = list.length
+    ? list.map(b => `
+        <div class="mj-refs-item" onclick="mjCloseRefs();mjTagGo('scenario','${b.docId}',${b.sessionId})">
+          <span class="mj-tree-ico">📄</span>
+          <div style="min-width:0;flex:1;">
+            <div class="mj-refs-doc">${escapeHtml(b.docTitle)}</div>
+            <div class="mj-refs-sess">📁 ${escapeHtml(b.sessionTitle)}</div>
+          </div>
+        </div>`).join('')
+    : `<div class="mj-empty-sm">Aucune référence.</div>`;
+  el.classList.add('open');
+}
+
+function mjCloseRefs() {
+  const el = document.getElementById('mj-refs');
+  if (el) el.classList.remove('open');
 }
 
 // ── Navigation au clic ────────────────────────────────────────

@@ -58,6 +58,7 @@ function mjRenderEncounterDetail() {
           onchange="mjSaveEncounterField('location', this.value)"/>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
+        ${typeof mjRenderBacklinksButton === 'function' ? mjRenderBacklinksButton('encounter', e.id) : ''}
         <button class="mj-btn-launch" onclick="mjLaunchEncounterCombat(${e.id})">⚔️ Lancer le combat</button>
         <button class="mj-btn-danger" onclick="mjDeleteEncounterConfirm(${e.id})">🗑️</button>
       </div>

@@ -56,7 +56,10 @@ async function mjRenderAssetDetail() {
           onchange="mjAssetRename(${asset.id}, this.value)"/>
         <div class="mj-subtitle-input">${asset.mimeType}</div>
       </div>
-      <button class="mj-btn-danger" onclick="mjDeleteAssetConfirm(${asset.id})">🗑️</button>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${typeof mjRenderBacklinksButton === 'function' ? mjRenderBacklinksButton('asset', asset.id) : ''}
+        <button class="mj-btn-danger" onclick="mjDeleteAssetConfirm(${asset.id})">🗑️</button>
+      </div>
     </div>
     <div class="mj-detail-body" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
       <img src="${url}" style="max-width:100%;max-height:420px;border-radius:12px;

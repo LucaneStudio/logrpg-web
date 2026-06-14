@@ -88,6 +88,7 @@ async function mjRenderNpcDetail() {
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${typeof mjRenderBacklinksButton === 'function' ? mjRenderBacklinksButton('npc', n.id) : ''}
         <button class="mj-btn-secondary" onclick="mjNpcUploadPortrait(${n.id})">🖼️️️ Portrait</button>
         <button class="mj-btn-danger" onclick="mjDeleteNpcConfirm(${n.id})">🗑️</button>
       </div>

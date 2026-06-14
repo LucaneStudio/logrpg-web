@@ -112,9 +112,9 @@ async function mjSwitchSection(section) {
   if (section === 'encounters') { _mjEncounter = null; }
   if (section === 'npcs')       { _mjNpc       = null; }
   _mjRenderShell();
+  // Index direct + rétroliens à jour avant de rendre la section
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
   await _mjRenderSection();
-  // Garder l'index des @tags à jour au fil de la navigation
-  if (typeof mjBuildTagIndex === 'function') mjBuildTagIndex();
 }
 
 function mjAddNew() {

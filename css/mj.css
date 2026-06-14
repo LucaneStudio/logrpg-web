@@ -345,3 +345,36 @@
   display: inline-block; margin-top: 4px;
   font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 99px;
 }
+
+/* ── Rétroliens « Référencé par » : bouton + sidebar ── */
+.mj-btn-refs {
+  background: var(--surface); border: 1px solid var(--divider); border-radius: 9px;
+  padding: 7px 11px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 900;
+  color: var(--text-mid); cursor: pointer; flex-shrink: 0; transition: background .12s;
+}
+.mj-btn-refs:hover { background: var(--divider); }
+
+#mj-refs { position: fixed; inset: 0; z-index: 10002; display: none; }
+#mj-refs.open { display: block; }
+.mj-refs-backdrop { position: absolute; inset: 0; background: rgba(44,62,80,.28); }
+.mj-refs-panel {
+  position: absolute; top: 0; right: 0; height: 100%;
+  width: 320px; max-width: 86vw;
+  background: var(--white); box-shadow: -8px 0 32px rgba(0,0,0,.18);
+  display: flex; flex-direction: column; animation: mjRefsIn .2s ease;
+}
+@keyframes mjRefsIn { from { transform: translateX(24px); opacity: .5; } to { transform: none; opacity: 1; } }
+.mj-refs-hdr {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 14px 16px; border-bottom: 1px solid rgba(0,0,0,.06);
+  font-size: 13px; font-weight: 900; color: var(--text);
+}
+.mj-refs-hdr .btn-icon { margin-left: auto; }
+.mj-refs-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.mj-refs-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 10px; cursor: pointer; transition: background .1s;
+}
+.mj-refs-item:hover { background: var(--surface); }
+.mj-refs-doc  { font-size: 12.5px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mj-refs-sess { font-size: 11px; font-weight: 700; color: var(--text-light); margin-top: 1px; }
