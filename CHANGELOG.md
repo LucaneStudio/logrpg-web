@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0] — 2026-06-14
+
+### Nouveau
+- Mode MJ — widgets interactifs dans les scénarios, cliquables en mode Aperçu (état conservé dans le texte, donc exporté avec la campagne) :
+  - `/switch{…}` interrupteur on/off
+  - `/todo{…}` case à cocher (texte barré quand cochée)
+  - `/combo{Label: a|b|c}` liste déroulante d'états
+  - `/compteur{unité}` compteur −/+ (bornable avec `: min..max`)
+  - `/jauge{Label: 6}` horloge de progression segmentée
+  - `/details{Titre | contenu}` bloc repliable
+- Autocomplétion des widgets en tapant `/` (comme `@` pour les tags)
+- Mode MJ — menu « créer depuis un tag cassé » : cliquer un `@tag` inexistant propose de créer la ressource (scénario, combat, PNJ, image)
+
 ## [1.4.1] — 2026-06-14
 
 ### Corrections
