@@ -24,19 +24,27 @@ function aproposSevClass(sev) {
 // ═══════════════════════════════════════════════════════════════
 function aproposParseChangelog(text) {
   const versions = [];
-  let cur = null, sec = null;
+  let cur = null, sec = null, lastTop = null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     let m;
     if ((m = line.match(/^##\s*\[([^\]]+)\]\s*[—–-]\s*(.+)$/))) {
       cur = { version: m[1].trim(), date: m[2].trim(), sections: [] };
-      sec = null;
+      sec = null; lastTop = null;
       versions.push(cur);
     } else if ((m = line.match(/^###\s+(.+)$/)) && cur) {
       sec = { title: m[1].trim(), items: [] };
+      lastTop = null;
       cur.sections.push(sec);
-    } else if ((m = line.match(/^-\s+(.+)$/)) && sec) {
-      sec.items.push(m[1].trim());
+    } else if ((m = raw.match(/^(\s*)-\s+(.+)$/)) && sec) {
+      const indent = m[1].replace(/\t/g, '  ').length;   // tab → 2 espaces
+      const item   = { text: m[2].trim(), children: [] };
+      if (indent >= 2 && lastTop) {
+        lastTop.children.push(item);                      // sous-puce
+      } else {
+        sec.items.push(item);                             // puce de premier niveau
+        lastTop = item;
+      }
     }
   }
   return versions;
@@ -61,11 +69,23 @@ function aproposCatClass(title) {
   return '';
 }
 
+// Rendu inline : échappe le HTML puis applique `code` et **gras**
+function aproposInline(s) {
+  return escapeHtml(s)
+    .replace(/`([^`]+)`/g, '<code class="rn-code">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
 function aproposRenderSections(sections) {
   return sections.map(sec => `
     <div class="rn-section">
       <span class="rn-cat ${aproposCatClass(sec.title)}">${escapeHtml(sec.title)}</span>
-      ${sec.items.map(it => `<div class="rn-item">${escapeHtml(it)}</div>`).join('')}
+      ${sec.items.map(it => {
+        const subs = (it.children && it.children.length)
+          ? `<div class="rn-subitems">${it.children.map(ch => `<div class="rn-subitem">${aproposInline(ch.text)}</div>`).join('')}</div>`
+          : '';
+        return `<div class="rn-item">${aproposInline(it.text)}</div>${subs}`;
+      }).join('')}
     </div>`).join('');
 }
 

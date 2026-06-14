@@ -26,13 +26,13 @@
     </div>
   </div>
 
-  <script src="js/config.js"></script>
+  <script src="js/config.js?v=1.5.0"></script>
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="/ic-logrpg-monograme.svg">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/combat.css">
-  <link rel="stylesheet" href="css/mj.css">
+  <link rel="stylesheet" href="css/base.css?v=1.5.0">
+  <link rel="stylesheet" href="css/combat.css?v=1.5.0">
+  <link rel="stylesheet" href="css/mj.css?v=1.5.0">
   <style>
     @media (max-width: 1099px) {
       /* Cacher l'app desktop */
@@ -327,6 +327,19 @@
               style="display:none;margin-right:auto;color:var(--red);">🗑️ Supprimer</button>
       <button class="btn btn-secondary" onclick="closeModal('modal-counter-edit')">Annuler</button>
       <button class="btn btn-primary" onclick="confirmCustomCounter()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation générique -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-sheet" style="max-width:420px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="confirm-title">Confirmer</div>
+    <p id="confirm-message" style="font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:16px;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Annuler</button>
+      <button class="btn btn-primary" id="confirm-ok-btn">Confirmer</button>
     </div>
   </div>
 </div>
@@ -1192,20 +1205,20 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="js/db.js"></script>
-<script src="js/player/counters.js"></script>
-<script src="js/player/caract.js"></script>
-<script src="js/player/capacites.js"></script>
-<script src="js/player/inventaire.js"></script>
-<script src="js/player/notes.js"></script>
-<script src="js/player/profile.js"></script>
-<script src="js/mobile.js"></script>
-<script src="js/init.js"></script>
-<script src="js/player/print.js"></script>
-<script src="js/combat/bestiary.js"></script>
-<script src="js/combat/state.js"></script>
-<script src="js/combat/setup.js"></script>
-<script src="js/combat/view.js"></script>
+<script src="js/db.js?v=1.5.0"></script>
+<script src="js/player/counters.js?v=1.5.0"></script>
+<script src="js/player/caract.js?v=1.5.0"></script>
+<script src="js/player/capacites.js?v=1.5.0"></script>
+<script src="js/player/inventaire.js?v=1.5.0"></script>
+<script src="js/player/notes.js?v=1.5.0"></script>
+<script src="js/player/profile.js?v=1.5.0"></script>
+<script src="js/mobile.js?v=1.5.0"></script>
+<script src="js/init.js?v=1.5.0"></script>
+<script src="js/player/print.js?v=1.5.0"></script>
+<script src="js/combat/bestiary.js?v=1.5.0"></script>
+<script src="js/combat/state.js?v=1.5.0"></script>
+<script src="js/combat/setup.js?v=1.5.0"></script>
+<script src="js/combat/view.js?v=1.5.0"></script>
 
 <!-- ── Mode MJ (desktop) ──────────────────────────────────── -->
 <div id="mj-overlay" style="display:none;flex-direction:column;"></div>
@@ -1213,14 +1226,15 @@
 <!-- ── Mode combat (desktop) ─────────────────────────────── -->
 <div id="combat-overlay" style="display:none;flex-direction:row;"></div>
 
-<script src="js/mj/db.js"></script>
-<script src="js/mj/sessions.js"></script>
-<script src="js/mj/encounters.js"></script>
-<script src="js/mj/npcs.js"></script>
-<script src="js/mj/assets.js"></script>
-<script src="js/mj/pj.js"></script>
-<script src="js/mj/tags.js"></script>
-<script src="js/mj/view.js"></script>
-<script src="js/apropos.js"></script>
+<script src="js/mj/db.js?v=1.5.0"></script>
+<script src="js/mj/sessions.js?v=1.5.0"></script>
+<script src="js/mj/encounters.js?v=1.5.0"></script>
+<script src="js/mj/npcs.js?v=1.5.0"></script>
+<script src="js/mj/objects.js?v=1.5.0"></script>
+<script src="js/mj/assets.js?v=1.5.0"></script>
+<script src="js/mj/pj.js?v=1.5.0"></script>
+<script src="js/mj/tags.js?v=1.5.0"></script>
+<script src="js/mj/view.js?v=1.5.0"></script>
+<script src="js/apropos.js?v=1.5.0"></script>
 </body>
 </html>

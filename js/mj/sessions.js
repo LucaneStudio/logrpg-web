@@ -185,14 +185,16 @@ async function mjAddDocTo(sessionId) {
   setTimeout(() => document.getElementById('mj-doc-title')?.focus(), 80);
 }
 
-async function mjDeleteDoc(docId) {
-  if (!_mjSession || !confirm('Supprimer ce document ?')) return;
-  _mjSession.docs = (_mjSession.docs || []).filter(d => d.id !== docId);
-  _mjSessionDoc = _mjSession.docs[0] || null;
-  _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
-  await mjSaveSession(_mjSession);
-  await mjRenderSessionsList();
-  mjRenderSessionDetail();
+function mjDeleteDoc(docId) {
+  if (!_mjSession) return;
+  appConfirm('Supprimer ce scénario ? Cette action est définitive.', async () => {
+    _mjSession.docs = (_mjSession.docs || []).filter(d => d.id !== docId);
+    _mjSessionDoc = _mjSession.docs[0] || null;
+    _mjDocPreview = !!(_mjSessionDoc?.content?.trim());
+    await mjSaveSession(_mjSession);
+    await mjRenderSessionsList();
+    mjRenderSessionDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }
 
 function _mjDocChanged() {
@@ -233,13 +235,14 @@ async function mjNewSession() {
   setTimeout(() => document.getElementById('mj-session-title')?.focus(), 80);
 }
 
-async function mjDeleteSessionConfirm(id) {
-  if (!confirm('Supprimer cette session et tous ses documents ?')) return;
-  await mjDeleteSession(id);
-  _mjExpanded.delete(id);
-  _mjSession = null; _mjSessionDoc = null;
-  await mjRenderSessionsList();
-  mjRenderSessionDetail();
+function mjDeleteSessionConfirm(id) {
+  appConfirm('Supprimer cette session et tous ses scénarios ? Cette action est définitive.', async () => {
+    await mjDeleteSession(id);
+    _mjExpanded.delete(id);
+    _mjSession = null; _mjSessionDoc = null;
+    await mjRenderSessionsList();
+    mjRenderSessionDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }
 
 function mjToggleSessionsList() {

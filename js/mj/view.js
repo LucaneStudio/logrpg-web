@@ -46,6 +46,10 @@ function _mjRenderShell() {
         <div class="mj-nav-group">RESSOURCES</div>
         <button class="mj-nav-btn ${_mjSection==='npcs'?'on':''}"
           onclick="mjSwitchSection('npcs')">👥 PNJ</button>
+        <button class="mj-nav-btn ${_mjSection==='objects'?'on':''}"
+          onclick="mjSwitchSection('objects')">📦 Objets</button>
+        <button class="mj-nav-btn ${_mjSection==='places'?'on':''}"
+          onclick="mjSwitchSection('places')">📍 Lieux</button>
         <button class="mj-nav-btn ${_mjSection==='assets'?'on':''}"
           onclick="mjSwitchSection('assets')">🖼️ Images</button>
         <div class="mj-nav-hr"></div>
@@ -81,7 +85,7 @@ function _mjRenderShell() {
 }
 
 async function _mjRenderSection() {
-  const titles = { sessions: 'Sessions', encounters: 'Rencontres', npcs: 'PNJ' };
+  const titles = { sessions: 'Sessions', encounters: 'Rencontres', npcs: 'PNJ', objects: 'Objets', places: 'Lieux' };
   const titleEl = document.getElementById('mj-list-title');
   if (titleEl) titleEl.textContent = titles[_mjSection] || '';
 
@@ -94,6 +98,12 @@ async function _mjRenderSection() {
   } else if (_mjSection === 'npcs') {
     await mjRenderNpcsList();
     await mjRenderNpcDetail();
+  } else if (_mjSection === 'objects') {
+    await mjRenderObjectsList();
+    await mjRenderObjectDetail();
+  } else if (_mjSection === 'places') {
+    await mjRenderPlacesList();
+    await mjRenderPlaceDetail();
   } else if (_mjSection === 'pj') {
     await mjRenderPjList();
     await mjRenderPjDetail();
@@ -111,6 +121,8 @@ async function mjSwitchSection(section) {
   if (section === 'assets')     { _mjAssetSelected = null; }
   if (section === 'encounters') { _mjEncounter = null; }
   if (section === 'npcs')       { _mjNpc       = null; }
+  if (section === 'objects')    { _mjObject    = null; }
+  if (section === 'places')     { _mjPlace     = null; }
   _mjRenderShell();
   // Index direct + rétroliens à jour avant de rendre la section
   if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
@@ -121,6 +133,8 @@ function mjAddNew() {
   if (_mjSection === 'sessions')   mjNewSession();
   if (_mjSection === 'encounters') mjNewEncounter();
   if (_mjSection === 'npcs')       mjNewNpc();
+  if (_mjSection === 'objects')    mjNewObject();
+  if (_mjSection === 'places')     mjNewPlace();
   if (_mjSection === 'assets')     mjAddAsset();
 }
 

@@ -9,6 +9,12 @@ db.version(2).stores({
   mj_assets    : '++id, name',
 });
 
+// Migration v3 : ajout des objets et lieux (ressources taggables)
+db.version(3).stores({
+  mj_objects: '++id, name',
+  mj_places : '++id, name',
+});
+
 // ── Sessions ──────────────────────────────────────────────────
 async function mjGetSessions()    { return db.mj_sessions.orderBy('updatedAt').reverse().toArray(); }
 async function mjGetSession(id)   { return db.mj_sessions.get(id); }
@@ -39,6 +45,26 @@ async function mjSaveNpc(n)   {
 }
 async function mjDeleteNpc(id) { await db.mj_npcs.delete(id); }
 
+// ── Objets ────────────────────────────────────────────────────
+// { name, otype, rarity, owner, notes, assetId }
+async function mjGetObjects()    { return db.mj_objects.orderBy('name').toArray(); }
+async function mjGetObject(id)   { return db.mj_objects.get(id); }
+async function mjSaveObject(o)   {
+  if (o.id) { await db.mj_objects.put(o); return o.id; }
+  return db.mj_objects.add(o);
+}
+async function mjDeleteObject(id) { await db.mj_objects.delete(id); }
+
+// ── Lieux ─────────────────────────────────────────────────────
+// { name, ptype, region, notes, assetId }
+async function mjGetPlaces()    { return db.mj_places.orderBy('name').toArray(); }
+async function mjGetPlace(id)   { return db.mj_places.get(id); }
+async function mjSavePlace(p)   {
+  if (p.id) { await db.mj_places.put(p); return p.id; }
+  return db.mj_places.add(p);
+}
+async function mjDeletePlace(id) { await db.mj_places.delete(id); }
+
 // ── Assets (images Blob) ──────────────────────────────────────
 async function mjSaveAsset(name, mimeType, blob) {
   return db.mj_assets.add({ name, mimeType, data: blob });
@@ -60,8 +86,8 @@ async function mjExportZip() {
   const zip = new JSZip();
   const assetsFolder = zip.folder('assets');
 
-  const [sessions, encounters, npcs, allAssets] = await Promise.all([
-    mjGetSessions(), mjGetEncounters(), mjGetNpcs(),
+  const [sessions, encounters, npcs, objects, places, allAssets] = await Promise.all([
+    mjGetSessions(), mjGetEncounters(), mjGetNpcs(), mjGetObjects(), mjGetPlaces(),
     db.mj_assets.toArray(),
   ]);
 
@@ -77,6 +103,8 @@ async function mjExportZip() {
     sessions,
     encounters,
     npcs,
+    objects,
+    places,
     assetMeta: allAssets.map(a => ({ id: a.id, name: a.name, mimeType: a.mimeType })),
   };
   zip.file('data.json', JSON.stringify(data, null, 2));
@@ -119,6 +147,8 @@ async function mjImportZip(file) {
   for (const s of (data.sessions   || [])) { const {id,...rest}=s; await mjSaveSession(remap(rest)); }
   for (const e of (data.encounters || [])) { const {id,...rest}=e; await mjSaveEncounter(remap(rest)); }
   for (const n of (data.npcs       || [])) { const {id,...rest}=n; await mjSaveNpc(remap(rest)); }
+  for (const o of (data.objects    || [])) { const {id,...rest}=o; await mjSaveObject(remap(rest)); }
+  for (const p of (data.places     || [])) { const {id,...rest}=p; await mjSavePlace(remap(rest)); }
 
   alert('Import réussi !');
   await _mjRenderAll();

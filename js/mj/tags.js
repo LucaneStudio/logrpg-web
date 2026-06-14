@@ -10,6 +10,8 @@ const _MJ_TAG_META = {
   scenario:  { icon: '📄', section: 'sessions',   label: 'Scénario' },
   encounter: { icon: '⚔️',  section: 'encounters', label: 'Combat'   },
   npc:       { icon: '🧑', section: 'npcs',       label: 'PNJ'      },
+  objet:     { icon: '📦', section: 'objects',    label: 'Objet'    },
+  lieu:      { icon: '📍', section: 'places',     label: 'Lieu'     },
   asset:     { icon: '🖼️', section: 'assets',     label: 'Image'    },
 };
 
@@ -25,8 +27,11 @@ function _mjAssetUrl(asset) {
 async function mjBuildTagIndex() {
   const idx = [];
   try {
-    const [sessions, encounters, npcs, assets] = await Promise.all([
-      mjGetSessions(), mjGetEncounters(), mjGetNpcs(), db.mj_assets.toArray(),
+    const [sessions, encounters, npcs, objects, places, assets] = await Promise.all([
+      mjGetSessions(), mjGetEncounters(), mjGetNpcs(),
+      (typeof mjGetObjects === 'function' ? mjGetObjects() : []),
+      (typeof mjGetPlaces  === 'function' ? mjGetPlaces()  : []),
+      db.mj_assets.toArray(),
     ]);
     const bestiary = (typeof bestiaryGetAll === 'function') ? bestiaryGetAll() : [];
 
@@ -52,6 +57,22 @@ async function mjBuildTagIndex() {
       const a = n.assetId ? assets.find(x => x.id === n.assetId) : null;
       idx.push({ name: n.name || 'Sans nom', type: 'npc', id: n.id,
         role: n.role || '', status: n.status || 'UNKNOWN', portrait: a ? _mjAssetUrl(a) : null });
+    });
+
+    objects.forEach(o => {
+      const a = o.assetId ? assets.find(x => x.id === o.assetId) : null;
+      idx.push({ name: o.name || 'Sans nom', type: 'objet', id: o.id,
+        otype: o.otype || '', rarity: o.rarity || 'common', owner: o.owner || '',
+        excerpt: (o.notes || '').replace(/[#>*_`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140),
+        portrait: a ? _mjAssetUrl(a) : null });
+    });
+
+    places.forEach(p => {
+      const a = p.assetId ? assets.find(x => x.id === p.assetId) : null;
+      idx.push({ name: p.name || 'Sans nom', type: 'lieu', id: p.id,
+        ptype: p.ptype || '', region: p.region || '',
+        excerpt: (p.notes || '').replace(/[#>*_`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140),
+        portrait: a ? _mjAssetUrl(a) : null });
     });
 
     assets.forEach(a => idx.push({ name: a.name || 'image', type: 'asset', id: a.id, url: _mjAssetUrl(a) }));
@@ -199,6 +220,8 @@ function _mjCreateMenuEl() {
         <div class="mj-create-opt" onclick="mjTagCreate('scenario')">📄 Scénario</div>
         <div class="mj-create-opt" onclick="mjTagCreate('encounter')">⚔️ Combat</div>
         <div class="mj-create-opt" onclick="mjTagCreate('npc')">🧑 PNJ</div>
+        <div class="mj-create-opt" onclick="mjTagCreate('objet')">📦 Objet</div>
+        <div class="mj-create-opt" onclick="mjTagCreate('lieu')">📍 Lieu</div>
         <div class="mj-create-opt" onclick="mjTagCreate('asset')">🖼️ Image (importer)</div>
       </div>`;
     document.body.appendChild(el);
@@ -253,6 +276,10 @@ async function mjTagCreate(type) {
 
   if (type === 'npc') {
     await mjSaveNpc({ name, role: '', status: 'UNKNOWN', notes: '' });
+  } else if (type === 'objet') {
+    await mjSaveObject({ name, otype: '', rarity: 'common', owner: '', notes: '' });
+  } else if (type === 'lieu') {
+    await mjSavePlace({ name, ptype: '', region: '', notes: '' });
   } else if (type === 'encounter') {
     await mjSaveEncounter({ title: name, location: '', participants: [], prepNotes: '' });
   } else if (type === 'scenario') {
@@ -263,7 +290,8 @@ async function mjTagCreate(type) {
   } else {
     return;
   }
-  await _mjAfterCreate(type === 'npc' ? 'PNJ' : type === 'encounter' ? 'combat' : 'scénario');
+  const labels = { npc: 'PNJ', objet: 'objet', lieu: 'lieu', encounter: 'combat', scenario: 'scénario' };
+  await _mjAfterCreate(labels[type] || 'ressource');
 }
 
 async function _mjAfterCreate(label) {
@@ -280,10 +308,14 @@ async function _mjAfterCreate(label) {
 async function mjTagGo(type, id, parentId) {
   const meta = _MJ_TAG_META[type];
   if (!meta) return;
+  mjTagPreviewHide();   // l'aperçu ne se ferme pas tout seul après la redirection
+  const ac = document.getElementById('mj-ac'); if (ac) ac.style.display = 'none';
   if (_mjSection !== meta.section) await mjSwitchSection(meta.section);
   if (type === 'scenario')  { await mjSelectSession(parentId); await mjSelectDocFromTree(parentId, id); }
   else if (type === 'encounter') await mjSelectEncounter(id);
   else if (type === 'npc')       await mjSelectNpc(id);
+  else if (type === 'objet')     await mjSelectObject(id);
+  else if (type === 'lieu')      await mjSelectPlace(id);
   else if (type === 'asset')     await mjSelectAsset(id);
 }
 
@@ -542,6 +574,33 @@ function _mjTagPreviewHtml(r) {
         <div class="mj-prev-title">${escapeHtml(r.name)}</div>
         ${r.role ? `<div class="mj-prev-sub">${escapeHtml(r.role)}</div>` : ''}
         ${st ? `<div class="mj-prev-badge" style="color:${st.color};background:${st.bg};">${st.label}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  if (r.type === 'objet') {
+    const rm = (typeof _objRarityMeta === 'function') ? _objRarityMeta(r.rarity) : null;
+    const portrait = r.portrait
+      ? `<img class="mj-prev-portrait" alt="" src="${r.portrait}"/>`
+      : `<div class="mj-prev-portrait ph">📦</div>`;
+    return `<div class="mj-prev-card mj-prev-npc-card">
+      ${portrait}
+      <div style="min-width:0;">
+        <div class="mj-prev-title">${escapeHtml(r.name)}</div>
+        ${r.otype ? `<div class="mj-prev-sub">${escapeHtml(r.otype)}${r.owner ? ' · ' + escapeHtml(r.owner) : ''}</div>` : (r.owner ? `<div class="mj-prev-sub">${escapeHtml(r.owner)}</div>` : '')}
+        ${rm ? `<div class="mj-prev-badge" style="color:${rm.color};background:${rm.bg};">${rm.label}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  if (r.type === 'lieu') {
+    const portrait = r.portrait
+      ? `<img class="mj-prev-portrait" alt="" src="${r.portrait}"/>`
+      : `<div class="mj-prev-portrait ph">📍</div>`;
+    return `<div class="mj-prev-card mj-prev-npc-card">
+      ${portrait}
+      <div style="min-width:0;">
+        <div class="mj-prev-title">${escapeHtml(r.name)}</div>
+        ${r.ptype ? `<div class="mj-prev-sub">${escapeHtml(r.ptype)}</div>` : ''}
+        ${r.region ? `<div class="mj-prev-sub">📍 ${escapeHtml(r.region)}</div>` : ''}
       </div>
     </div>`;
   }

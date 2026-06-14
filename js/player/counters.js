@@ -521,20 +521,19 @@ function _renderCounterTypes() {
 }
 function pickCounterType(t) { _ccPickedType = t; _renderCounterTypes(); _syncCounterModalFields(); }
 
+// Petits helpers tolérants (évitent un crash si un champ manque — cache partiel)
+function _ccSet(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+function _ccGet(id)    { const el = document.getElementById(id); return el ? el.value : ''; }
+
 // Affiche les champs pertinents selon le type choisi
 function _syncCounterModalFields() {
   const t = _ccPickedType;
-  document.getElementById('counter-step-group').style.display = (t === 'step') ? '' : 'none';
-  document.getElementById('counter-rest-group').style.display = (t === 'rest') ? '' : 'none';
+  const stepG = document.getElementById('counter-step-group'); if (stepG) stepG.style.display = (t === 'step') ? '' : 'none';
+  const restG = document.getElementById('counter-rest-group'); if (restG) restG.style.display = (t === 'rest') ? '' : 'none';
   const maxLabel = document.getElementById('counter-max-label');
   const maxInput = document.getElementById('counter-edit-max');
-  if (t === 'pips' || t === 'rest') {
-    maxLabel.textContent = (t === 'pips') ? 'Nombre de cases' : 'Utilisations max';
-    maxInput.placeholder = '';
-  } else {
-    maxLabel.textContent = 'Max (vide = illimité)';
-    maxInput.placeholder = '∞';
-  }
+  if (maxLabel) maxLabel.textContent = (t === 'pips') ? 'Nombre de cases' : (t === 'rest') ? 'Utilisations max' : 'Max (vide = illimité)';
+  if (maxInput) maxInput.placeholder = (t === 'pips' || t === 'rest') ? '' : '∞';
 }
 
 function openCreateCustomCounter() {
@@ -542,12 +541,12 @@ function openCreateCustomCounter() {
   _ccPickedColor    = 'green';
   _ccPickedType     = 'simple';
   document.getElementById('counter-edit-title').textContent = '＋ Nouveau compteur';
-  document.getElementById('counter-edit-label').value    = '';
-  document.getElementById('counter-edit-value').value    = 0;
-  document.getElementById('counter-edit-max').value      = '';
-  document.getElementById('counter-edit-step').value     = 1;
-  document.getElementById('counter-edit-recharge').value = 'long';
-  document.getElementById('counter-delete-btn').style.display = 'none';
+  _ccSet('counter-edit-label', '');
+  _ccSet('counter-edit-value', 0);
+  _ccSet('counter-edit-max', '');
+  _ccSet('counter-edit-step', 1);
+  _ccSet('counter-edit-recharge', 'long');
+  const del = document.getElementById('counter-delete-btn'); if (del) del.style.display = 'none';
   _renderCounterTypes(); _renderCounterSwatches(); _syncCounterModalFields();
   openModal('modal-counter-edit');
   setTimeout(() => document.getElementById('counter-edit-label').focus(), 120);
@@ -558,33 +557,33 @@ function openEditCustomCounter(id) {
   _ccPickedColor    = c.color || 'green';
   _ccPickedType     = c.type  || 'simple';
   document.getElementById('counter-edit-title').textContent = 'Modifier le compteur';
-  document.getElementById('counter-edit-label').value    = c.label || '';
-  document.getElementById('counter-edit-value').value    = c.value;
-  document.getElementById('counter-edit-max').value      = c.max > 0 ? c.max : '';
-  document.getElementById('counter-edit-step').value     = c.step || 1;
-  document.getElementById('counter-edit-recharge').value = c.recharge || 'long';
-  document.getElementById('counter-delete-btn').style.display = '';
+  _ccSet('counter-edit-label', c.label || '');
+  _ccSet('counter-edit-value', c.value);
+  _ccSet('counter-edit-max', c.max > 0 ? c.max : '');
+  _ccSet('counter-edit-step', c.step || 1);
+  _ccSet('counter-edit-recharge', c.recharge || 'long');
+  const del = document.getElementById('counter-delete-btn'); if (del) del.style.display = '';
   _renderCounterTypes(); _renderCounterSwatches(); _syncCounterModalFields();
   openModal('modal-counter-edit');
 }
 function confirmCustomCounter() {
-  const label = (document.getElementById('counter-edit-label').value || '').trim();
-  if (!label) { document.getElementById('counter-edit-label').focus(); return; }
+  const label = (_ccGet('counter-edit-label') || '').trim();
+  if (!label) { const el = document.getElementById('counter-edit-label'); if (el) el.focus(); return; }
   const type = _ccPickedType;
-  let max = parseInt(document.getElementById('counter-edit-max').value, 10);
+  let max = parseInt(_ccGet('counter-edit-max'), 10);
   if (isNaN(max) || max < 0) max = 0;
   if (type === 'pips') max = Math.max(1, Math.min(20, max || 1));   // cases : 1..20
   if (type === 'rest') max = Math.max(1, max || 1);                 // repos : ≥ 1
-  let step = parseInt(document.getElementById('counter-edit-step').value, 10);
+  let step = parseInt(_ccGet('counter-edit-step'), 10);
   if (isNaN(step) || step < 1) step = 1;
-  let value = parseInt(document.getElementById('counter-edit-value').value, 10);
+  let value = parseInt(_ccGet('counter-edit-value'), 10);
   if (isNaN(value) || value < 0) value = 0;
   if (max > 0 && value > max) value = max;
 
   if (!CS.customCounters) CS.customCounters = [];
   const data = { label, type, value, max, color: _ccPickedColor };
   if (type === 'step') data.step = step;
-  if (type === 'rest') data.recharge = document.getElementById('counter-edit-recharge').value || 'long';
+  if (type === 'rest') data.recharge = _ccGet('counter-edit-recharge') || 'long';
 
   if (_editingCounterId) {
     const c = _findCC(_editingCounterId);

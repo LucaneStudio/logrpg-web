@@ -316,6 +316,8 @@ body {
 .btn-primary:hover { box-shadow: 0 6px 18px rgba(92,200,168,.4); }
 .btn-secondary { background: #F0F3F2; color: var(--text-mid); }
 .btn-secondary:hover { background: #E8EDEB; }
+.btn-danger { background: var(--red); color: #fff; box-shadow: 0 4px 14px rgba(255,107,107,.3); }
+.btn-danger:hover { box-shadow: 0 6px 18px rgba(255,107,107,.4); }
 .btn-icon {
   width: 32px; height: 32px;
   padding: 0;
@@ -1122,11 +1124,38 @@ body {
 .rn-cat.fix    { color: var(--blue); }
 .rn-cat.change { color: var(--orange); }
 .rn-item {
-  position: relative; padding-left: 14px;
-  font-size: 13px; color: var(--text-mid); line-height: 1.7;
+  position: relative; padding-left: 16px; margin-bottom: 7px;
+  font-size: 13px; color: var(--text); font-weight: 600; line-height: 1.55;
 }
-.rn-item::before { content: '•'; position: absolute; left: 3px; color: var(--text-light); }
+.rn-item:last-child { margin-bottom: 0; }
+.rn-item::before {
+  content: ''; position: absolute; left: 3px; top: 7px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+}
+.rn-cat.fix    ~ .rn-item::before,
+.rn-section .rn-cat.fix    + .rn-item::before { background: var(--blue); }
 .rn-item span { color: var(--green-d); font-weight: 700; }
+
+/* Sous-puces (hiérarchie) */
+.rn-subitems { margin: 4px 0 8px 16px; }
+.rn-subitem {
+  position: relative; padding-left: 15px; margin-bottom: 4px;
+  font-size: 12.5px; color: var(--text-mid); line-height: 1.5;
+}
+.rn-subitem:last-child { margin-bottom: 0; }
+.rn-subitem::before {
+  content: ''; position: absolute; left: 3px; top: 7px;
+  width: 5px; height: 5px; border-radius: 50%;
+  border: 1.5px solid var(--text-mid); box-sizing: border-box;
+}
+
+/* Code inline dans les notes */
+.rn-code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11.5px; font-weight: 700;
+  background: var(--green-l); color: var(--green-d);
+  padding: 1px 5px; border-radius: 5px; white-space: nowrap;
+}
 
 /* ── Patchnotes (historique) ── */
 .pn-version {

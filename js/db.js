@@ -131,6 +131,21 @@ function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.remove('open');
 }
+
+// Modale de confirmation stylée (remplace confirm() natif).
+// appConfirm('Message', () => { … }, { okLabel:'Supprimer', danger:true })
+function appConfirm(message, onConfirm, opts) {
+  opts = opts || {};
+  const el  = document.getElementById('modal-confirm');
+  const msg = document.getElementById('confirm-message');
+  const ok  = document.getElementById('confirm-ok-btn');
+  if (!el || !ok) { if (confirm(message)) onConfirm(); return; }   // repli si la modale manque
+  if (msg) msg.textContent = message;
+  ok.textContent = opts.okLabel || 'Confirmer';
+  ok.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+  ok.onclick = () => { closeModal('modal-confirm'); if (typeof onConfirm === 'function') onConfirm(); };
+  openModal('modal-confirm');
+}
 document.addEventListener('click', e => {
   if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });

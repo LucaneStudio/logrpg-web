@@ -16,10 +16,14 @@
   - `/jauge{Label: 6}` horloge de progression segmentée
   - `/details{Titre | contenu}` bloc repliable
 - Autocomplétion des widgets en tapant `/` (comme `@` pour les tags)
-- Mode MJ — menu « créer depuis un tag cassé » : cliquer un `@tag` inexistant propose de créer la ressource (scénario, combat, PNJ, image)
+- Mode MJ — nouvelles ressources **Objets** (type, rareté, propriétaire) et **Lieux** (type, région), avec image, taggables via `@` comme les PNJ
+- Mode MJ — menu « créer depuis un tag cassé » : cliquer un `@tag` inexistant propose de créer la ressource (scénario, combat, PNJ, objet, lieu, image)
 
 ### Corrections
 - Version mobile : refonte des correctifs pour Safari iOS
+- Mode MJ : modale de confirmation lors de la suppression d'un scénario ou d'une session
+- Mode MJ : l'aperçu d'un tag ne reste plus affiché après avoir cliqué dessus
+- Les mises à jour de l'application sont désormais appliquées sans avoir à vider le cache du navigateur
 - Plus de zoom intempestif lors d'appuis rapides sur les boutons et onglets
 - Appui long fiabilisé, et nouveau bouton « ⋯ » sur les cartes et la fiche pour accéder au menu (renommer, PDF, exporter, supprimer)
 - Génération du PDF réparée sur mobile (impression native iOS → « Enregistrer dans Fichiers »)
