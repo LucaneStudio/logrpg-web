@@ -11,10 +11,12 @@ let _mjExpanded        = new Set();   // ids des sessions dépliées dans l'arbr
 
 function _newDocId() { return 'doc_' + Math.random().toString(36).slice(2, 9); }
 
-// Rendu Markdown + transformation des @tags en liens (si le module est chargé)
+// Rendu Markdown + transformation des @tags en liens et des widgets /switch…
 function _mjMarkdownWithTags(content) {
-  const html = renderMarkdown(content || '');
-  return (typeof mjLinkifyTags === 'function') ? mjLinkifyTags(html) : html;
+  let html = renderMarkdown(content || '');
+  if (typeof mjLinkifyTags    === 'function') html = mjLinkifyTags(html);
+  if (typeof mjLinkifyWidgets === 'function') html = mjLinkifyWidgets(html);
+  return html;
 }
 
 // ── Arborescence des sessions (dossiers > documents) ──────────
@@ -120,7 +122,7 @@ function mjRenderSessionDetail() {
           <button class="mj-btn-sm-danger" onclick="mjDeleteDoc('${_mjSessionDoc.id}')" title="Supprimer">×</button>
         </div>
         ${_mjDocPreview
-          ? `<div style="flex:1;overflow-y:auto;border:1.5px solid var(--divider);border-radius:12px;
+          ? `<div id="mj-doc-preview-scroll" style="flex:1;overflow-y:auto;border:1.5px solid var(--divider);border-radius:12px;
               padding:14px 18px;background:var(--white);">${_mjMarkdownWithTags(_mjSessionDoc.content || '')}</div>`
           : `<textarea id="mj-doc-content"
               style="width:100%;flex:1;min-height:calc(100vh - 300px);border:1.5px solid var(--divider);

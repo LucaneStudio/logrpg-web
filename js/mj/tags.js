@@ -114,7 +114,8 @@ function mjLinkifyTags(html) {
         return `${pre}<span class="mj-tag mj-tag-${res.type}" title="${_MJ_TAG_META[res.type].label} : ${escapeHtml(res.name)}"`
              + ` onclick="mjTagGo('${res.type}',${idArg}${extra})"${hover}>${res.icon} ${escapeHtml(res.name)}</span>`;
       }
-      return `${pre}<span class="mj-tag broken" title="Référence introuvable">@${shown}</span>`;
+      return `${pre}<span class="mj-tag broken" title="Cliquer pour créer « ${shown} »"`
+           + ` data-name="${escapeHtml(_mjUnescape(shown))}" onclick="mjTagCreateMenu(event)">@${shown}</span>`;
     });
 }
 
@@ -185,6 +186,96 @@ function mjCloseRefs() {
   if (el) el.classList.remove('open');
 }
 
+// ── Créer une ressource depuis un tag cassé ───────────────────
+function _mjCreateMenuEl() {
+  let el = document.getElementById('mj-create-menu');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mj-create-menu';
+    el.innerHTML = `
+      <div class="mj-create-backdrop" onclick="mjCreateMenuClose()"></div>
+      <div class="mj-create-card" id="mj-create-card">
+        <div class="mj-create-hdr" id="mj-create-title"></div>
+        <div class="mj-create-opt" onclick="mjTagCreate('scenario')">📄 Scénario</div>
+        <div class="mj-create-opt" onclick="mjTagCreate('encounter')">⚔️ Combat</div>
+        <div class="mj-create-opt" onclick="mjTagCreate('npc')">🧑 PNJ</div>
+        <div class="mj-create-opt" onclick="mjTagCreate('asset')">🖼️ Image (importer)</div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function mjTagCreateMenu(e) {
+  e.stopPropagation();
+  const name = e.currentTarget.dataset.name || '';
+  if (!name) return;
+  const el = _mjCreateMenuEl();
+  el.dataset.name = name;
+  el.querySelector('#mj-create-title').textContent = `Créer « ${name} » comme :`;
+  el.style.display = 'block';
+  const card = el.querySelector('#mj-create-card');
+  const r = e.currentTarget.getBoundingClientRect();
+  card.style.left = '0px'; card.style.top = '0px';
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let left = r.left;
+  let top  = r.bottom + 4;
+  if (top + ch > window.innerHeight - 8) top = r.top - ch - 4;
+  left = Math.max(8, Math.min(left, window.innerWidth - cw - 8));
+  card.style.left = left + 'px';
+  card.style.top  = top + 'px';
+}
+
+function mjCreateMenuClose() {
+  const el = document.getElementById('mj-create-menu');
+  if (el) el.style.display = 'none';
+}
+
+async function mjTagCreate(type) {
+  const menu = document.getElementById('mj-create-menu');
+  const name = menu ? (menu.dataset.name || '') : '';
+  mjCreateMenuClose();
+  if (!name) return;
+
+  if (type === 'asset') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      await mjSaveAsset(name, file.type, file);
+      await _mjAfterCreate('image');
+    };
+    input.click();
+    return;
+  }
+
+  if (type === 'npc') {
+    await mjSaveNpc({ name, role: '', status: 'UNKNOWN', notes: '' });
+  } else if (type === 'encounter') {
+    await mjSaveEncounter({ title: name, location: '', participants: [], prepNotes: '' });
+  } else if (type === 'scenario') {
+    if (!_mjSession) return;
+    if (!_mjSession.docs) _mjSession.docs = [];
+    _mjSession.docs.push({ id: _newDocId(), title: name, content: '' });
+    await mjSaveSession(_mjSession);
+  } else {
+    return;
+  }
+  await _mjAfterCreate(type === 'npc' ? 'PNJ' : type === 'encounter' ? 'combat' : 'scénario');
+}
+
+async function _mjAfterCreate(label) {
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
+  // Déplier la session courante pour que le scénario créé soit visible dans l'arbre
+  if (typeof _mjExpanded !== 'undefined' && _mjSession) _mjExpanded.add(_mjSession.id);
+  // Rafraîchir l'arbre (un scénario créé apparaît) puis le détail (le tag devient valide)
+  if (typeof mjRenderSessionsList === 'function')  await mjRenderSessionsList();
+  if (typeof mjRenderSessionDetail === 'function') mjRenderSessionDetail();
+  if (typeof showToast === 'function') showToast(`✅ ${label ? label[0].toUpperCase() + label.slice(1) : 'Ressource'} créé`);
+}
+
 // ── Navigation au clic ────────────────────────────────────────
 async function mjTagGo(type, id, parentId) {
   const meta = _MJ_TAG_META[type];
@@ -205,6 +296,17 @@ let _mjAcIndex      = 0;
 let _mjAcTokenStart = -1;
 let _mjAcBraced     = false;
 let _mjAcSig        = '';
+let _mjAcMode       = 'tag';   // 'tag' (@) | 'widget' (/)
+
+// Modèles insérés par l'autocomplétion « / » ($ = position du curseur après insertion)
+const _MJ_WIDGET_AC = [
+  { key: 'switch',   icon: '🔘', desc: 'Interrupteur on/off',  tpl: '/switch{$}' },
+  { key: 'todo',     icon: '☑️', desc: 'Case à cocher',         tpl: '/todo{$}' },
+  { key: 'combo',    icon: '🔽', desc: 'Liste déroulante',     tpl: '/combo{$: option1|option2}' },
+  { key: 'compteur', icon: '🔢', desc: 'Compteur +/− (unité)', tpl: '/compteur{$}' },
+  { key: 'jauge',    icon: '🕐', desc: 'Horloge segmentée',     tpl: '/jauge{$: 6}' },
+  { key: 'details',  icon: '▶️', desc: 'Bloc repliable',        tpl: '/details{$ | contenu}' },
+];
 
 function _mjAcEl() {
   let el = document.getElementById('mj-ac');
@@ -235,11 +337,33 @@ function mjAcUpdate() {
   if (!ta) { mjAcClose(); return; }
   const caret = ta.selectionStart;
   const val   = ta.value;
-  const at    = val.lastIndexOf('@', caret - 1);
+
+  // Déclencheur le plus proche à gauche du curseur : @ (tag) ou / (widget)
+  const atTag = val.lastIndexOf('@', caret - 1);
+  const atWdg = val.lastIndexOf('/', caret - 1);
+  const at    = Math.max(atTag, atWdg);
   if (at === -1) { mjAcClose(); return; }
   if (at > 0 && /[\wÀ-ÿ]/.test(val[at - 1])) { mjAcClose(); return; }
 
   const partial = val.slice(at + 1, caret);
+
+  // ── Mode widget « / » : suggère switch / cycle / compteur ──
+  if (at === atWdg) {
+    if (!/^[a-zà-ÿ]*$/i.test(partial)) { mjAcClose(); return; }  // accolade/espace → plus un token
+    const q   = partial.trim().toLowerCase();
+    const sig = 'w|' + at + '|' + q;
+    if (sig === _mjAcSig && _mjAcOpen) return;
+    _mjAcSig = sig;
+    _mjAcMode       = 'widget';
+    _mjAcItems      = _MJ_WIDGET_AC.filter(w => w.key.includes(q));
+    _mjAcTokenStart = at;
+    _mjAcBraced     = false;
+    _mjAcIndex      = 0;
+    _mjAcRender(ta, caret);
+    return;
+  }
+
+  // ── Mode tag « @ » ──
   let braced = false, query = partial;
   if (partial.startsWith('{')) {
     if (partial.includes('}')) { mjAcClose(); return; }
@@ -249,12 +373,13 @@ function mjAcUpdate() {
   }
 
   const q   = query.trim().toLowerCase();
-  const sig = at + '|' + braced + '|' + q;
+  const sig = 't|' + at + '|' + braced + '|' + q;
   if (sig === _mjAcSig && _mjAcOpen) return;   // rien de neuf → ne pas réinitialiser
   _mjAcSig = sig;
 
   let items = q ? _mjTagIndex.filter(r => r.lname.includes(q)) : _mjTagIndex.slice();
   items = items.slice(0, 8);
+  _mjAcMode       = 'tag';
   _mjAcItems      = items;
   _mjAcTokenStart = at;
   _mjAcBraced     = braced;
@@ -265,7 +390,15 @@ function mjAcUpdate() {
 function _mjAcRender(ta, caret) {
   const el = _mjAcEl();
   if (!_mjAcItems.length) {
-    el.innerHTML = `<div class="mj-ac-empty">Aucune ressource</div>`;
+    el.innerHTML = `<div class="mj-ac-empty">Aucun résultat</div>`;
+  } else if (_mjAcMode === 'widget') {
+    el.innerHTML = _mjAcItems.map((w, i) => `
+      <div class="mj-ac-item ${i === _mjAcIndex ? 'sel' : ''}"
+           onmousedown="event.preventDefault();mjAcInsertByIndex(${i})">
+        <span class="mj-ac-ico">${w.icon}</span>
+        <span class="mj-ac-name">/${escapeHtml(w.key)} <span style="color:var(--text-light);font-weight:600;">· ${escapeHtml(w.desc)}</span></span>
+        <span class="mj-ac-type">Widget</span>
+      </div>`).join('');
   } else {
     el.innerHTML = _mjAcItems.map((r, i) => `
       <div class="mj-ac-item ${i === _mjAcIndex ? 'sel' : ''}"
@@ -296,7 +429,26 @@ function _mjAcMove(d) {
 
 function mjAcInsertByIndex(i) {
   const item = _mjAcItems[i];
-  if (item) _mjAcInsert(item);
+  if (!item) return;
+  if (_mjAcMode === 'widget') _mjAcInsertWidget(item);
+  else _mjAcInsert(item);
+}
+
+// Insère un modèle de widget ; place le curseur sur le marqueur $
+function _mjAcInsertWidget(w) {
+  const ta = document.getElementById('mj-doc-content');
+  if (!ta || _mjAcTokenStart < 0) return;
+  const caret  = ta.selectionStart;
+  const before = ta.value.slice(0, _mjAcTokenStart);
+  const after  = ta.value.slice(caret);
+  const mark   = w.tpl.indexOf('$');
+  const insert = w.tpl.replace('$', '');
+  ta.value = before + insert + after;
+  const pos = before.length + (mark >= 0 ? mark : insert.length);
+  mjAcClose();
+  ta.focus();
+  ta.setSelectionRange(pos, pos);
+  _mjDocChanged();
 }
 
 function _mjAcInsert(item) {
@@ -418,6 +570,210 @@ function _mjTagPreviewPlace(tag) {
 function mjTagPreviewHide() {
   const el = document.getElementById('mj-tag-preview');
   if (el) el.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Widgets interactifs : /switch /cycle /compteur
+// ═══════════════════════════════════════════════════════════════
+// L'état vit DANS le texte du scénario (comme une case Markdown) :
+// il persiste, part dans l'export ZIP, et ne nécessite aucun store.
+//   /switch{Objet trouvé}             interrupteur éteint (le bouton suit le libellé)
+//   /switch[x]{Objet trouvé}          interrupteur allumé
+//   /todo{Parler au forgeron}         case à cocher (texte barré si cochée)
+//   /todo[x]{Parler au forgeron}      cochée
+//   /combo{Porte: fermée|ouverte}     liste déroulante (état 0)
+//   /combo[1]{Porte: fermée|ouverte}  état courant = index 1
+//   /compteur{pv}                     compteur 0 avec unité : « − 0 pv + »
+//   /compteur[3]{pv: 0..4}            compteur = 3, borné à 0..4
+//   /jauge{Rituel: 6}                 horloge segmentée 0/6
+//   /jauge[2]{Rituel: 6}              2 segments remplis sur 6
+//   /details{Titre | contenu replié} bloc repliable (élément <details> natif)
+//
+// Interactifs en mode Aperçu (👁). Le changement réécrit le token dans
+// le contenu du document puis re-rend. Regex recréée à chaque appel
+// pour éviter les soucis de lastIndex avec le flag /g.
+function _mjWidgetRe() {
+  return /\/(switch|todo|combo|compteur|jauge|details)(?:\[([^\]]*)\])?\{([^}]*)\}/g;
+}
+
+function _mjParseWidget(type, stateStr, body) {
+  body = body || '';
+  if (type === 'switch' || type === 'todo') {
+    return { type, label: body.trim(), on: (stateStr || '').trim().toLowerCase() === 'x' };
+  }
+  if (type === 'details') {
+    const pi = body.indexOf('|');
+    return { type,
+      label:   (pi >= 0 ? body.slice(0, pi) : body).trim(),
+      content: (pi >= 0 ? body.slice(pi + 1) : '').trim() };
+  }
+  if (type === 'jauge') {
+    const ci    = body.indexOf(':');
+    const label = (ci >= 0 ? body.slice(0, ci) : body).trim();
+    let max = parseInt(ci >= 0 ? body.slice(ci + 1) : '', 10);
+    if (isNaN(max)) max = 4;
+    max = Math.max(1, Math.min(12, max));            // garde-fou
+    let val = parseInt(stateStr, 10); if (isNaN(val)) val = 0;
+    val = Math.max(0, Math.min(max, val));
+    return { type, label, val, max };
+  }
+  if (type === 'combo') {
+    const ci    = body.indexOf(':');
+    const label = (ci >= 0 ? body.slice(0, ci) : body).trim();
+    const opts  = (ci >= 0 ? body.slice(ci + 1) : '').split('|').map(s => s.trim()).filter(Boolean);
+    let idx = parseInt(stateStr, 10); if (isNaN(idx)) idx = 0;
+    if (opts.length) idx = ((idx % opts.length) + opts.length) % opts.length;
+    return { type, label, opts, idx };
+  }
+  // compteur : `label` porte l'unité (ex. « pv »)
+  const ci    = body.indexOf(':');
+  const label = (ci >= 0 ? body.slice(0, ci) : body).trim();
+  let min = null, max = null;
+  if (ci >= 0) {
+    const mm = body.slice(ci + 1).match(/(-?\d+)\s*\.\.\s*(-?\d+)/);
+    if (mm) { min = parseInt(mm[1], 10); max = parseInt(mm[2], 10); }
+  }
+  let val = parseInt(stateStr, 10); if (isNaN(val)) val = (min != null ? min : 0);
+  if (min != null) val = Math.max(min, val);
+  if (max != null) val = Math.min(max, val);
+  return { type, label, val, min, max };
+}
+
+// Le label/options proviennent du HTML déjà rendu → déjà échappés, sûrs à injecter.
+function _mjRenderWidget(w, wi) {
+  if (w.type === 'switch') {
+    // Interrupteur APRÈS le libellé
+    return `<span class="mj-wdg mj-wdg-switch ${w.on ? 'on' : 'off'}" onclick="mjWidgetToggle(${wi})"`
+         + ` title="Interrupteur — cliquer pour basculer"><span class="mj-wdg-label">${w.label}</span>`
+         + `<span class="mj-wdg-knob"></span></span>`;
+  }
+  if (w.type === 'todo') {
+    // Case à cocher APRÈS le libellé (comme le switch) ; texte barré quand cochée
+    return `<span class="mj-wdg mj-wdg-todo ${w.on ? 'done' : ''}" onclick="mjWidgetToggle(${wi})"`
+         + ` title="Tâche — cliquer pour cocher"><span class="mj-wdg-label">${w.label}</span>`
+         + `<span class="mj-wdg-box">${w.on ? '✓' : ''}</span></span>`;
+  }
+  if (w.type === 'details') {
+    // Bloc repliable natif (ouverture/fermeture sans état dans le texte)
+    return `<details class="mj-wdg-details"><summary>${w.label || 'Détails'}</summary>`
+         + `<div class="mj-wdg-details-body">${w.content}</div></details>`;
+  }
+  if (w.type === 'jauge') {
+    // Horloge segmentée : clic sur un segment → remplit/vide jusqu'à lui
+    let segs = '';
+    for (let i = 0; i < w.max; i++) {
+      segs += `<span class="mj-wdg-seg ${i < w.val ? 'on' : ''}" onclick="mjWidgetGauge(${wi},${i})"></span>`;
+    }
+    return `<span class="mj-wdg mj-wdg-gauge" title="Horloge de progression">`
+         + (w.label ? `<span class="mj-wdg-label">${w.label}</span>` : '')
+         + `<span class="mj-wdg-segs">${segs}</span>`
+         + `<span class="mj-wdg-gauge-txt">${w.val}/${w.max}</span></span>`;
+  }
+  if (w.type === 'combo') {
+    // Liste déroulante des états
+    const opts = w.opts.map((o, i) => `<option value="${i}"${i === w.idx ? ' selected' : ''}>${o}</option>`).join('');
+    return `<span class="mj-wdg mj-wdg-combo" title="Choisir un état">`
+         + (w.label ? `<span class="mj-wdg-label">${w.label}</span>` : '')
+         + `<select class="mj-wdg-select" onchange="mjWidgetCombo(${wi}, this.selectedIndex)">${opts}</select></span>`;
+  }
+  // compteur : « − valeur unité + »
+  return `<span class="mj-wdg mj-wdg-count" title="Compteur">`
+       + `<button class="mj-wdg-btn" onclick="mjWidgetCount(${wi},-1)">−</button>`
+       + `<span class="mj-wdg-val">${w.val}</span>`
+       + (w.label ? `<span class="mj-wdg-unit">${w.label}</span>` : '')
+       + `<button class="mj-wdg-btn" onclick="mjWidgetCount(${wi},1)">＋</button></span>`;
+}
+
+// Transforme les tokens /switch… du HTML rendu en widgets cliquables
+function mjLinkifyWidgets(html) {
+  let wi = -1;
+  const out = html.replace(_mjWidgetRe(), (full, type, stateStr, body) => {
+    wi++;
+    return _mjRenderWidget(_mjParseWidget(type, stateStr, body), wi);
+  });
+  // Une fois le HTML inséré dans le DOM (au prochain tick), ajuster la largeur
+  // des combos. setTimeout plutôt que rAF : se déclenche aussi onglet en arrière-plan.
+  if (out.indexOf('mj-wdg-select') !== -1) {
+    setTimeout(() => { if (typeof _mjSizeCombos === 'function') _mjSizeCombos(); }, 0);
+  }
+  return out;
+}
+
+// Ajuste la largeur de chaque combo à son option courante : un <select> natif
+// se dimensionne sinon sur l'option la plus large → espace vide disgracieux.
+function _mjSizeCombos() {
+  const root = document.getElementById('mj-doc-preview-scroll') || document;
+  const sels = root.querySelectorAll('.mj-wdg-select');
+  if (!sels.length) return;
+  const meas = document.createElement('span');
+  meas.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;top:-9999px;left:-9999px;';
+  document.body.appendChild(meas);
+  sels.forEach(sel => {
+    const cs = getComputedStyle(sel);
+    meas.style.fontFamily    = cs.fontFamily;
+    meas.style.fontSize      = cs.fontSize;
+    meas.style.fontWeight    = cs.fontWeight;
+    meas.style.letterSpacing = cs.letterSpacing;
+    const opt = sel.options[sel.selectedIndex];
+    meas.textContent = opt ? opt.textContent : '';
+    sel.style.width = (Math.ceil(meas.offsetWidth) + 22) + 'px';  // texte + flèche/padding
+  });
+  meas.remove();
+}
+
+// Réécrit le wi-ème widget du document via `mutate`, sauvegarde et re-rend
+async function _mjWidgetMutate(wi, mutate) {
+  if (!_mjSession || !_mjSessionDoc) return;
+  let n = -1;
+  const next = (_mjSessionDoc.content || '').replace(_mjWidgetRe(), (full, type, stateStr, body) => {
+    n++;
+    return (n === wi) ? mutate(type, stateStr, body) : full;
+  });
+  if (next === _mjSessionDoc.content) return;
+
+  _mjSessionDoc.content = next;
+  const idx = (_mjSession.docs || []).findIndex(d => d.id === _mjSessionDoc.id);
+  if (idx !== -1) _mjSession.docs[idx] = { ..._mjSessionDoc };
+  await mjSaveSession(_mjSession);
+
+  // Préserver la position de défilement de l'aperçu
+  const prev = document.getElementById('mj-doc-preview-scroll');
+  const top  = prev ? prev.scrollTop : 0;
+  mjRenderSessionDetail();
+  const next2 = document.getElementById('mj-doc-preview-scroll');
+  if (next2) next2.scrollTop = top;
+}
+
+// Bascule on/off — conserve le type (switch ou todo)
+function mjWidgetToggle(wi) {
+  _mjWidgetMutate(wi, (type, stateStr, body) => {
+    const on = (stateStr || '').trim().toLowerCase() === 'x';
+    return on ? `/${type}{${body}}` : `/${type}[x]{${body}}`;
+  });
+}
+
+// Horloge : clic sur le segment i → remplit jusqu'à i+1, ou vide jusqu'à i
+function mjWidgetGauge(wi, i) {
+  _mjWidgetMutate(wi, (type, stateStr, body) => {
+    const w = _mjParseWidget('jauge', stateStr, body);
+    const next = (i < w.val) ? i : i + 1;   // segment plein → on enlève ; vide → on remplit
+    return `/jauge[${Math.max(0, Math.min(w.max, next))}]{${body}}`;
+  });
+}
+
+function mjWidgetCombo(wi, idx) {
+  const i = Math.max(0, parseInt(idx, 10) || 0);
+  _mjWidgetMutate(wi, (type, stateStr, body) => `/combo[${i}]{${body}}`);
+}
+
+function mjWidgetCount(wi, delta) {
+  _mjWidgetMutate(wi, (type, stateStr, body) => {
+    const w = _mjParseWidget('compteur', stateStr, body);
+    let v = w.val + delta;
+    if (w.min != null) v = Math.max(w.min, v);
+    if (w.max != null) v = Math.min(w.max, v);
+    return `/compteur[${v}]{${body}}`;
+  });
 }
 
 // Coordonnées pixel du curseur dans un textarea (technique du miroir)
