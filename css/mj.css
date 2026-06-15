@@ -282,6 +282,8 @@
 .mj-tag-scenario  { background: var(--orange-l); color: var(--orange); }
 .mj-tag-encounter { background: var(--red-l);    color: var(--red);    }
 .mj-tag-npc       { background: #FFF3CC;         color: #B8860B;        }
+.mj-tag-objet     { background: var(--green-l);  color: var(--green-d); }
+.mj-tag-lieu      { background: var(--blue-l);   color: var(--blue);    }
 .mj-tag-asset     { background: var(--purple-l); color: var(--purple); }
 .mj-tag.broken {
   background: var(--red-l); color: var(--red);

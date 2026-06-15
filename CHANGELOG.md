@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.0] — 2026-06-15
+
+### Nouveau
+- Mode MJ — Objets : raretés **personnalisables** (couleur + nom, adaptées à ton univers)
+- Mode MJ — Objets : propriétaire en **texte libre** où l'on peut taguer un PNJ avec `@` (comme dans les scénarios)
+- Mode MJ — Lieux : vignette conservée + image **ouvrable en plein écran** (idéal pour une carte)
+
+### Corrections
+- Mode MJ : style des tags Objet/Lieu (fond et contour) aligné sur les autres tags
+
 ## [1.5.0] — 2026-06-14
 
 ### Nouveau

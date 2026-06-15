@@ -329,6 +329,8 @@ let _mjAcTokenStart = -1;
 let _mjAcBraced     = false;
 let _mjAcSig        = '';
 let _mjAcMode       = 'tag';   // 'tag' (@) | 'widget' (/)
+let _mjAcTargetId   = 'mj-doc-content';   // champ courant pour l'autocomplétion
+let _mjAcTagOnly    = false;              // true = pas de widgets « / » (champs autres que le scénario)
 
 // Modèles insérés par l'autocomplétion « / » ($ = position du curseur après insertion)
 const _MJ_WIDGET_AC = [
@@ -363,16 +365,21 @@ function mjAcBlur() {
   setTimeout(mjAcClose, 150);
 }
 
+// Scénario (textarea) : tags @ + widgets /
+function mjAcUpdate() { _mjAcTargetId = 'mj-doc-content'; _mjAcTagOnly = false; _mjAcRun(); }
+// Champ générique (input) : uniquement les tags @
+function mjAcUpdateField(el) { if (!el || !el.id) return; _mjAcTargetId = el.id; _mjAcTagOnly = true; _mjAcRun(); }
+
 // Recalcule le token @… à gauche du curseur et affiche le menu
-function mjAcUpdate() {
-  const ta = document.getElementById('mj-doc-content');
+function _mjAcRun() {
+  const ta = document.getElementById(_mjAcTargetId);
   if (!ta) { mjAcClose(); return; }
   const caret = ta.selectionStart;
   const val   = ta.value;
 
   // Déclencheur le plus proche à gauche du curseur : @ (tag) ou / (widget)
   const atTag = val.lastIndexOf('@', caret - 1);
-  const atWdg = val.lastIndexOf('/', caret - 1);
+  const atWdg = _mjAcTagOnly ? -1 : val.lastIndexOf('/', caret - 1);
   const at    = Math.max(atTag, atWdg);
   if (at === -1) { mjAcClose(); return; }
   if (at > 0 && /[\wÀ-ÿ]/.test(val[at - 1])) { mjAcClose(); return; }
@@ -484,7 +491,7 @@ function _mjAcInsertWidget(w) {
 }
 
 function _mjAcInsert(item) {
-  const ta = document.getElementById('mj-doc-content');
+  const ta = document.getElementById(_mjAcTargetId);
   if (!ta || _mjAcTokenStart < 0) return;
   const caret  = ta.selectionStart;
   const before = ta.value.slice(0, _mjAcTokenStart);
@@ -496,7 +503,8 @@ function _mjAcInsert(item) {
   mjAcClose();
   ta.focus();
   ta.setSelectionRange(pos, pos);
-  _mjDocChanged();   // déclenche la sauvegarde différée
+  if (_mjAcTargetId === 'mj-doc-content') _mjDocChanged();   // sauvegarde différée du scénario
+  else ta.dispatchEvent(new Event('change'));                // déclenche le onchange du champ
 }
 
 // Navigation clavier (appelée depuis onkeydown du textarea)
@@ -513,6 +521,11 @@ function mjAcKeydown(e) {
 function mjAcKeyup(e) {
   if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) return;
   mjAcUpdate();
+}
+// keyup pour un champ générique (input) en mode tag uniquement
+function mjAcKeyupField(e, el) {
+  if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) return;
+  mjAcUpdateField(el);
 }
 
 // ═══════════════════════════════════════════════════════════════

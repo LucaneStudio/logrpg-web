@@ -6,14 +6,65 @@
 let _mjObject = null;
 let _mjPlace  = null;
 
-const MJ_OBJ_RARITIES = [
-  { key: 'common',    label: 'Commun',     color: '#6B7C8E', bg: '#EEF2F5' },
-  { key: 'uncommon',  label: 'Peu commun', color: '#3DAF8E', bg: '#D4F2EA' },
-  { key: 'rare',      label: 'Rare',       color: '#5B9CF6', bg: '#DDEAFF' },
-  { key: 'veryrare',  label: 'Très rare',  color: '#A78BFA', bg: '#EDE9FF' },
-  { key: 'legendary', label: 'Légendaire', color: '#FF8C42', bg: '#FFEDE0' },
+// Raretés par défaut — personnalisables par le MJ (stockées en localStorage)
+const MJ_DEFAULT_RARITIES = [
+  { key: 'common',    label: 'Commun',     color: '#6B7C8E' },
+  { key: 'uncommon',  label: 'Peu commun', color: '#3DAF8E' },
+  { key: 'rare',      label: 'Rare',       color: '#5B9CF6' },
+  { key: 'veryrare',  label: 'Très rare',  color: '#A78BFA' },
+  { key: 'legendary', label: 'Légendaire', color: '#FF8C42' },
 ];
-function _objRarityMeta(k) { return MJ_OBJ_RARITIES.find(r => r.key === k) || MJ_OBJ_RARITIES[0]; }
+function mjGetRarities() {
+  try {
+    const s = localStorage.getItem('mj_obj_rarities');
+    if (s) { const a = JSON.parse(s); if (Array.isArray(a) && a.length) return a; }
+  } catch (e) {}
+  return MJ_DEFAULT_RARITIES.slice();
+}
+function mjSaveRarities(list) {
+  try { localStorage.setItem('mj_obj_rarities', JSON.stringify(list)); } catch (e) {}
+}
+// bg dérivé de la couleur (#RRGGBB + alpha) si non fourni
+function _objRarityMeta(k) {
+  const list = mjGetRarities();
+  const m = list.find(r => r.key === k) || list[0] || MJ_DEFAULT_RARITIES[0];
+  return { ...m, bg: m.bg || (m.color + '22') };
+}
+
+// ── Éditeur de raretés ──
+let _rarityDraft = [];
+function openRarityEditor() {
+  _rarityDraft = mjGetRarities().map(r => ({ key: r.key, label: r.label, color: r.color }));
+  _renderRarityRows();
+  openModal('modal-rarity-edit');
+}
+function _renderRarityRows() {
+  const box = document.getElementById('rarity-rows');
+  if (!box) return;
+  box.innerHTML = _rarityDraft.map((r, i) => `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="color" value="${r.color}" onchange="_rarityDraft[${i}].color=this.value"
+        style="width:36px;height:36px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0;"/>
+      <input class="input" value="${escapeHtml(r.label)}" oninput="_rarityDraft[${i}].label=this.value"
+        placeholder="Nom de la rareté" style="flex:1;"/>
+      <button class="btn-icon" onclick="_deleteRarityRow(${i})" title="Supprimer" style="flex-shrink:0;color:var(--red);">✕</button>
+    </div>`).join('');
+}
+function _deleteRarityRow(i) { _rarityDraft.splice(i, 1); _renderRarityRows(); }
+function addRarityRow() {
+  _rarityDraft.push({ key: 'r_' + Math.random().toString(36).slice(2, 8), label: '', color: '#6B7C8E' });
+  _renderRarityRows();
+}
+async function confirmRarities() {
+  const list = _rarityDraft
+    .map(r => ({ key: r.key, label: (r.label || '').trim(), color: r.color }))
+    .filter(r => r.label);
+  if (!list.length) return;
+  mjSaveRarities(list);
+  closeModal('modal-rarity-edit');
+  if (_mjObject) await mjRenderObjectDetail();
+  await mjRenderObjectsList();
+}
 
 // ═══════════════════════════════════════════════════════════════
 // OBJETS
@@ -62,12 +113,12 @@ async function mjRenderObjectDetail() {
       display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">📦</div>`;
   }
 
-  const rarityBtns = MJ_OBJ_RARITIES.map(r => `
+  const rarityBtns = mjGetRarities().map(r => `
     <button onclick="mjObjectSetRarity('${r.key}')"
       style="padding:5px 10px;border-radius:8px;border:1.5px solid ${o.rarity===r.key?r.color:'var(--divider)'};
-      background:${o.rarity===r.key?r.bg:'transparent'};font-family:'Nunito',sans-serif;font-size:11px;
+      background:${o.rarity===r.key?(r.color+'22'):'transparent'};font-family:'Nunito',sans-serif;font-size:11px;
       font-weight:800;color:${o.rarity===r.key?r.color:'var(--text-light)'};cursor:pointer;">
-      ${r.label}</button>`).join('');
+      ${escapeHtml(r.label)}</button>`).join('');
 
   detail.innerHTML = `
     <div class="mj-detail-hdr">
@@ -89,13 +140,17 @@ async function mjRenderObjectDetail() {
       </div>
     </div>
     <div class="mj-detail-body">
-      <div class="sec-lbl" style="margin-bottom:8px;">RARETÉ</div>
+      <div class="sec-lbl" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">RARETÉ
+        <button onclick="openRarityEditor()" title="Personnaliser les raretés"
+          style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1;color:var(--text-light);">⚙️</button>
+      </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">${rarityBtns}</div>
 
       <div class="sec-lbl" style="margin-bottom:8px;">PROPRIÉTAIRE</div>
-      <input class="mj-subtitle-input" style="margin-bottom:16px;"
-        value="${escapeHtml(o.owner || '')}" placeholder="Qui le possède ?"
-        onchange="mjObjectSaveField('owner', this.value)"/>
+      <input id="mj-object-owner" class="mj-subtitle-input" style="margin-bottom:16px;"
+        value="${escapeHtml(o.owner || '')}" placeholder="Tape @ pour lier un PNJ…"
+        oninput="mjAcUpdateField(this)" onkeydown="mjAcKeydown(event)" onkeyup="mjAcKeyupField(event,this)"
+        onblur="mjAcBlur()" onchange="mjObjectSaveField('owner', this.value)"/>
 
       <div class="sec-lbl" style="margin-bottom:8px;">DESCRIPTION</div>
       <textarea id="mj-object-notes"
@@ -119,6 +174,20 @@ async function mjObjectSetRarity(rarity) {
   await mjSaveObject(_mjObject);
   await mjRenderObjectsList();
   await mjRenderObjectDetail();
+}
+// Ouvre une image en plein écran (lightbox) — clic pour fermer
+function mjOpenImageLightbox(url) {
+  if (!url) return;
+  let el = document.getElementById('mj-lightbox');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mj-lightbox';
+    el.onclick = () => { el.style.display = 'none'; el.innerHTML = ''; };
+    document.body.appendChild(el);
+  }
+  el.style.cssText = 'position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.85);'
+    + 'display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px;';
+  el.innerHTML = `<img src="${url}" style="max-width:96%;max-height:96%;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5);"/>`;
 }
 function mjObjectUploadImage(objId) {
   const input = document.createElement('input');
@@ -185,20 +254,25 @@ async function mjRenderPlaceDetail() {
   }
   const p = _mjPlace;
 
-  let imgHtml = '';
+  // Vignette avant le nom — clic : ouvre l'image en grand (carte), ou importe si vide
+  let thumb;
   if (p.assetId) {
     const url = await mjAssetToUrl(p.assetId);
-    if (url) imgHtml = `<img src="${url}" style="width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;"/>`;
+    thumb = url
+      ? `<img src="${url}" onclick="mjOpenImageLightbox('${url}')" title="Ouvrir en grand"
+          style="width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;cursor:zoom-in;"/>`
+      : '';
   }
-  if (!imgHtml) {
-    imgHtml = `<div style="width:64px;height:64px;border-radius:14px;background:${combatColorFor(p.name||'?')};
-      display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">📍</div>`;
+  if (!thumb) {
+    thumb = `<div onclick="mjPlaceUploadImage(${p.id})" title="Ajouter une image"
+      style="width:64px;height:64px;border-radius:14px;background:${combatColorFor(p.name||'?')};
+      display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;cursor:pointer;">📍</div>`;
   }
 
   detail.innerHTML = `
     <div class="mj-detail-hdr">
       <div style="display:flex;align-items:center;gap:12px;flex:1;">
-        ${imgHtml}
+        ${thumb}
         <div style="flex:1;min-width:0;">
           <input id="mj-place-name" class="mj-title-input"
             value="${escapeHtml(p.name || '')}" placeholder="Nom du lieu…"
