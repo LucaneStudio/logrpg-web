@@ -639,6 +639,18 @@ function _mjAcConvertBlockRich(item) {
     mjOpenDetailsForm(b.id, before + after, null);   // modale Titre + Contenu
     return;
   }
+  if (item.key === 'sep') {                          // séparateur : rendu <hr> direct + paragraphe dessous
+    const idx = _mjBlocks.findIndex((x) => x.id === b.id);
+    const rest = (before + after).trim();
+    const para = { id: _mjNewBlockId(), raw: '' };
+    if (rest === '') { b.raw = '---'; _mjBlocks.splice(idx + 1, 0, para); }
+    else { b.raw = rest; _mjBlocks.splice(idx + 1, 0, { id: _mjNewBlockId(), raw: '---' }, para); }
+    _mjEditingBlockId = para.id;                     // on n'édite PAS le séparateur, mais le paragraphe neuf
+    if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+    if (typeof _mjRenderBlocks === 'function') _mjRenderBlocks();
+    if (typeof _mjFocusBlockEditor === 'function') _mjFocusBlockEditor(para.id, 'start');
+    return;
+  }
   b.raw = before + item.tpl.replace('$', '') + after;
   if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
   if (typeof _mjEnterEdit === 'function') _mjEnterEdit(b.id);   // re-rend + édite le nouveau type
