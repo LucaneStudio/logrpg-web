@@ -1194,6 +1194,17 @@ function mjWidgetContext(ev) {
     const blockId = blockEl && blockEl.getAttribute('data-block-id');
     if (blockId) { ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'details', blockId }); return false; }
   }
+  // Tableau rendu (lecture) : clic droit → Modifier (grille) / Supprimer
+  const blk = ev.target.closest && ev.target.closest('#mj-blocks .mj-block[data-block-id]');
+  if (blk && typeof _mjBlocks !== 'undefined' && typeof _mjIsTableBlock === 'function') {
+    const blockId = blk.getAttribute('data-block-id');
+    const b = _mjBlocks.find((x) => x.id === blockId);
+    if (b && _mjIsTableBlock(b.raw)) {
+      ev.preventDefault(); ev.stopPropagation();
+      _mjShowWdgCtx(ev, { mode: 'table', blockId });
+      return false;
+    }
+  }
   return true;
 }
 
@@ -1235,7 +1246,9 @@ function mjWdgCtxClose() {
 function mjWdgCtxModify() {
   const t = _mjWdgCtxTarget; mjWdgCtxClose();
   if (!t) return;
-  if (t.mode === 'details') {
+  if (t.mode === 'table') {
+    if (typeof _mjEnterEdit === 'function') _mjEnterEdit(t.blockId);   // ouvre la grille
+  } else if (t.mode === 'details') {
     const b = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find((x) => x.id === t.blockId) : null;
     if (typeof mjOpenDetailsForm === 'function') mjOpenDetailsForm(t.blockId, '', b ? b.raw : '');
   } else if (t.mode === 'edit') {
@@ -1248,7 +1261,7 @@ function mjWdgCtxModify() {
 function mjWdgCtxDelete() {
   const t = _mjWdgCtxTarget; mjWdgCtxClose();
   if (!t) return;
-  if (t.mode === 'details') {
+  if (t.mode === 'details' || t.mode === 'table') {
     if (typeof _mjBlocks === 'undefined') return;
     const i = _mjBlocks.findIndex((x) => x.id === t.blockId);
     if (i < 0) return;
