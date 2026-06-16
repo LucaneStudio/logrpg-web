@@ -1,14 +1,24 @@
 # Changelog
 
-## [1.6.0] — 2026-06-15
+## [1.6.0] — 2026-06-17
 
 ### Nouveau
+- Mode MJ — **éditeur de scénario WYSIWYG** : on écrit sans voir le Markdown, qui reste le format de stockage.
+  - Paragraphes, titres et citations édités en direct (gras / italique / souligné / barré sur la sélection).
+  - Tags `@` insérés comme des pastilles cliquables ; autocomplétion `@` et `/`.
+  - Widgets `/switch /todo /combo /compteur /jauge` : insertion par **formulaire**, utilisables au clic (combo : liste déroulante), **clic droit** pour Modifier / Supprimer.
+  - Bloc repliable `/details` géré par une fenêtre **Titre + Contenu**.
+  - **Listes à puces et numérotées multi-niveaux** (Entrée / Tab / Maj+Tab, comme un traitement de texte), affichées en retrait en lecture.
+  - Tableaux : **clic droit** pour Modifier (grille) ou Supprimer.
+  - **Copier** le scénario en Markdown ; collage nettoyé (pas de styles externes importés).
+- Mode MJ — **clic droit → Supprimer** sur tout élément (session, scénario, PNJ, objet, lieu, combat, image), avec fenêtre de confirmation.
 - Mode MJ — Objets : raretés **personnalisables** (couleur + nom, adaptées à ton univers)
 - Mode MJ — Objets : propriétaire en **texte libre** où l'on peut taguer un PNJ avec `@` (comme dans les scénarios)
 - Mode MJ — Lieux : vignette conservée + image **ouvrable en plein écran** (idéal pour une carte)
 
 ### Corrections
 - Mode MJ : style des tags Objet/Lieu (fond et contour) aligné sur les autres tags
+- Suppressions (PNJ, combat, image) via la **fenêtre de confirmation** intégrée au lieu de la boîte du navigateur
 
 ## [1.5.0] — 2026-06-14
 
