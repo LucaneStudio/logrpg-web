@@ -2,7 +2,7 @@
 // CONFIG LogRPG — modifier ici sans toucher au code
 // ═══════════════════════════════════════════════════════════════
 const APP_CONFIG = {
-  version : '1.6.0',
+  version : '1.7.11',
   appName : 'LogRPG',
 };
 

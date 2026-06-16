@@ -211,6 +211,199 @@
   overflow: hidden; background: var(--bg);
 }
 
+/* ── Champ « Propriétaire » (tag PNJ cliquable / édition au clic) ── */
+/* Au repos : transparent ; en édition : fond blanc + contour violet. */
+.mj-owner-view {
+  min-height: 38px; padding: 8px 12px; box-sizing: border-box;
+  border: 1.5px solid var(--divider); border-radius: 10px; background: transparent;
+  cursor: text; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; color: var(--text);
+  transition: border-color .1s;
+}
+.mj-owner-view:hover { border-color: rgba(167,139,250,.4); }
+.mj-owner-ph { color: var(--text-light); font-weight: 600; }
+.mj-owner-input {
+  width: 100%; box-sizing: border-box; min-height: 38px; padding: 8px 12px;
+  border: 1.5px solid rgba(167,139,250,.45); border-radius: 10px; background: var(--white);
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; color: var(--text);
+  outline: none; box-shadow: 0 0 0 3px var(--purple-l);
+}
+.mj-owner-input::placeholder { color: var(--text-light); font-weight: 600; }
+
+/* ── Barre de mise en forme (segmented control) ── */
+.mj-format-bar {
+  display: inline-flex; gap: 2px; margin-bottom: 10px; padding: 3px;
+  background: var(--surface); border: 1.5px solid var(--divider);
+  border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  transition: opacity .12s;
+}
+.mj-format-bar.off { opacity: .45; pointer-events: none; }
+.mj-fmt-btn {
+  width: 32px; height: 30px; border-radius: 7px; border: none; background: transparent;
+  color: var(--text-mid); font-family: 'Nunito', sans-serif; font-size: 15px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .1s, color .1s, box-shadow .1s, transform .05s;
+}
+.mj-fmt-btn:hover { background: var(--white); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.mj-fmt-btn:active { transform: translateY(1px); }
+.mj-fmt-btn.active {
+  background: var(--purple); color: #fff;
+  box-shadow: 0 1px 4px rgba(167,139,250,.5);
+}
+
+/* ── Éditeur par blocs (toujours rendu, clic pour éditer) ── */
+.mj-doc-scroll {
+  flex: 1; overflow-y: auto;
+  border: 1.5px solid var(--divider); border-radius: 12px;
+  padding: 10px 14px; background: var(--white);
+}
+.mj-blocks { display: flex; flex-direction: column; }
+/* Variante encadrée (descriptions d'objets / lieux / PNJ) */
+.mj-blocks-boxed {
+  border: 1.5px solid var(--divider); border-radius: 12px;
+  padding: 10px 14px; background: var(--white); min-height: 140px;
+}
+.mj-block {
+  border-radius: 8px; padding: 2px 8px; margin: 1px -8px;
+  cursor: text; transition: background .08s;
+}
+.mj-block:hover { background: var(--surface); }
+.mj-block.editing { background: transparent; cursor: auto; }
+.mj-block-empty { color: var(--text-light); font-style: italic; font-size: 13px; opacity: .7; }
+.mj-block-edit {
+  width: 100%; box-sizing: border-box; display: block;
+  border: 1.5px solid rgba(167,139,250,.45); border-radius: 8px;
+  padding: 8px 10px; margin: 1px 0;
+  font-family: 'Nunito', sans-serif; font-size: 13.5px; font-weight: 600;
+  color: var(--text); line-height: 1.75; background: var(--white);
+  resize: none; overflow: hidden; outline: none;
+  box-shadow: 0 0 0 3px var(--purple-l);
+}
+.mj-block-edit::placeholder { color: var(--text-light); font-weight: 600; }
+
+/* ── Bloc paragraphe en contenteditable riche (option D) ── */
+/* font-weight 400 (et non 600 hérité de .mj-block-edit) pour que l'apparence en
+   édition soit IDENTIQUE à la lecture : le **gras** (700) ressort franchement. */
+.mj-block-rich {
+  white-space: pre-wrap; word-break: break-word; min-height: 1.75em;
+  height: auto; overflow: visible; cursor: text; font-weight: 400;
+}
+.mj-block-rich strong, .mj-block-rich b { font-weight: 700; }
+.mj-block-rich:empty::before {
+  content: attr(data-ph); color: var(--text-light); font-weight: 600; pointer-events: none;
+}
+/* Titres / citation en édition : apparence identique au rendu lecture */
+.mj-rich-h1 { font-size: 22px; font-weight: 900; color: var(--purple); margin: 6px 0 2px; }
+.mj-rich-h2 { font-size: 19px; font-weight: 900; color: var(--text);   margin: 4px 0 2px; }
+.mj-rich-h3 { font-size: 16px; font-weight: 800; color: var(--text);   margin: 2px 0; }
+.mj-rich-quote {
+  border-left: 3px solid var(--purple); background: var(--purple-l);
+  padding: 8px 12px; border-radius: 0 8px 8px 0; font-style: italic;
+}
+.mj-rich-h1 strong, .mj-rich-h1 b, .mj-rich-h2 strong, .mj-rich-h2 b, .mj-rich-h3 strong, .mj-rich-h3 b { font-weight: 900; }
+/* Puces atomiques (widgets & @tags) insérées dans la prose éditée */
+.mj-pill {
+  display: inline-block; vertical-align: baseline; white-space: nowrap;
+  user-select: all; -webkit-user-select: all; cursor: pointer;
+}
+/* Puce-widget : le visuel interactif (.mj-wdg) vit à l'intérieur ; pas de cadre propre */
+.mj-pill-wdg { padding: 0; }
+.mj-blocks-tail { flex: 1; min-height: 60px; cursor: text; }
+
+/* ── Formulaire d'insertion de widget (spec §5.1) ── */
+#mj-wdg-form { position: fixed; inset: 0; z-index: 11050; display: none; }  /* au-dessus de #mj-overlay (4998) */
+.mj-wf-backdrop { position: absolute; inset: 0; background: rgba(20,24,33,.35); }
+.mj-wf-card {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: min(360px, calc(100vw - 32px)); background: var(--white);
+  border-radius: 14px; box-shadow: 0 18px 60px rgba(0,0,0,.3); padding: 18px;
+}
+.mj-wf-title { font-size: 15px; font-weight: 900; color: var(--text); margin-bottom: 14px; }
+.mj-wf-row { display: block; margin-bottom: 12px; }
+.mj-wf-lbl { display: block; font-size: 11px; font-weight: 800; color: var(--text-light); margin-bottom: 4px; }
+.mj-wf-input {
+  width: 100%; box-sizing: border-box; padding: 8px 10px;
+  border: 1.5px solid #E8ECF0; border-radius: 8px; outline: none;
+  font-family: 'Nunito', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--text);
+}
+.mj-wf-input:focus { border-color: var(--purple); }
+.mj-wf-textarea { min-height: 96px; resize: vertical; line-height: 1.5; font-weight: 600; }
+.mj-wf-bar { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.mj-wf-cancel, .mj-wf-ok {
+  padding: 8px 16px; border-radius: 99px; font-family: 'Nunito', sans-serif;
+  font-size: 13px; font-weight: 800; cursor: pointer; border: 1.5px solid transparent;
+}
+.mj-wf-cancel { background: var(--surface); color: var(--text-mid); border-color: #E8ECF0; }
+.mj-wf-ok { background: var(--purple); color: #fff; }
+.mj-wf-ok:hover { filter: brightness(1.05); }
+
+/* ── Combo dans l'éditeur : déclencheur cliquable + popup de choix custom ── */
+/* (un <select> natif est peu fiable dans un contenteditable → liste maison) */
+.mj-block-rich .mj-wdg-combo { cursor: pointer; }
+.mj-wdg-combo-val { font-weight: 800; }
+#mj-wdg-pick { position: fixed; inset: 0; z-index: 11060; display: none; }  /* au-dessus de #mj-overlay (4998) */
+
+/* Menu contextuel widget (clic droit) : Modifier / Supprimer */
+#mj-wdg-ctx { position: fixed; inset: 0; z-index: 11070; display: none; }
+.mj-wdgctx-backdrop { position: absolute; inset: 0; }
+.mj-wdgctx-card {
+  position: absolute; min-width: 156px; padding: 5px;
+  background: var(--white); border: 1.5px solid var(--divider); border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+}
+.mj-wdgctx-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 7px;
+  font-family: 'Nunito', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--text); cursor: pointer;
+}
+.mj-wdgctx-item:hover { background: var(--surface); }
+.mj-wdgctx-item.danger { color: var(--red, #F2675F); }
+.mj-wdgctx-item.danger:hover { background: rgba(242,103,95,.10); }
+.mj-pick-back { position: absolute; inset: 0; }
+.mj-pick-menu {
+  position: absolute; background: var(--white); border: 1px solid #E8ECF0;
+  border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 4px;
+  min-width: 120px; max-height: 260px; overflow-y: auto;
+}
+.mj-pick-opt {
+  padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 700;
+  color: var(--text); cursor: pointer; white-space: nowrap;
+}
+.mj-pick-opt:hover { background: var(--purple-l); }
+.mj-pick-opt.sel { color: var(--purple); background: var(--purple-l); }
+
+/* ── Éditeur de tableau en grille (WYSIWYG) ── */
+.mj-tedit-wrap {
+  margin: 6px 0; padding: 10px; border-radius: 10px;
+  border: 1.5px solid rgba(167,139,250,.45); background: var(--white);
+  box-shadow: 0 0 0 3px var(--purple-l); overflow-x: auto;
+}
+.mj-tedit { border-collapse: separate; border-spacing: 0; }
+.mj-tedit th, .mj-tedit td { padding: 0; }
+.mj-tedit-th { position: relative; }
+.mj-tedit-cell {
+  box-sizing: border-box; min-width: 90px; width: 100%; padding: 7px 10px;
+  border: 1px solid rgba(110,130,150,.38); background: var(--white);
+  font-family: 'Nunito', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--text);
+  outline: none;
+}
+.mj-tedit-cell:focus { border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
+.mj-tedit-head { font-weight: 900; background: var(--surface); }
+.mj-tedit-ctrl { width: 22px; text-align: center; vertical-align: middle; }
+.mj-tedit-del {
+  width: 18px; height: 18px; border-radius: 5px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-light); font-size: 11px; line-height: 1;
+}
+.mj-tedit-del:hover { background: var(--red, #F2675F); color: #fff; }
+.mj-tedit-th .mj-tedit-del { position: absolute; top: 2px; right: 2px; }
+.mj-tedit-bar { display: flex; gap: 6px; margin-top: 8px; }
+.mj-tedit-add, .mj-tedit-done {
+  padding: 5px 11px; border-radius: 8px; border: 1.5px solid var(--divider);
+  background: var(--surface); font-family: 'Nunito', sans-serif; font-size: 11px;
+  font-weight: 800; color: var(--text-mid); cursor: pointer;
+}
+.mj-tedit-add:hover { background: var(--white); color: var(--text); }
+.mj-tedit-done { margin-left: auto; background: var(--purple); color: #fff; border-color: var(--purple); }
+
 /* ── Sessions : arborescence (style explorateur) ── */
 .mj-tree-node { display: flex; flex-direction: column; }
 .mj-tree-folder {

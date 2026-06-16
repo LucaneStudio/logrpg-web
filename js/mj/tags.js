@@ -331,9 +331,19 @@ let _mjAcSig        = '';
 let _mjAcMode       = 'tag';   // 'tag' (@) | 'widget' (/)
 let _mjAcTargetId   = 'mj-doc-content';   // champ courant pour l'autocomplétion
 let _mjAcTagOnly    = false;              // true = pas de widgets « / » (champs autres que le scénario)
+let _mjAcTypeFilter = null;               // si défini (ex. 'npc'), ne propose que ce type de ressource
 
 // Modèles insérés par l'autocomplétion « / » ($ = position du curseur après insertion)
+// Types de blocs (préfixe Markdown) puis widgets MJ (token avec état dans le texte).
 const _MJ_WIDGET_AC = [
+  { key: 'h1',       icon: 'H₁', desc: 'Titre 1',             tpl: '# $' },
+  { key: 'h2',       icon: 'H₂', desc: 'Titre 2',             tpl: '## $' },
+  { key: 'h3',       icon: 'H₃', desc: 'Titre 3',             tpl: '### $' },
+  { key: 'liste',    icon: '•',  desc: 'Liste à puces',       tpl: '- $' },
+  { key: 'num',      icon: '1.', desc: 'Liste numérotée',     tpl: '1. $' },
+  { key: 'cite',     icon: '❝',  desc: 'Citation',            tpl: '> $' },
+  { key: 'sep',      icon: '—',  desc: 'Séparateur',          tpl: '---' },
+  { key: 'tab',      icon: '▦',  desc: 'Tableau',             tpl: '| $ | Colonne 2 |\n| --- | --- |\n| | |' },
   { key: 'switch',   icon: '🔘', desc: 'Interrupteur on/off',  tpl: '/switch{$}' },
   { key: 'todo',     icon: '☑️', desc: 'Case à cocher',         tpl: '/todo{$}' },
   { key: 'combo',    icon: '🔽', desc: 'Liste déroulante',     tpl: '/combo{$: option1|option2}' },
@@ -366,9 +376,15 @@ function mjAcBlur() {
 }
 
 // Scénario (textarea) : tags @ + widgets /
-function mjAcUpdate() { _mjAcTargetId = 'mj-doc-content'; _mjAcTagOnly = false; _mjAcRun(); }
-// Champ générique (input) : uniquement les tags @
-function mjAcUpdateField(el) { if (!el || !el.id) return; _mjAcTargetId = el.id; _mjAcTagOnly = true; _mjAcRun(); }
+function mjAcUpdate() { _mjAcTargetId = 'mj-doc-content'; _mjAcTagOnly = false; _mjAcTypeFilter = null; _mjAcRun(); }
+// Bloc de scénario (textarea dynamique #mjb-…) : tags @ + widgets /
+function mjAcUpdateBlock(el) { if (!el || !el.id) return; _mjAcTargetId = el.id; _mjAcTagOnly = false; _mjAcTypeFilter = null; _mjAcRun(); }
+function mjAcKeyupBlock(e, el) {
+  if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) return;
+  mjAcUpdateBlock(el);
+}
+// Champ générique (input) : uniquement les tags @, éventuellement restreints à un type (ex. 'npc')
+function mjAcUpdateField(el, type) { if (!el || !el.id) return; _mjAcTargetId = el.id; _mjAcTagOnly = true; _mjAcTypeFilter = type || null; _mjAcRun(); }
 
 // Recalcule le token @… à gauche du curseur et affiche le menu
 function _mjAcRun() {
@@ -388,7 +404,7 @@ function _mjAcRun() {
 
   // ── Mode widget « / » : suggère switch / cycle / compteur ──
   if (at === atWdg) {
-    if (!/^[a-zà-ÿ]*$/i.test(partial)) { mjAcClose(); return; }  // accolade/espace → plus un token
+    if (!/^[a-zà-ÿ0-9]*$/i.test(partial)) { mjAcClose(); return; }  // accolade/espace → plus un token
     const q   = partial.trim().toLowerCase();
     const sig = 'w|' + at + '|' + q;
     if (sig === _mjAcSig && _mjAcOpen) return;
@@ -412,11 +428,12 @@ function _mjAcRun() {
   }
 
   const q   = query.trim().toLowerCase();
-  const sig = 't|' + at + '|' + braced + '|' + q;
+  const sig = 't|' + at + '|' + braced + '|' + q + '|' + (_mjAcTypeFilter || '');
   if (sig === _mjAcSig && _mjAcOpen) return;   // rien de neuf → ne pas réinitialiser
   _mjAcSig = sig;
 
   let items = q ? _mjTagIndex.filter(r => r.lname.includes(q)) : _mjTagIndex.slice();
+  if (_mjAcTypeFilter) items = items.filter(r => r.type === _mjAcTypeFilter);   // ex. propriétaire d'objet → PNJ only
   items = items.slice(0, 8);
   _mjAcMode       = 'tag';
   _mjAcItems      = items;
@@ -426,35 +443,43 @@ function _mjAcRun() {
   _mjAcRender(ta, caret);
 }
 
-function _mjAcRender(ta, caret) {
-  const el = _mjAcEl();
-  if (!_mjAcItems.length) {
-    el.innerHTML = `<div class="mj-ac-empty">Aucun résultat</div>`;
-  } else if (_mjAcMode === 'widget') {
-    el.innerHTML = _mjAcItems.map((w, i) => `
+// HTML des items du menu (partagé textarea / contenteditable)
+function _mjAcItemsHtml() {
+  if (!_mjAcItems.length) return `<div class="mj-ac-empty">Aucun résultat</div>`;
+  if (_mjAcMode === 'widget') {
+    return _mjAcItems.map((w, i) => `
       <div class="mj-ac-item ${i === _mjAcIndex ? 'sel' : ''}"
            onmousedown="event.preventDefault();mjAcInsertByIndex(${i})">
         <span class="mj-ac-ico">${w.icon}</span>
         <span class="mj-ac-name">/${escapeHtml(w.key)} <span style="color:var(--text-light);font-weight:600;">· ${escapeHtml(w.desc)}</span></span>
         <span class="mj-ac-type">Widget</span>
       </div>`).join('');
-  } else {
-    el.innerHTML = _mjAcItems.map((r, i) => `
-      <div class="mj-ac-item ${i === _mjAcIndex ? 'sel' : ''}"
-           onmousedown="event.preventDefault();mjAcInsertByIndex(${i})">
-        <span class="mj-ac-ico">${r.icon}</span>
-        <span class="mj-ac-name">${escapeHtml(r.name)}${r.parentName ? ` <span style="color:var(--text-light);font-weight:600;">· ${escapeHtml(r.parentName)}</span>` : ''}</span>
-        <span class="mj-ac-type">${_MJ_TAG_META[r.type].label}</span>
-      </div>`).join('');
   }
-  const c = _mjCaretCoords(ta, caret);
+  return _mjAcItems.map((r, i) => `
+    <div class="mj-ac-item ${i === _mjAcIndex ? 'sel' : ''}"
+         onmousedown="event.preventDefault();mjAcInsertByIndex(${i})">
+      <span class="mj-ac-ico">${r.icon}</span>
+      <span class="mj-ac-name">${escapeHtml(r.name)}${r.parentName ? ` <span style="color:var(--text-light);font-weight:600;">· ${escapeHtml(r.parentName)}</span>` : ''}</span>
+      <span class="mj-ac-type">${_MJ_TAG_META[r.type].label}</span>
+    </div>`).join('');
+}
+
+// Affiche le menu à une position écran donnée (top = sous la ligne du curseur)
+function _mjAcShowAt(left, top, lineH) {
+  const el = _mjAcEl();
+  el.innerHTML = _mjAcItemsHtml();
   el.style.display = 'block';
-  el.style.top  = (c.top + c.lineHeight + 2) + 'px';
-  el.style.left = c.left + 'px';
+  el.style.top  = (top + lineH + 2) + 'px';
+  el.style.left = left + 'px';
   const r = el.getBoundingClientRect();
   if (r.right  > window.innerWidth  - 8) el.style.left = Math.max(8, window.innerWidth  - 8 - r.width)  + 'px';
-  if (r.bottom > window.innerHeight - 8) el.style.top  = Math.max(8, c.top - r.height - 2) + 'px';
+  if (r.bottom > window.innerHeight - 8) el.style.top  = Math.max(8, top - r.height - 2) + 'px';
   _mjAcOpen = true;
+}
+
+function _mjAcRender(ta, caret) {
+  const c = _mjCaretCoords(ta, caret);
+  _mjAcShowAt(c.left, c.top, c.lineHeight);
 }
 
 function _mjAcMove(d) {
@@ -469,17 +494,176 @@ function _mjAcMove(d) {
 function mjAcInsertByIndex(i) {
   const item = _mjAcItems[i];
   if (!item) return;
+  const el = document.getElementById(_mjAcTargetId);
+  if (el && el.isContentEditable) {        // bloc riche
+    if (_mjAcMode === 'tag') {
+      _mjAcInsertTagRich(item);
+    } else if (_MJ_INLINE_WIDGETS.includes(item.key)) {          // widget inline → formulaire (§5.1)
+      if (typeof mjOpenWidgetForm === 'function') {
+        mjOpenWidgetForm(item.key, { node: _mjAcRichNode, start: _mjAcRichTokenStart, caret: _mjAcRichCaret, targetId: _mjAcTargetId });
+        mjAcClose();
+      }
+    } else {                                                     // h1/h2/h3/liste/num/cite/sep/tab/details
+      _mjAcConvertBlockRich(item);
+    }
+    return;
+  }
   if (_mjAcMode === 'widget') _mjAcInsertWidget(item);
   else _mjAcInsert(item);
 }
 
+// ── Autocomplétion dans un bloc riche (contenteditable) ───────
+// Détecte le token @ à gauche du curseur (dans le nœud texte courant), propose
+// les ressources, et insère une PUCE-TAG atomique à la validation. Les widgets « / »
+// (formulaire d'insertion, spec §5.1) viendront dans l'incrément dédié.
+let _mjAcRichNode       = null;   // nœud texte contenant le token
+let _mjAcRichTokenStart = -1;     // offset du @ dans ce nœud
+let _mjAcRichCaret      = -1;     // offset du curseur dans ce nœud
+
+function mjAcUpdateRich(el) {
+  if (!el || !el.isContentEditable) { mjAcClose(); return; }
+  _mjAcTargetId = el.id; _mjAcTagOnly = false; _mjAcTypeFilter = null;
+  _mjAcRunRich(el);
+}
+
+function _mjAcRunRich(el) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) { mjAcClose(); return; }
+  const range = sel.getRangeAt(0);
+  if (!range.collapsed || range.startContainer.nodeType !== 3
+      || !el.contains(range.startContainer)) { mjAcClose(); return; }
+  const node  = range.startContainer;
+  const caret = range.startOffset;
+  const text  = node.nodeValue.slice(0, caret);
+
+  const atTag = text.lastIndexOf('@');
+  const atWdg = text.lastIndexOf('/');
+  const at    = Math.max(atTag, atWdg);
+  if (at === -1) { mjAcClose(); return; }
+  if (at > 0 && /[\wÀ-ÿ]/.test(text[at - 1])) { mjAcClose(); return; }
+
+  const partial = text.slice(at + 1);
+  _mjAcRichNode = node; _mjAcRichTokenStart = at; _mjAcRichCaret = caret;
+
+  // ── Mode widget « / » : liste complète (widgets inline + conversions de bloc)
+  if (at === atWdg) {
+    if (!/^[a-zà-ÿ0-9]*$/i.test(partial)) { mjAcClose(); return; }
+    const q = partial.trim().toLowerCase();
+    _mjAcMode  = 'widget';
+    _mjAcItems = _MJ_WIDGET_AC.filter(w => w.key.includes(q));
+    _mjAcIndex = 0;
+    _mjAcRenderRich(range);
+    return;
+  }
+
+  // ── Mode tag « @ » ──
+  let braced = false, query = partial;
+  if (partial.startsWith('{')) {
+    if (partial.includes('}')) { mjAcClose(); return; }
+    braced = true; query = partial.slice(1);
+  } else if (!/^[\wÀ-ÿ\-]*$/.test(partial)) { mjAcClose(); return; }
+
+  const q   = query.trim().toLowerCase();
+  let items = q ? _mjTagIndex.filter(r => r.lname.includes(q)) : _mjTagIndex.slice();
+  items = items.slice(0, 8);
+  _mjAcMode = 'tag';
+  _mjAcItems = items;
+  _mjAcBraced = braced;
+  _mjAcIndex = 0;
+  _mjAcRenderRich(range);
+}
+
+function _mjAcRenderRich(range) {
+  let rect = range.getBoundingClientRect();
+  if (!rect || (!rect.top && !rect.left && !rect.height)) {
+    const er = document.getElementById(_mjAcTargetId)?.getBoundingClientRect();
+    rect = er || { left: 8, top: 8, height: 18 };
+  }
+  _mjAcShowAt(rect.left, rect.top, rect.height || 18);
+}
+
+// Remplace le token @… (du nœud texte) par une puce-tag atomique, curseur après.
+function _mjAcInsertTagRich(item) {
+  const node = _mjAcRichNode;
+  if (!node || !node.parentNode) { mjAcClose(); return; }
+  const full   = node.nodeValue;
+  const before = full.slice(0, _mjAcRichTokenStart);
+  const after  = full.slice(_mjAcRichCaret);
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = _mjTagPillHtml(item.name);
+  const pill = tmp.firstChild;
+
+  const parent    = node.parentNode;
+  const beforeNd  = document.createTextNode(before);
+  const afterNd   = document.createTextNode(after.length ? after : _MJ_RICH_ZWSP); // ancre le curseur
+  parent.insertBefore(beforeNd, node);
+  parent.insertBefore(pill, node);
+  parent.insertBefore(afterNd, node);
+  parent.removeChild(node);
+
+  const sel = window.getSelection();
+  const r = document.createRange();
+  r.setStart(afterNd, 0); r.collapse(true);
+  sel.removeAllRanges(); sel.addRange(r);
+  mjAcClose();
+
+  const el = document.getElementById(_mjAcTargetId);
+  if (el) {
+    const b = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find(x => x.id === _mjEditingBlockId) : null;
+    if (b) b.raw = mjEditableToMd(el);
+    el.focus();
+  }
+  if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+}
+
+// Conversion de bloc depuis le contenteditable (h1/h2/h3/liste/num/cite/sep/tab/
+// details). Miroir markdown du chemin textarea (_mjAcInsertWidget) : on retire le
+// token /partial, on insère le modèle à sa place, puis on rebascule sur l'éditeur
+// adapté au nouveau type (titre/liste/citation → textarea, comme la migration §11).
+function _mjAcConvertBlockRich(item) {
+  const el = document.getElementById(_mjAcTargetId);
+  const b  = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find(x => x.id === _mjEditingBlockId) : null;
+  if (!el || !b) { mjAcClose(); return; }
+  const tokenOff = _mjRichMdLenTo(el, _mjAcRichNode, _mjAcRichTokenStart);
+  const caretOff = _mjRichMdLenTo(el, _mjAcRichNode, _mjAcRichCaret);
+  const raw    = mjEditableToMd(el);
+  const before = raw.slice(0, tokenOff);
+  const after  = raw.slice(caretOff);
+  mjAcClose();
+  if (item.key === 'tab' && typeof mjMakeTableBlock === 'function') {
+    mjMakeTableBlock(before + after);          // crée la grille (gère le texte restant)
+    return;
+  }
+  if (item.key === 'details' && typeof mjOpenDetailsForm === 'function') {
+    mjOpenDetailsForm(b.id, before + after, null);   // modale Titre + Contenu
+    return;
+  }
+  b.raw = before + item.tpl.replace('$', '') + after;
+  if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+  if (typeof _mjEnterEdit === 'function') _mjEnterEdit(b.id);   // re-rend + édite le nouveau type
+}
+
+// Notifie le bon handler après une insertion selon le champ ciblé
+function _mjAcNotify(ta) {
+  if (ta.id === 'mj-doc-content') { if (typeof _mjDocChanged === 'function') _mjDocChanged(); }
+  else if (ta.id && ta.id.indexOf('mjb-') === 0) ta.dispatchEvent(new Event('input')); // bloc → mjBlockInput
+  else ta.dispatchEvent(new Event('change'));                                           // champ générique
+}
+
 // Insère un modèle de widget ; place le curseur sur le marqueur $
 function _mjAcInsertWidget(w) {
-  const ta = document.getElementById('mj-doc-content');
+  const ta = document.getElementById(_mjAcTargetId);
   if (!ta || _mjAcTokenStart < 0) return;
   const caret  = ta.selectionStart;
   const before = ta.value.slice(0, _mjAcTokenStart);
   const after  = ta.value.slice(caret);
+  // /tab : on ne colle pas de Markdown brut, on crée un tableau par défaut + grille
+  if (w.key === 'tab' && ta.id.indexOf('mjb-') === 0 && typeof mjMakeTableBlock === 'function') {
+    mjAcClose();
+    mjMakeTableBlock(before + after);
+    return;
+  }
   const mark   = w.tpl.indexOf('$');
   const insert = w.tpl.replace('$', '');
   ta.value = before + insert + after;
@@ -487,7 +671,7 @@ function _mjAcInsertWidget(w) {
   mjAcClose();
   ta.focus();
   ta.setSelectionRange(pos, pos);
-  _mjDocChanged();
+  _mjAcNotify(ta);
 }
 
 function _mjAcInsert(item) {
@@ -503,8 +687,7 @@ function _mjAcInsert(item) {
   mjAcClose();
   ta.focus();
   ta.setSelectionRange(pos, pos);
-  if (_mjAcTargetId === 'mj-doc-content') _mjDocChanged();   // sauvegarde différée du scénario
-  else ta.dispatchEvent(new Event('change'));                // déclenche le onchange du champ
+  _mjAcNotify(ta);
 }
 
 // Navigation clavier (appelée depuis onkeydown du textarea)
@@ -523,9 +706,9 @@ function mjAcKeyup(e) {
   mjAcUpdate();
 }
 // keyup pour un champ générique (input) en mode tag uniquement
-function mjAcKeyupField(e, el) {
+function mjAcKeyupField(e, el, type) {
   if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) return;
-  mjAcUpdateField(el);
+  mjAcUpdateField(el, type);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -766,11 +949,20 @@ function _mjRenderWidget(w, wi) {
        + `<button class="mj-wdg-btn" onclick="mjWidgetCount(${wi},1)">＋</button></span>`;
 }
 
+// Index des widgets : continu à travers plusieurs appels quand on rend le
+// document bloc par bloc (sinon chaque bloc repartirait de 0 et mjWidgetToggle
+// retomberait sur le mauvais token). mjBeginWidgetSeq/mjEndWidgetSeq encadrent
+// le rendu d'une séquence de blocs ; hors séquence, l'index est local à l'appel.
+let _mjWidgetSeq       = -1;
+let _mjWidgetSeqActive = false;
+function mjBeginWidgetSeq() { _mjWidgetSeq = -1; _mjWidgetSeqActive = true; }
+function mjEndWidgetSeq()   { _mjWidgetSeqActive = false; }
+
 // Transforme les tokens /switch… du HTML rendu en widgets cliquables
 function mjLinkifyWidgets(html) {
-  let wi = -1;
+  let localWi = -1;
   const out = html.replace(_mjWidgetRe(), (full, type, stateStr, body) => {
-    wi++;
+    const wi = _mjWidgetSeqActive ? (++_mjWidgetSeq) : (++localWi);
     return _mjRenderWidget(_mjParseWidget(type, stateStr, body), wi);
   });
   // Une fois le HTML inséré dans le DOM (au prochain tick), ajuster la largeur
@@ -784,7 +976,7 @@ function mjLinkifyWidgets(html) {
 // Ajuste la largeur de chaque combo à son option courante : un <select> natif
 // se dimensionne sinon sur l'option la plus large → espace vide disgracieux.
 function _mjSizeCombos() {
-  const root = document.getElementById('mj-doc-preview-scroll') || document;
+  const root = document.getElementById('mj-doc-scroll') || document;
   const sels = root.querySelectorAll('.mj-wdg-select');
   if (!sels.length) return;
   const meas = document.createElement('span');
@@ -803,27 +995,18 @@ function _mjSizeCombos() {
   meas.remove();
 }
 
-// Réécrit le wi-ème widget du document via `mutate`, sauvegarde et re-rend
+// Réécrit le wi-ème widget de la zone active via `mutate`, sauvegarde et re-rend.
+// Générique : agit sur l'éditeur par blocs courant (scénario, description…).
 async function _mjWidgetMutate(wi, mutate) {
-  if (!_mjSession || !_mjSessionDoc) return;
+  if (typeof _mjBlocksToContent !== 'function' || typeof mjBlocksApplyExternal !== 'function') return;
+  const cur = _mjBlocksToContent();
   let n = -1;
-  const next = (_mjSessionDoc.content || '').replace(_mjWidgetRe(), (full, type, stateStr, body) => {
+  const next = cur.replace(_mjWidgetRe(), (full, type, stateStr, body) => {
     n++;
     return (n === wi) ? mutate(type, stateStr, body) : full;
   });
-  if (next === _mjSessionDoc.content) return;
-
-  _mjSessionDoc.content = next;
-  const idx = (_mjSession.docs || []).findIndex(d => d.id === _mjSessionDoc.id);
-  if (idx !== -1) _mjSession.docs[idx] = { ..._mjSessionDoc };
-  await mjSaveSession(_mjSession);
-
-  // Préserver la position de défilement de l'aperçu
-  const prev = document.getElementById('mj-doc-preview-scroll');
-  const top  = prev ? prev.scrollTop : 0;
-  mjRenderSessionDetail();
-  const next2 = document.getElementById('mj-doc-preview-scroll');
-  if (next2) next2.scrollTop = top;
+  if (next === cur) return;
+  mjBlocksApplyExternal(next);   // recharge blocs + re-rend (#mj-blocks, scroll préservé) + sauvegarde
 }
 
 // Bascule on/off — conserve le type (switch ou todo)
@@ -856,6 +1039,254 @@ function mjWidgetCount(wi, delta) {
     if (w.max != null) v = Math.min(w.max, v);
     return `/compteur[${v}]{${body}}`;
   });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Widgets DANS l'éditeur riche (puce contenteditable=false, état autonome)
+// ═══════════════════════════════════════════════════════════════
+// Contrairement au mode lecture (index global + mjBlocksApplyExternal qui
+// recharge tout), chaque puce d'éditeur est AUTONOME : elle porte son token
+// complet en data-md. Les mutateurs ci-dessous agissent sur la puce cliquée
+// (this), réécrivent son data-md + son rendu, et re-sérialisent juste le bloc
+// courant — sans re-render global, pour préserver la session d'édition.
+const _MJ_INLINE_WIDGETS = ['switch', 'todo', 'combo', 'compteur', 'jauge'];
+const _MJ_WDG_TOKEN_RE = /^\/(switch|todo|combo|compteur|jauge)(?:\[([^\]]*)\])?\{([^}]*)\}$/;
+
+// Rendu visuel interactif d'un token, à placer DANS la puce (.mj-pill-wdg).
+// Miroir de _mjRenderWidget mais avec des handlers basés sur l'événement (pas
+// d'index global) et un ré-échappement des libellés (issus du token brut).
+function _mjWidgetEditorInner(token) {
+  const m = (token || '').match(_MJ_WDG_TOKEN_RE);
+  if (!m) return escapeHtml(token || '');
+  const w = _mjParseWidget(m[1], m[2], m[3]);
+  if (w.type === 'switch')
+    return `<span class="mj-wdg mj-wdg-switch ${w.on ? 'on' : 'off'}" onclick="mjRichWdgToggle(event)" title="Interrupteur">`
+         + `<span class="mj-wdg-label">${escapeHtml(w.label)}</span><span class="mj-wdg-knob"></span></span>`;
+  if (w.type === 'todo')
+    return `<span class="mj-wdg mj-wdg-todo ${w.on ? 'done' : ''}" onclick="mjRichWdgToggle(event)" title="Tâche">`
+         + `<span class="mj-wdg-label">${escapeHtml(w.label)}</span><span class="mj-wdg-box">${w.on ? '✓' : ''}</span></span>`;
+  if (w.type === 'jauge') {
+    let segs = '';
+    for (let i = 0; i < w.max; i++) segs += `<span class="mj-wdg-seg ${i < w.val ? 'on' : ''}" onclick="mjRichWdgGauge(event,${i})"></span>`;
+    return `<span class="mj-wdg mj-wdg-gauge" title="Horloge">`
+         + (w.label ? `<span class="mj-wdg-label">${escapeHtml(w.label)}</span>` : '')
+         + `<span class="mj-wdg-segs">${segs}</span><span class="mj-wdg-gauge-txt">${w.val}/${w.max}</span></span>`;
+  }
+  if (w.type === 'combo') {
+    // Liste maison (clic gauche = déployer/choisir) : un <select> natif est peu
+    // fiable dans un contenteditable. Clic droit = modale d'édition (via la puce).
+    const cur = w.opts.length ? (w.opts[w.idx] || w.opts[0]) : '—';
+    return `<span class="mj-wdg mj-wdg-combo" onclick="mjRichComboOpen(event)" title="Cliquer pour choisir">`
+         + (w.label ? `<span class="mj-wdg-label">${escapeHtml(w.label)}</span>` : '')
+         + `<span class="mj-wdg-combo-val">${escapeHtml(cur)} ▾</span></span>`;
+  }
+  return `<span class="mj-wdg mj-wdg-count" title="Compteur">`
+       + `<button class="mj-wdg-btn" onclick="mjRichWdgCount(event,-1)">−</button>`
+       + `<span class="mj-wdg-val">${w.val}</span>`
+       + (w.label ? `<span class="mj-wdg-unit">${escapeHtml(w.label)}</span>` : '')
+       + `<button class="mj-wdg-btn" onclick="mjRichWdgCount(event,1)">＋</button></span>`;
+}
+
+// Mutation locale d'une puce donnée : réécrit son token + son rendu, puis
+// re-sérialise le bloc courant (pas de re-render global → édition préservée).
+function _mjRichWdgApply(pill, mutate) {
+  const m = (pill.getAttribute('data-md') || '').match(_MJ_WDG_TOKEN_RE);
+  if (!m) return;
+  pill.setAttribute('data-md', mutate(m[1], m[2], m[3]));
+  pill.innerHTML = _mjWidgetEditorInner(pill.getAttribute('data-md'));
+  const host = pill.closest('.mj-block-rich');
+  if (host && typeof _mjBlocks !== 'undefined') {
+    const b = _mjBlocks.find((x) => x.id === _mjEditingBlockId);
+    if (b) b.raw = mjEditableToMd(host);
+    if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+  }
+}
+function _mjRichWdgMutate(ev, mutate) {
+  ev.stopPropagation();
+  const pill = ev.target.closest('.mj-pill-wdg');
+  if (pill) _mjRichWdgApply(pill, mutate);
+}
+
+function mjRichWdgToggle(ev) {
+  _mjRichWdgMutate(ev, (type, st, body) =>
+    ((st || '').trim().toLowerCase() === 'x') ? `/${type}{${body}}` : `/${type}[x]{${body}}`);
+}
+function mjRichWdgGauge(ev, i) {
+  _mjRichWdgMutate(ev, (type, st, body) => {
+    const w = _mjParseWidget('jauge', st, body);
+    const next = (i < w.val) ? i : i + 1;
+    return `/jauge[${Math.max(0, Math.min(w.max, next))}]{${body}}`;
+  });
+}
+function mjRichWdgCount(ev, delta) {
+  _mjRichWdgMutate(ev, (type, st, body) => {
+    const w = _mjParseWidget('compteur', st, body);
+    let v = w.val + delta;
+    if (w.min != null) v = Math.max(w.min, v);
+    if (w.max != null) v = Math.min(w.max, v);
+    return `/compteur[${v}]{${body}}`;
+  });
+}
+
+// ── Combo : popup de choix maison (clic gauche) ───────────────
+function mjRichComboOpen(ev) {
+  ev.stopPropagation();
+  const pill = ev.target.closest('.mj-pill-wdg');
+  if (!pill) return;
+  const m = (pill.getAttribute('data-md') || '').match(_MJ_WDG_TOKEN_RE);
+  if (!m) return;
+  const w = _mjParseWidget('combo', m[2], m[3]);
+  if (!w.opts.length) return;
+  let pop = document.getElementById('mj-wdg-pick');
+  if (!pop) { pop = document.createElement('div'); pop.id = 'mj-wdg-pick'; document.body.appendChild(pop); }
+  pop._pill = pill;
+  const opts = w.opts.map((o, i) =>
+    `<div class="mj-pick-opt ${i === w.idx ? 'sel' : ''}" onmousedown="event.preventDefault();mjRichComboPick(${i})">${escapeHtml(o)}</div>`).join('');
+  pop.innerHTML = `<div class="mj-pick-back" onmousedown="event.preventDefault();mjRichComboClose()"></div><div class="mj-pick-menu">${opts}</div>`;
+  pop.style.display = 'block';
+  const trigger = ev.target.closest('.mj-wdg-combo') || pill;
+  const r = trigger.getBoundingClientRect();
+  const menu = pop.querySelector('.mj-pick-menu');
+  menu.style.left = r.left + 'px';
+  menu.style.top  = (r.bottom + 3) + 'px';
+  const mr = menu.getBoundingClientRect();
+  if (mr.bottom > window.innerHeight - 8) menu.style.top = Math.max(8, r.top - mr.height - 3) + 'px';
+  if (mr.right  > window.innerWidth  - 8) menu.style.left = Math.max(8, window.innerWidth - 8 - mr.width) + 'px';
+}
+function mjRichComboPick(i) {
+  const pop = document.getElementById('mj-wdg-pick');
+  const pill = pop && pop._pill;
+  if (pill) _mjRichWdgApply(pill, (type, st, body) => `/combo[${i}]{${body}}`);
+  mjRichComboClose();
+}
+function mjRichComboClose() {
+  const pop = document.getElementById('mj-wdg-pick');
+  if (pop) { pop.style.display = 'none'; pop._pill = null; }
+}
+
+// ── Clic droit sur une puce-widget → modale d'édition de structure ──
+// ── Menu contextuel widget (clic droit) : Modifier / Supprimer ──
+// Unifié pour la puce en ÉDITION (.mj-pill-wdg) et le widget rendu en LECTURE
+// (.mj-wdg). En lecture, le widget est repéré par son index d'ordre (wi), aligné
+// sur _mjWidgetMutate (mêmes tokens, même ordre).
+let _mjWdgCtxTarget = null;
+
+function _mjWidgetTokenAt(wi) {
+  if (typeof _mjBlocksToContent !== 'function') return null;
+  const re = _mjWidgetRe(); const content = _mjBlocksToContent();
+  let n = -1, m;
+  while ((m = re.exec(content)) !== null) { n++; if (n === wi) return m[0]; }
+  return null;
+}
+
+function mjWidgetContext(ev) {
+  const pill = ev.target.closest && ev.target.closest('.mj-pill-wdg');
+  if (pill) { ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'edit', pill }); return false; }
+  const wdg = ev.target.closest && ev.target.closest('.mj-wdg');
+  if (wdg && !wdg.closest('.mj-pill-wdg')) {
+    const all = [...document.querySelectorAll('#mj-blocks .mj-wdg')].filter((n) => !n.closest('.mj-pill-wdg'));
+    const wi = all.indexOf(wdg);
+    if (wi >= 0) { ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'read', wi }); return false; }
+  }
+  const det = ev.target.closest && ev.target.closest('.mj-wdg-details');
+  if (det) {
+    const blockEl = det.closest('.mj-block');
+    const blockId = blockEl && blockEl.getAttribute('data-block-id');
+    if (blockId) { ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'details', blockId }); return false; }
+  }
+  return true;
+}
+
+function _mjWdgCtxEl() {
+  let el = document.getElementById('mj-wdg-ctx');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mj-wdg-ctx';
+    el.innerHTML = `<div class="mj-wdgctx-backdrop" oncontextmenu="event.preventDefault();mjWdgCtxClose();return false;" onclick="mjWdgCtxClose()"></div>
+      <div class="mj-wdgctx-card" id="mj-wdgctx-card">
+        <div class="mj-wdgctx-item" onclick="mjWdgCtxModify()">✏️ Modifier</div>
+        <div class="mj-wdgctx-item danger" onclick="mjWdgCtxDelete()">🗑️ Supprimer</div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function _mjShowWdgCtx(ev, target) {
+  _mjWdgCtxTarget = target;
+  const el = _mjWdgCtxEl();
+  el.style.display = 'block';
+  const card = el.querySelector('#mj-wdgctx-card');
+  card.style.left = '0px'; card.style.top = '0px';
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let left = ev.clientX, top = ev.clientY;
+  if (left + cw > window.innerWidth  - 8) left = window.innerWidth  - 8 - cw;
+  if (top  + ch > window.innerHeight - 8) top  = window.innerHeight - 8 - ch;
+  card.style.left = Math.max(8, left) + 'px';
+  card.style.top  = Math.max(8, top) + 'px';
+}
+
+function mjWdgCtxClose() {
+  const el = document.getElementById('mj-wdg-ctx');
+  if (el) el.style.display = 'none';
+  _mjWdgCtxTarget = null;
+}
+
+function mjWdgCtxModify() {
+  const t = _mjWdgCtxTarget; mjWdgCtxClose();
+  if (!t) return;
+  if (t.mode === 'details') {
+    const b = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find((x) => x.id === t.blockId) : null;
+    if (typeof mjOpenDetailsForm === 'function') mjOpenDetailsForm(t.blockId, '', b ? b.raw : '');
+  } else if (t.mode === 'edit') {
+    if (typeof mjOpenWidgetEditForm === 'function') mjOpenWidgetEditForm(t.pill);
+  } else if (typeof mjOpenWidgetEditFormRead === 'function') {
+    mjOpenWidgetEditFormRead(t.wi);
+  }
+}
+
+function mjWdgCtxDelete() {
+  const t = _mjWdgCtxTarget; mjWdgCtxClose();
+  if (!t) return;
+  if (t.mode === 'details') {
+    if (typeof _mjBlocks === 'undefined') return;
+    const i = _mjBlocks.findIndex((x) => x.id === t.blockId);
+    if (i < 0) return;
+    _mjBlocks.splice(i, 1);
+    if (_mjBlocks.length === 0) _mjBlocks.push({ id: _mjNewBlockId(), raw: '' });
+    if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+    if (typeof _mjRenderBlocks === 'function') _mjRenderBlocks();
+  } else if (t.mode === 'edit') {
+    const pill = t.pill, host = pill && pill.closest('.mj-block-rich');
+    if (pill) pill.remove();
+    if (host && typeof mjRichInput === 'function') mjRichInput(host.id.replace('mjb-', ''));
+  } else if (typeof _mjWidgetMutate === 'function') {
+    _mjWidgetMutate(t.wi, () => '');
+  }
+}
+
+// Compat : ancien point d'entrée du clic droit sur puce → menu unifié.
+function mjWidgetPillContext(ev) { return mjWidgetContext(ev); }
+
+// Token → valeurs de formulaire (pour pré-remplir la modale d'édition).
+function _mjWidgetTokenToVals(token) {
+  const m = (token || '').match(_MJ_WDG_TOKEN_RE);
+  if (!m) return null;
+  const type = m[1], body = m[3];
+  const ci = body.indexOf(':');
+  const label = (ci >= 0 ? body.slice(0, ci) : body).trim();
+  const rest  = (ci >= 0 ? body.slice(ci + 1) : '').trim();
+  const vals = { label };
+  if (type === 'combo')    vals.opts = rest.split('|').map((s) => s.trim()).filter(Boolean).join('|');
+  if (type === 'compteur') { const mm = rest.match(/-?\d+\s*\.\.\s*-?\d+/); vals.range = mm ? mm[0] : ''; }
+  if (type === 'jauge')    { const n = parseInt(rest, 10); vals.segs = isNaN(n) ? '' : String(n); }
+  return { type, vals };
+}
+
+// Applique l'édition de structure : remplace le token de la puce (en gardant l'état).
+function _mjApplyWidgetEdit(pill, token) {
+  if (!pill) return;
+  _mjRichWdgApply(pill, () => token);
 }
 
 // Coordonnées pixel du curseur dans un textarea (technique du miroir)

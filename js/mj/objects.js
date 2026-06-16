@@ -90,6 +90,7 @@ async function mjRenderObjectsList() {
 
 async function mjSelectObject(id) {
   _mjObject = await mjGetObject(id);
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();  // @tags rendus dans la description
   await mjRenderObjectsList();
   await mjRenderObjectDetail();
 }
@@ -147,19 +148,55 @@ async function mjRenderObjectDetail() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">${rarityBtns}</div>
 
       <div class="sec-lbl" style="margin-bottom:8px;">PROPRIÉTAIRE</div>
-      <input id="mj-object-owner" class="mj-subtitle-input" style="margin-bottom:16px;"
-        value="${escapeHtml(o.owner || '')}" placeholder="Tape @ pour lier un PNJ…"
-        oninput="mjAcUpdateField(this)" onkeydown="mjAcKeydown(event)" onkeyup="mjAcKeyupField(event,this)"
-        onblur="mjAcBlur()" onchange="mjObjectSaveField('owner', this.value)"/>
+      <div id="mj-owner-field" style="margin-bottom:16px;">${_mjOwnerFieldHtml(o.owner)}</div>
 
       <div class="sec-lbl" style="margin-bottom:8px;">DESCRIPTION</div>
-      <textarea id="mj-object-notes"
-        style="width:100%;min-height:160px;border:1.5px solid var(--divider);border-radius:12px;
-        padding:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--text);
-        line-height:1.7;resize:vertical;background:var(--white);outline:none;box-sizing:border-box;"
-        placeholder="Pouvoirs, histoire, apparence… (@ pour lier une ressource)"
-        onchange="mjObjectSaveField('notes', this.value)">${escapeHtml(o.notes || '')}</textarea>
+      ${mjBlockEditorHtml({ boxed: true })}
     </div>`;
+  mjMountBlockEditor(o.notes || '', mjObjectSaveNotes);
+}
+
+async function mjObjectSaveNotes() {
+  if (!_mjObject) return;
+  _mjObject.notes = _mjBlocksToContent();
+  await mjSaveObject(_mjObject);
+}
+
+// ── Champ « Propriétaire » : tag PNJ cliquable au repos, éditable au clic ──
+// Au repos, le @tag est rendu en pastille cliquable (navigation vers le PNJ).
+// Au clic ailleurs, le champ redevient un input avec autocomplétion PNJ only.
+function _mjOwnerFieldHtml(owner) {
+  const v = (owner || '').trim();
+  const inner = v
+    ? (typeof mjLinkifyTags === 'function' ? mjLinkifyTags(escapeHtml(v)) : escapeHtml(v))
+    : `<span class="mj-owner-ph">Tape @ pour lier un PNJ…</span>`;
+  return `<div class="mj-owner-view" onclick="mjOwnerEdit(event)" title="Cliquer pour modifier">${inner}</div>`;
+}
+
+function mjOwnerEdit(e) {
+  if (e && e.target.closest('.mj-tag')) return;   // clic sur la pastille = navigation, pas édition
+  const box = document.getElementById('mj-owner-field');
+  if (!box || !_mjObject) return;
+  box.innerHTML = `<input id="mj-object-owner" class="mj-owner-input"
+    value="${escapeHtml(_mjObject.owner || '')}" placeholder="Tape @ pour lier un PNJ…"
+    oninput="mjAcUpdateField(this,'npc')" onkeydown="mjAcKeydown(event)" onkeyup="mjAcKeyupField(event,this,'npc')"
+    onblur="mjOwnerCommit()"/>`;
+  const inp = document.getElementById('mj-object-owner');
+  if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+function mjOwnerCommit() {
+  // léger délai : laisse l'autocomplétion insérer (elle re-focus l'input) avant de committer
+  setTimeout(async () => {
+    const inp = document.getElementById('mj-object-owner');
+    if (!inp || !_mjObject) return;
+    if (document.activeElement === inp) return;   // toujours en édition (re-focus après autocomplétion)
+    if (typeof mjAcClose === 'function') mjAcClose();
+    _mjObject.owner = inp.value;
+    await mjSaveObject(_mjObject);
+    const box = document.getElementById('mj-owner-field');
+    if (box) box.innerHTML = _mjOwnerFieldHtml(_mjObject.owner);
+  }, 150);
 }
 
 async function mjObjectSaveField(field, value) {
@@ -241,6 +278,7 @@ async function mjRenderPlacesList() {
 
 async function mjSelectPlace(id) {
   _mjPlace = await mjGetPlace(id);
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();  // @tags rendus dans la description
   await mjRenderPlacesList();
   await mjRenderPlaceDetail();
 }
@@ -295,13 +333,15 @@ async function mjRenderPlaceDetail() {
         onchange="mjPlaceSaveField('region', this.value)"/>
 
       <div class="sec-lbl" style="margin-bottom:8px;">DESCRIPTION</div>
-      <textarea id="mj-place-notes"
-        style="width:100%;min-height:160px;border:1.5px solid var(--divider);border-radius:12px;
-        padding:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--text);
-        line-height:1.7;resize:vertical;background:var(--white);outline:none;box-sizing:border-box;"
-        placeholder="Ambiance, PNJ présents, points d'intérêt… (@ pour lier une ressource)"
-        onchange="mjPlaceSaveField('notes', this.value)">${escapeHtml(p.notes || '')}</textarea>
+      ${mjBlockEditorHtml({ boxed: true })}
     </div>`;
+  mjMountBlockEditor(p.notes || '', mjPlaceSaveNotes);
+}
+
+async function mjPlaceSaveNotes() {
+  if (!_mjPlace) return;
+  _mjPlace.notes = _mjBlocksToContent();
+  await mjSavePlace(_mjPlace);
 }
 
 async function mjPlaceSaveField(field, value) {

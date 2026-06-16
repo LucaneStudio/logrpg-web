@@ -283,13 +283,13 @@ function renderMarkdown(md) {
       out.push(_mdTable(tLines)); continue;
     }
     // Titres
-    if (line.startsWith('### ')) { out.push(`<h3 style="font-size:16px;font-weight:800;color:var(--text);margin:10px 0 4px;">${escapeHtml(line.slice(4))}</h3>`); i++; continue; }
-    if (line.startsWith('## '))  { out.push(`<h2 style="font-size:19px;font-weight:900;color:var(--text);margin:14px 0 5px;">${escapeHtml(line.slice(3))}</h2>`); i++; continue; }
-    if (line.startsWith('# '))   { out.push(`<h1 style="font-size:22px;font-weight:900;color:var(--purple);margin:16px 0 6px;">${escapeHtml(line.slice(2))}</h1>`); i++; continue; }
+    if (line.startsWith('### ')) { out.push(`<h3 style="font-size:16px;font-weight:800;color:var(--text);margin:10px 0 4px;">${inlineMd(escapeHtml(line.slice(4)))}</h3>`); i++; continue; }
+    if (line.startsWith('## '))  { out.push(`<h2 style="font-size:19px;font-weight:900;color:var(--text);margin:14px 0 5px;">${inlineMd(escapeHtml(line.slice(3)))}</h2>`); i++; continue; }
+    if (line.startsWith('# '))   { out.push(`<h1 style="font-size:22px;font-weight:900;color:var(--purple);margin:16px 0 6px;">${inlineMd(escapeHtml(line.slice(2)))}</h1>`); i++; continue; }
     // Liste
     if (tr.startsWith('- ') || tr.startsWith('* '))  { out.push(`<div style="display:flex;gap:8px;margin:2px 0;"><span style="color:var(--purple);">•</span><span>${inlineMd(escapeHtml(tr.slice(2)))}</span></div>`); i++; continue; }
     // Citation
-    if (tr.startsWith('> '))  { out.push(`<div style="border-left:3px solid var(--purple);background:var(--purple-l);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0;font-style:italic;">${escapeHtml(tr.slice(2))}</div>`); i++; continue; }
+    if (tr.startsWith('> '))  { out.push(`<div style="border-left:3px solid var(--purple);background:var(--purple-l);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0;font-style:italic;">${inlineMd(escapeHtml(tr.slice(2)))}</div>`); i++; continue; }
     // Ligne vide
     if (!tr) { out.push('<div style="height:8px;"></div>'); i++; continue; }
     // Paragraphe
@@ -308,11 +308,12 @@ function _mdTable(lines) {
   }
   const headers = parseRow(lines[0]);
   const rows    = lines.slice(2).map(parseRow);
-  const thCells = headers.map(h => `<th style="padding:7px 12px;background:var(--surface);font-size:12px;font-weight:900;color:var(--text);text-align:left;border-bottom:2px solid var(--divider);">${escapeHtml(h)}</th>`).join('');
-  const dataRows = rows.map(row =>
-    `<tr>${row.map((cell,j) => `<td style="padding:6px 12px;font-size:12.5px;border:1px solid var(--divider);color:${j===0?'var(--text)':'var(--text-mid)'};">${inlineMd(escapeHtml(cell))}</td>`).join('')}</tr>`
+  const bd = '1px solid rgba(110,130,150,.38)';   // séparateur visible (var(--divider) est trop clair)
+  const thCells = headers.map(h => `<th style="padding:8px 13px;background:var(--surface);font-size:12px;font-weight:900;color:var(--text);text-align:left;border:${bd};">${escapeHtml(h)}</th>`).join('');
+  const dataRows = rows.map((row, ri) =>
+    `<tr style="background:${ri % 2 ? 'rgba(110,130,150,.05)' : 'var(--white)'};">${row.map((cell) => `<td style="padding:7px 13px;font-size:12.5px;border:${bd};color:var(--text);">${inlineMd(escapeHtml(cell))}</td>`).join('')}</tr>`
   ).join('');
-  return `<div style="overflow-x:auto;margin:8px 0;"><table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);border:1px solid var(--divider);">
+  return `<div style="overflow-x:auto;margin:8px 0;"><table style="border-collapse:collapse;border:${bd};box-shadow:0 1px 4px rgba(0,0,0,.06);">
     <thead><tr>${thCells}</tr></thead>
     <tbody>${dataRows}</tbody>
   </table></div>`;
@@ -320,8 +321,10 @@ function _mdTable(lines) {
 
 function inlineMd(t) {
   return t
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,     '<em>$1</em>');
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')   // **gras**
+    .replace(/~~(.+?)~~/g,     '<s>$1</s>')              // ~~barré~~
+    .replace(/__(.+?)__/g,     '<u>$1</u>')              // __souligné__
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>');           // *italique*
 }
 
 // ── Create / Rename / Delete ──────────────────────────────────────────────────

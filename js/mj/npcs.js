@@ -38,6 +38,7 @@ async function mjRenderNpcsList() {
 
 async function mjSelectNpc(id) {
   _mjNpc = await mjGetNpc(id);
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();  // @tags rendus dans les notes
   await mjRenderNpcsList();
   await mjRenderNpcDetail();
 }
@@ -99,13 +100,15 @@ async function mjRenderNpcDetail() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">${statusBtns}</div>
 
       <div class="sec-lbl" style="margin-bottom:8px;">NOTES</div>
-      <textarea id="mj-npc-notes"
-        style="width:100%;min-height:180px;border:1.5px solid var(--divider);border-radius:12px;
-        padding:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--text);
-        line-height:1.7;resize:vertical;background:var(--white);outline:none;box-sizing:border-box;"
-        placeholder="Personnalité, secrets, liens avec les PJ…"
-        onchange="mjNpcSaveField('notes', this.value)">${escapeHtml(n.notes || '')}</textarea>
+      ${mjBlockEditorHtml({ boxed: true })}
     </div>`;
+  mjMountBlockEditor(n.notes || '', mjNpcSaveNotes);
+}
+
+async function mjNpcSaveNotes() {
+  if (!_mjNpc) return;
+  _mjNpc.notes = _mjBlocksToContent();
+  await mjSaveNpc(_mjNpc);
 }
 
 // ── Actions ───────────────────────────────────────────────────
