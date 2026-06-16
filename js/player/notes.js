@@ -286,8 +286,18 @@ function renderMarkdown(md) {
     if (line.startsWith('### ')) { out.push(`<h3 style="font-size:16px;font-weight:800;color:var(--text);margin:10px 0 4px;">${inlineMd(escapeHtml(line.slice(4)))}</h3>`); i++; continue; }
     if (line.startsWith('## '))  { out.push(`<h2 style="font-size:19px;font-weight:900;color:var(--text);margin:14px 0 5px;">${inlineMd(escapeHtml(line.slice(3)))}</h2>`); i++; continue; }
     if (line.startsWith('# '))   { out.push(`<h1 style="font-size:22px;font-weight:900;color:var(--purple);margin:16px 0 6px;">${inlineMd(escapeHtml(line.slice(2)))}</h1>`); i++; continue; }
-    // Liste
-    if (tr.startsWith('- ') || tr.startsWith('* '))  { out.push(`<div style="display:flex;gap:8px;margin:2px 0;"><span style="color:var(--purple);">•</span><span>${inlineMd(escapeHtml(tr.slice(2)))}</span></div>`); i++; continue; }
+    // Liste (à puces ou numérotée) — l'indentation (2 espaces = 1 niveau) est respectée
+    const mLi = line.match(/^([ \t]*)([-*]|\d+\.)\s+(.*)$/);
+    if (mLi) {
+      const indent  = mLi[1].replace(/\t/g, '  ').length;
+      const level   = Math.floor(indent / 2);
+      const ordered = /^\d+\.$/.test(mLi[2]);
+      const marker  = ordered ? mLi[2] : ['•', '◦', '▪'][level % 3];
+      out.push(`<div style="display:flex;gap:8px;margin:2px 0;padding-left:${level * 20}px;">`
+        + `<span style="color:var(--purple);flex-shrink:0;">${marker}</span>`
+        + `<span>${inlineMd(escapeHtml(mLi[3]))}</span></div>`);
+      i++; continue;
+    }
     // Citation
     if (tr.startsWith('> '))  { out.push(`<div style="border-left:3px solid var(--purple);background:var(--purple-l);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0;font-style:italic;">${inlineMd(escapeHtml(tr.slice(2)))}</div>`); i++; continue; }
     // Ligne vide

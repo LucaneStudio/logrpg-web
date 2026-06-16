@@ -1,8 +1,8 @@
 # Passation — Éditeur WYSIWYG inline (option D) — suite
 
-> Reprise de session. Branche : `rework-zone-text`. Version : **1.7.12** (`js/config.js`).
-> **Commité** : `8b24857` (éditeur WYSIWYG option D) + `a908af7` (clic droit tableaux).
-> `origin/main` = v1.6.0 ; branche non poussée.
+> Reprise de session. Branche : `rework-zone-text`. Version : **1.7.14** (`js/config.js`).
+> **Commité** : `8b24857` (éditeur WYSIWYG option D) + `a908af7` (clic droit tableaux) +
+> commit listes. `origin/main` = v1.6.0 ; non poussée (push + note de version à la fin).
 > Spec : `docs/superpowers/specs/2026-06-15-editeur-wysiwyg-inline-option-d-design.md`.
 
 ## Où on en est
@@ -71,12 +71,29 @@ aller-retour `_mjBlocksToContent`→`_mjLoadBlocks` stable, garde mjBlockClick. 
 (grille) ; `mjWdgCtxDelete` mode `table` → retire le bloc (corrige l'impossibilité de
 supprimer un tableau). Vérifié dans la vraie app.
 
+## ✅ Listes multi-niveaux (§7) — FAIT et VÉRIFIÉ
+Bloc liste (puces `-` ou numéroté `1.`) édité en contenteditable : un `<div.mj-li>`
+par item, niveau via `data-level`/`--lvl`. Comportement type Word :
+- Entrée (texte) → item frère ; Entrée (item vide) → désindente, ou sort de la liste
+  niveau 0 (l'item devient un paragraphe ; items suivants → nouvelle liste sous le para).
+- Tab → indente (≤ niveau du précédent+1 ; 1er item non indentable) ; Maj+Tab → désindente.
+- Backspace début d'item : niveau>0 → désindente ; sinon fusionne avec l'item précédent.
+- Sérialisation : 2 espaces/niveau ; ordonné numéroté par compteurs de niveau.
+- Marques B/I/U/S et tags `@` fonctionnent **dans l'item courant** (conteneur actif =
+  `.mj-li`, via `_mjActiveRichContainer`). Sérialisation unifiée `_mjEditorToRaw(el)`.
+- Rendu lecture (§7.2) : `renderMarkdown` (`js/player/notes.js`) respecte l'indentation
+  (niveau = espaces/2, marqueurs •/◦/▪, listes numérotées avec leur n°). Bénéficie aussi
+  aux notes joueur.
+Fonctions (sessions.js) : `_mjIsListBlock`, `_mjParseList`, `_mjListToMarkdown`,
+`_mjListSerialize`, `_mjLiInline`, `_mjEditorToRaw`, `_mjActiveRichContainer`,
+`_mjListEditorHtml`, `mjListInput/Keydown/Blur`, `_mjListSplitItem`, `_mjListMergePrevItem`,
+`_mjListExitToParagraph`. CSS `.mj-list-edit`/`.mj-li`.
+Vérifié : pures 10/10, structure 7/7, marques+tags 6/6, Entrée/Tab/Maj+Tab en vrai éditeur.
+
 ## ⏭️ Ensuite (non commencé)
-- **Listes** multi-niveaux type Word (Entrée/Tab/Maj+Tab) + **upgrade du rendu lecture**
-  `renderMarkdown` (`js/player/notes.js`) pour respecter l'indentation (2 espaces/niveau ;
-  il aplatit tout aujourd'hui). C'est le plus gros morceau (spec §7).
 - **Séparateur** (`---`) : laissé en textarea minimal pour l'instant.
 - Boutons copier/coller Markdown (spec §9).
+- **Puis** : pousser la branche + rédiger la note de version (demande utilisateur : à la fin).
 
 ## 🧹 Dette à nettoyer (sans impact fonctionnel)
 - **4 octets NUL (U+0000)** dans `js/mj/sessions.js` (sentinelles littérales de `_mjSplitBlocks`,

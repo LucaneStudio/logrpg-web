@@ -289,6 +289,27 @@
   height: auto; overflow: visible; cursor: text; font-weight: 400;
 }
 .mj-block-rich strong, .mj-block-rich b { font-weight: 700; }
+
+/* ── Éditeur de liste multi-niveaux (§7) ── */
+.mj-list-edit {
+  width: 100%; box-sizing: border-box; display: block;
+  border: 1.5px solid rgba(167,139,250,.45); border-radius: 8px;
+  padding: 8px 10px; margin: 1px 0;
+  font-family: 'Nunito', sans-serif; font-size: 13.5px; font-weight: 400;
+  color: var(--text); line-height: 1.75; background: var(--white);
+  outline: none; box-shadow: 0 0 0 3px var(--purple-l);
+}
+.mj-li {
+  position: relative; padding-left: calc(var(--lvl, 0) * 20px + 18px);
+  white-space: pre-wrap; word-break: break-word; min-height: 1.6em;
+}
+.mj-li::before {
+  content: '•'; position: absolute; left: calc(var(--lvl, 0) * 20px);
+  color: var(--purple); font-weight: 700;
+}
+.mj-li[data-level="1"]::before { content: '◦'; }
+.mj-li[data-level="2"]::before { content: '▪'; }
+.mj-li strong, .mj-li b { font-weight: 700; }
 .mj-block-rich:empty::before {
   content: attr(data-ph); color: var(--text-light); font-weight: 600; pointer-events: none;
 }

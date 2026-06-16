@@ -611,7 +611,7 @@ function _mjAcInsertTagRich(item) {
   const el = document.getElementById(_mjAcTargetId);
   if (el) {
     const b = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find(x => x.id === _mjEditingBlockId) : null;
-    if (b) b.raw = mjEditableToMd(el);
+    if (b) b.raw = (typeof _mjEditorToRaw === 'function') ? _mjEditorToRaw(el) : mjEditableToMd(el);
     el.focus();
   }
   if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
@@ -1094,10 +1094,10 @@ function _mjRichWdgApply(pill, mutate) {
   if (!m) return;
   pill.setAttribute('data-md', mutate(m[1], m[2], m[3]));
   pill.innerHTML = _mjWidgetEditorInner(pill.getAttribute('data-md'));
-  const host = pill.closest('.mj-block-rich');
+  const host = pill.closest('.mj-block-rich, .mj-list-edit');
   if (host && typeof _mjBlocks !== 'undefined') {
     const b = _mjBlocks.find((x) => x.id === _mjEditingBlockId);
-    if (b) b.raw = mjEditableToMd(host);
+    if (b) b.raw = (typeof _mjEditorToRaw === 'function') ? _mjEditorToRaw(host) : mjEditableToMd(host);
     if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
   }
 }
@@ -1270,9 +1270,13 @@ function mjWdgCtxDelete() {
     if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
     if (typeof _mjRenderBlocks === 'function') _mjRenderBlocks();
   } else if (t.mode === 'edit') {
-    const pill = t.pill, host = pill && pill.closest('.mj-block-rich');
+    const pill = t.pill, host = pill && pill.closest('.mj-block-rich, .mj-list-edit');
     if (pill) pill.remove();
-    if (host && typeof mjRichInput === 'function') mjRichInput(host.id.replace('mjb-', ''));
+    if (host) {
+      const b = (typeof _mjBlocks !== 'undefined') ? _mjBlocks.find((x) => 'mjb-' + x.id === host.id) : null;
+      if (b && typeof _mjEditorToRaw === 'function') b.raw = _mjEditorToRaw(host);
+      if (typeof _mjBlocksChanged === 'function') _mjBlocksChanged();
+    }
   } else if (typeof _mjWidgetMutate === 'function') {
     _mjWidgetMutate(t.wi, () => '');
   }
