@@ -14,7 +14,8 @@ async function mjRenderAssetsList() {
     ? `<div class="mj-empty">🖼️️️️<br>Aucune image.<br>Clique + pour importer.</div>`
     : assets.map(a => `
         <div class="mj-item-card ${_mjAssetSelected===a.id?'active':''}"
-             onclick="mjSelectAsset(${a.id})">
+             onclick="mjSelectAsset(${a.id})"
+             oncontextmenu="return mjItemContext(event, () => mjDeleteAssetConfirm(${a.id}))">
           <div class="mj-item-name" style="display:flex;align-items:center;gap:7px;">
             <span style="font-size:14px;">🖼️️️️</span>${escapeHtml(a.name)}
           </div>
@@ -87,12 +88,12 @@ async function mjAssetRename(id, name) {
   await mjRenderAssetsList();
 }
 
-async function mjDeleteAssetConfirm(id) {
-  if (!confirm('Supprimer cette image ?')) return;
-  // Révoquer l'URL si en cache
-  if (_mjAssetUrls[id]) { URL.revokeObjectURL(_mjAssetUrls[id]); delete _mjAssetUrls[id]; }
-  await mjDeleteAsset(id);
-  _mjAssetSelected = null;
-  await mjRenderAssetsList();
-  await mjRenderAssetDetail();
+function mjDeleteAssetConfirm(id) {
+  appConfirm('Supprimer cette image ? Cette action est définitive.', async () => {
+    if (_mjAssetUrls[id]) { URL.revokeObjectURL(_mjAssetUrls[id]); delete _mjAssetUrls[id]; }
+    await mjDeleteAsset(id);
+    if (_mjAssetSelected === id) _mjAssetSelected = null;
+    await mjRenderAssetsList();
+    await mjRenderAssetDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }

@@ -17,7 +17,8 @@ async function mjRenderEncountersList() {
         const total = (e.participants || []).reduce((s, p) => s + (p.qty || 1), 0);
         return `
           <div class="mj-item-card ${_mjEncounter?.id === e.id ? 'active' : ''}"
-               onclick="mjSelectEncounter(${e.id})">
+               onclick="mjSelectEncounter(${e.id})"
+               oncontextmenu="return mjItemContext(event, () => mjDeleteEncounterConfirm(${e.id}))">
             <div class="mj-item-name">${escapeHtml(e.title || 'Sans titre')}</div>
             <div class="mj-item-sub">
               <span class="mj-pill mj-pill-red">${total} participant${total>1?'s':''}</span>
@@ -257,12 +258,13 @@ async function mjNewEncounter() {
   setTimeout(() => document.getElementById('mj-enc-title')?.focus(), 100);
 }
 
-async function mjDeleteEncounterConfirm(id) {
-  if (!confirm('Supprimer cette rencontre ?')) return;
-  await mjDeleteEncounter(id);
-  _mjEncounter = null;
-  await mjRenderEncountersList();
-  mjRenderEncounterDetail();
+function mjDeleteEncounterConfirm(id) {
+  appConfirm('Supprimer cette rencontre ? Cette action est définitive.', async () => {
+    await mjDeleteEncounter(id);
+    if (_mjEncounter && _mjEncounter.id === id) _mjEncounter = null;
+    await mjRenderEncountersList();
+    mjRenderEncounterDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }
 
 // ── Lancement combat depuis une rencontre ─────────────────────

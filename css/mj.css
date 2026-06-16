@@ -372,7 +372,7 @@
 #mj-wdg-pick { position: fixed; inset: 0; z-index: 11060; display: none; }  /* au-dessus de #mj-overlay (4998) */
 
 /* Menu contextuel widget (clic droit) : Modifier / Supprimer */
-#mj-wdg-ctx { position: fixed; inset: 0; z-index: 11070; display: none; }
+#mj-wdg-ctx, #mj-item-ctx { position: fixed; inset: 0; z-index: 11070; display: none; }
 .mj-wdgctx-backdrop { position: absolute; inset: 0; }
 .mj-wdgctx-card {
   position: absolute; min-width: 156px; padding: 5px;

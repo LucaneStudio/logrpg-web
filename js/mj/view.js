@@ -153,3 +153,32 @@ function _mjTriggerImport() {
   };
   input.click();
 }
+
+// ── Menu contextuel générique des items MJ (clic droit → Supprimer) ──
+// Réutilisé par toutes les listes (sessions, scénarios, PNJ, objets, lieux,
+// combats, images). L'action passée ouvre la modale de confirmation dédiée.
+let _mjItemCtxAction = null;
+function mjItemContext(ev, action) {
+  if (typeof action !== 'function') return true;
+  ev.preventDefault(); ev.stopPropagation();
+  _mjItemCtxAction = action;
+  let el = document.getElementById('mj-item-ctx');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'mj-item-ctx';
+    el.innerHTML = `<div class="mj-wdgctx-backdrop" oncontextmenu="event.preventDefault();mjItemCtxClose();return false;" onclick="mjItemCtxClose()"></div>`
+      + `<div class="mj-wdgctx-card" id="mj-itemctx-card"><div class="mj-wdgctx-item danger" onclick="mjItemCtxRun()">🗑️ Supprimer</div></div>`;
+    document.body.appendChild(el);
+  }
+  el.style.display = 'block';
+  const card = el.querySelector('#mj-itemctx-card');
+  card.style.left = '0px'; card.style.top = '0px';
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let left = ev.clientX, top = ev.clientY;
+  if (left + cw > window.innerWidth  - 8) left = window.innerWidth  - 8 - cw;
+  if (top  + ch > window.innerHeight - 8) top  = window.innerHeight - 8 - ch;
+  card.style.left = Math.max(8, left) + 'px';
+  card.style.top  = Math.max(8, top)  + 'px';
+  return false;
+}
+function mjItemCtxClose() { const el = document.getElementById('mj-item-ctx'); if (el) el.style.display = 'none'; _mjItemCtxAction = null; }
+function mjItemCtxRun() { const a = _mjItemCtxAction; mjItemCtxClose(); if (typeof a === 'function') a(); }

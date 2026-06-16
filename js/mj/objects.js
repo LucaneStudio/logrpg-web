@@ -78,7 +78,8 @@ async function mjRenderObjectsList() {
     : objs.map(o => {
         const r = _objRarityMeta(o.rarity);
         return `
-          <div class="mj-item-card ${_mjObject?.id === o.id ? 'active' : ''}" onclick="mjSelectObject(${o.id})">
+          <div class="mj-item-card ${_mjObject?.id === o.id ? 'active' : ''}" onclick="mjSelectObject(${o.id})"
+               oncontextmenu="return mjItemContext(event, () => mjDeleteObjectConfirm(${o.id}))">
             <div class="mj-item-name">${escapeHtml(o.name || 'Sans nom')}</div>
             <div class="mj-item-sub">
               <span class="mj-pill" style="color:${r.color};background:${r.bg};">${r.label}</span>
@@ -267,7 +268,8 @@ async function mjRenderPlacesList() {
   list.innerHTML = places.length === 0
     ? `<div class="mj-empty">📍<br>Aucun lieu.<br>Ajoute le premier !</div>`
     : places.map(p => `
-        <div class="mj-item-card ${_mjPlace?.id === p.id ? 'active' : ''}" onclick="mjSelectPlace(${p.id})">
+        <div class="mj-item-card ${_mjPlace?.id === p.id ? 'active' : ''}" onclick="mjSelectPlace(${p.id})"
+             oncontextmenu="return mjItemContext(event, () => mjDeletePlaceConfirm(${p.id}))">
           <div class="mj-item-name">${escapeHtml(p.name || 'Sans nom')}</div>
           <div class="mj-item-sub">
             ${p.ptype ? `<span>${escapeHtml(p.ptype)}</span>` : ''}

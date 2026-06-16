@@ -104,6 +104,15 @@ séparateur supprimable.
 - Les 4 octets NUL de `_mjSplitBlocks` sont remplacés par `_MJ_BLK_SENT =
   String.fromCharCode(0xE010)` ; `sessions.js` est de nouveau du texte (ripgrep/Grep OK).
 
+## ✅ Clic droit « Supprimer » sur tous les items MJ — FAIT
+Menu contextuel générique `mjItemContext(ev, action)` (js/mj/view.js, `#mj-item-ctx`,
+réutilise les classes `.mj-wdgctx-*`, z 11070) branché en `oncontextmenu` sur sessions,
+scénarios (arbre), PNJ, objets, lieux, combats, images. « Supprimer » → modale
+`appConfirm` (z 10000, au-dessus de l'overlay 4998). Les confirmations PNJ/combat/image
+qui utilisaient `confirm()` natif sont passées à `appConfirm` (modale stylée) ; nouveau
+`mjDeleteScenarioConfirm(sessionId, docId)` sûr hors session courante. Vérifié (session
++ PNJ supprimés via la modale).
+
 ## ⏭️ Ensuite — il ne reste que la FIN
 - Pousser la branche `rework-zone-text` + rédiger la **note de version** (demande
   utilisateur : à la toute fin, une fois tout terminé). Penser à recenser les bumps

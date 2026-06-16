@@ -26,7 +26,8 @@ async function mjRenderNpcsList() {
         const st = _npcStatusMeta(n.status);
         return `
           <div class="mj-item-card ${_mjNpc?.id === n.id ? 'active' : ''}"
-               onclick="mjSelectNpc(${n.id})">
+               onclick="mjSelectNpc(${n.id})"
+               oncontextmenu="return mjItemContext(event, () => mjDeleteNpcConfirm(${n.id}))">
             <div class="mj-item-name">${escapeHtml(n.name || 'Sans nom')}</div>
             <div class="mj-item-sub">
               <span class="mj-pill" style="color:${st.color};background:${st.bg};">${st.label}</span>
@@ -152,11 +153,13 @@ async function mjNewNpc() {
   setTimeout(() => document.getElementById('mj-npc-name')?.focus(), 100);
 }
 
-async function mjDeleteNpcConfirm(id) {
-  if (!confirm('Supprimer ce PNJ ?')) return;
-  if (_mjNpc?.assetId) await mjDeleteAsset(_mjNpc.assetId);
-  await mjDeleteNpc(id);
-  _mjNpc = null;
-  await mjRenderNpcsList();
-  await mjRenderNpcDetail();
+function mjDeleteNpcConfirm(id) {
+  appConfirm('Supprimer ce PNJ ? Cette action est définitive.', async () => {
+    const npc = await mjGetNpc(id);
+    if (npc && npc.assetId) await mjDeleteAsset(npc.assetId);
+    await mjDeleteNpc(id);
+    if (_mjNpc && _mjNpc.id === id) _mjNpc = null;
+    await mjRenderNpcsList();
+    await mjRenderNpcDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }

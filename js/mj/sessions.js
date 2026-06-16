@@ -128,7 +128,8 @@ async function mjRenderSessionsList() {
     const activeSess  = _mjSession?.id === s.id;
 
     const folder = `
-      <div class="mj-tree-folder ${activeSess ? 'active' : ''}" onclick="mjSelectSession(${s.id})">
+      <div class="mj-tree-folder ${activeSess ? 'active' : ''}" onclick="mjSelectSession(${s.id})"
+           oncontextmenu="return mjItemContext(event, () => mjDeleteSessionConfirm(${s.id}))">
         <span class="mj-tree-chevron">${expanded ? '▾' : '▸'}</span>
         <span class="mj-tree-ico">📁</span>
         <span class="mj-tree-label">${escapeHtml(s.title || 'Sans titre')}</span>
@@ -139,7 +140,8 @@ async function mjRenderSessionsList() {
     if (expanded) {
       const docNodes = docs.map(d => `
         <div class="mj-tree-doc ${(activeSess && _mjSessionDoc?.id === d.id) ? 'active' : ''}"
-             onclick="event.stopPropagation();mjSelectDocFromTree(${s.id},'${d.id}')">
+             onclick="event.stopPropagation();mjSelectDocFromTree(${s.id},'${d.id}')"
+             oncontextmenu="return mjItemContext(event, () => mjDeleteScenarioConfirm(${s.id},'${d.id}'))">
           <span class="mj-tree-ico">📄</span>
           <span class="mj-tree-label">${escapeHtml(d.title || 'Sans titre')}</span>
         </div>`).join('');
@@ -1552,6 +1554,23 @@ async function mjAddDocTo(sessionId) {
   await mjRenderSessionsList();
   mjRenderSessionDetail();
   setTimeout(() => document.getElementById('mj-doc-title')?.focus(), 80);
+}
+
+// Suppression d'un scénario depuis l'arbre (clic droit) — sûre quelle que soit la
+// session actuellement sélectionnée (ne dépend pas de _mjSession).
+function mjDeleteScenarioConfirm(sessionId, docId) {
+  appConfirm('Supprimer ce scénario ? Cette action est définitive.', async () => {
+    const sess = await mjGetSession(sessionId);
+    if (!sess) return;
+    sess.docs = (sess.docs || []).filter((d) => d.id !== docId);
+    await mjSaveSession(sess);
+    if (_mjSession && _mjSession.id === sessionId) {
+      _mjSession = sess;
+      if (_mjSessionDoc && _mjSessionDoc.id === docId) _mjSessionDoc = sess.docs[0] || null;
+    }
+    await mjRenderSessionsList();
+    if (_mjSession && _mjSession.id === sessionId) mjRenderSessionDetail();
+  }, { okLabel: 'Supprimer', danger: true });
 }
 
 function mjDeleteDoc(docId) {
