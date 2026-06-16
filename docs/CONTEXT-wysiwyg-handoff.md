@@ -90,15 +90,24 @@ Fonctions (sessions.js) : `_mjIsListBlock`, `_mjParseList`, `_mjListToMarkdown`,
 `_mjListExitToParagraph`. CSS `.mj-list-edit`/`.mj-li`.
 Vérifié : pures 10/10, structure 7/7, marques+tags 6/6, Entrée/Tab/Maj+Tab en vrai éditeur.
 
-## ⏭️ Ensuite (non commencé)
-- **Séparateur** (`---`) : laissé en textarea minimal pour l'instant.
-- Boutons copier/coller Markdown (spec §9).
-- **Puis** : pousser la branche + rédiger la note de version (demande utilisateur : à la fin).
+## ✅ Copier/coller Markdown (§9) + séparateur — FAIT
+- **Copier Markdown** : bouton « ⧉ Markdown » dans l'en-tête du document →
+  `mjCopyDocMarkdown()` copie `_mjBlocksToContent()` (clipboard API + repli execCommand).
+- **Coller** : `mjRichPaste` (onpaste sur rich + liste) n'insère QUE le `text/plain`
+  (`_mjInsertPlainTextAtCaret`) — le HTML externe est ignoré (pas de styles arbitraires).
+- **Séparateur** (`---`) : rendu en `<hr>` ; clic gauche n'entre pas en édition ; clic droit
+  → menu « Supprimer » seul (Modifier masqué pour `mode:'sep'`). Insertion via `/sep`.
+Vérifié dans la vraie app : copie sans erreur, collage sanitisé (gras/script supprimés),
+séparateur supprimable.
 
-## 🧹 Dette à nettoyer (sans impact fonctionnel)
-- **4 octets NUL (U+0000)** dans `js/mj/sessions.js` (sentinelles littérales de `_mjSplitBlocks`,
-  protection des `/details`). Rend le fichier « binaire » pour ripgrep/Grep. Remplacer par des
-  échappements `' '` ou une sentinelle imprimable. Localiser : scan `python` des `\x00`.
+## 🧹 Dette — RÉSOLUE
+- Les 4 octets NUL de `_mjSplitBlocks` sont remplacés par `_MJ_BLK_SENT =
+  String.fromCharCode(0xE010)` ; `sessions.js` est de nouveau du texte (ripgrep/Grep OK).
+
+## ⏭️ Ensuite — il ne reste que la FIN
+- Pousser la branche `rework-zone-text` + rédiger la **note de version** (demande
+  utilisateur : à la toute fin, une fois tout terminé). Penser à recenser les bumps
+  de version internes (actuellement v1.7.17).
 
 ## Tester / lancer
 - Serveur `logrpg-static` : `python -m http.server 8777 --bind 127.0.0.1`. L'utilisateur teste

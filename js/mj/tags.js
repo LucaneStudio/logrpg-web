@@ -1194,15 +1194,17 @@ function mjWidgetContext(ev) {
     const blockId = blockEl && blockEl.getAttribute('data-block-id');
     if (blockId) { ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'details', blockId }); return false; }
   }
-  // Tableau rendu (lecture) : clic droit → Modifier (grille) / Supprimer
+  // Tableau / séparateur rendus (lecture) : clic droit → menu contextuel
   const blk = ev.target.closest && ev.target.closest('#mj-blocks .mj-block[data-block-id]');
-  if (blk && typeof _mjBlocks !== 'undefined' && typeof _mjIsTableBlock === 'function') {
+  if (blk && typeof _mjBlocks !== 'undefined') {
     const blockId = blk.getAttribute('data-block-id');
     const b = _mjBlocks.find((x) => x.id === blockId);
-    if (b && _mjIsTableBlock(b.raw)) {
-      ev.preventDefault(); ev.stopPropagation();
-      _mjShowWdgCtx(ev, { mode: 'table', blockId });
-      return false;
+    const raw = b ? (b.raw || '').trim() : '';
+    if (b && typeof _mjIsTableBlock === 'function' && _mjIsTableBlock(b.raw)) {
+      ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'table', blockId }); return false;
+    }
+    if (b && /^([-*_]\s*){3,}$/.test(raw)) {        // séparateur → Supprimer
+      ev.preventDefault(); ev.stopPropagation(); _mjShowWdgCtx(ev, { mode: 'sep', blockId }); return false;
     }
   }
   return true;
@@ -1227,6 +1229,8 @@ function _mjShowWdgCtx(ev, target) {
   _mjWdgCtxTarget = target;
   const el = _mjWdgCtxEl();
   el.style.display = 'block';
+  const modItem = el.querySelector('.mj-wdgctx-item:not(.danger)');   // « Modifier » inutile pour un séparateur
+  if (modItem) modItem.style.display = (target.mode === 'sep') ? 'none' : '';
   const card = el.querySelector('#mj-wdgctx-card');
   card.style.left = '0px'; card.style.top = '0px';
   const cw = card.offsetWidth, ch = card.offsetHeight;
@@ -1261,7 +1265,7 @@ function mjWdgCtxModify() {
 function mjWdgCtxDelete() {
   const t = _mjWdgCtxTarget; mjWdgCtxClose();
   if (!t) return;
-  if (t.mode === 'details' || t.mode === 'table') {
+  if (t.mode === 'details' || t.mode === 'table' || t.mode === 'sep') {
     if (typeof _mjBlocks === 'undefined') return;
     const i = _mjBlocks.findIndex((x) => x.id === t.blockId);
     if (i < 0) return;

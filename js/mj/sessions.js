@@ -205,6 +205,7 @@ function mjRenderSessionDetail() {
             value="${escapeHtml(_mjSessionDoc.title || '')}" placeholder="Titre du document…"
             onchange="_mjDocChanged()"/>
           <span id="mj-doc-save-ind" style="font-size:10px;color:var(--text-light);font-weight:700;flex-shrink:0;"></span>
+          <button class="mj-btn-sm" onclick="mjCopyDocMarkdown(this)" title="Copier le contenu en Markdown" style="flex-shrink:0;">⧉ Markdown</button>
           <button class="mj-btn-sm-danger" onclick="mjDeleteDoc('${_mjSessionDoc.id}')" title="Supprimer">×</button>
         </div>
         ${_mjFormatBarHtml()}
@@ -491,6 +492,7 @@ function _mjListEditorHtml(b) {
       onkeydown="mjListKeydown(event,'${b.id}')"
       onkeyup="mjRichKeyup(event,'${b.id}')"
       onmouseup="mjFormatUpdateState()"
+      onpaste="mjRichPaste(event)"
       onblur="mjListBlur('${b.id}')">${lis}</div>
   </div>`;
 }
@@ -653,6 +655,7 @@ function _mjRichEditorHtml(b) {
       onkeydown="mjRichKeydown(event,'${b.id}')"
       onkeyup="mjRichKeyup(event,'${b.id}')"
       onmouseup="mjFormatUpdateState()"
+      onpaste="mjRichPaste(event)"
       onblur="mjRichBlur('${b.id}')">${mjMdToEditableHtml(inline)}</div>
   </div>`;
 }
@@ -703,9 +706,10 @@ function _mjAutosize(ta) {
 function mjBlockClick(e, id) {
   // Ne pas éditer si on clique un élément interactif (widget, tag, lien, résumé…)
   if (e.target.closest('.mj-wdg, .mj-wdg-details, .mj-tag, a, summary, select, button, input')) return;
-  // Bloc /details : édition via clic droit (modale), pas d'édition texte inline.
+  // Bloc /details ou séparateur : pas d'édition texte inline (action via clic droit).
   const b = _mjBlocks.find((x) => x.id === id);
-  if (b && /^\/details(\[[^\]]*\])?\{/.test((b.raw || '').trim())) return;
+  const raw = (b ? b.raw : '').trim();
+  if (b && (/^\/details(\[[^\]]*\])?\{/.test(raw) || /^([-*_]\s*){3,}$/.test(raw))) return;
   if (_mjEditingBlockId === id) return;
   _mjEnterEdit(id);
 }
@@ -1233,6 +1237,50 @@ function _mjInsertWidgetPillAt(ctx, token) {
   if (b) b.raw = mjEditableToMd(el);
   _mjBlocksChanged();
   if (typeof _mjSizeCombos === 'function') setTimeout(_mjSizeCombos, 0);
+}
+
+// ── Copier / coller Markdown (§9) ─────────────────────────────
+// Copie le contenu courant (Markdown brut) dans le presse-papier.
+function mjCopyDocMarkdown() {
+  const md = (typeof _mjBlocksToContent === 'function') ? _mjBlocksToContent() : '';
+  const done = () => { if (typeof showToast === 'function') showToast('✅ Markdown copié'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(md).then(done).catch(() => _mjFallbackCopy(md, done));
+  } else _mjFallbackCopy(md, done);
+}
+function _mjFallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+  ta.remove(); if (cb) cb();
+}
+
+// Collage dans un éditeur riche/liste : on n'insère QUE du texte brut (text/plain),
+// jamais le HTML externe (pas d'import de styles arbitraires) — spec §9.
+function mjRichPaste(e) {
+  if (!e.clipboardData) return;
+  e.preventDefault();
+  const text = e.clipboardData.getData('text/plain') || '';
+  _mjInsertPlainTextAtCaret(text);
+  const el = e.target.closest && e.target.closest('.mj-block-rich, .mj-list-edit');
+  if (el) {
+    const id = el.id.replace('mjb-', '');
+    if (el.classList.contains('mj-list-edit')) mjListInput(id); else mjRichInput(id);
+  }
+}
+function _mjInsertPlainTextAtCaret(text) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const r = sel.getRangeAt(0);
+  r.deleteContents();
+  const nodes = [];
+  text.split(/\r?\n/).forEach((p, i) => { if (i) nodes.push(document.createElement('br')); nodes.push(document.createTextNode(p)); });
+  const frag = document.createDocumentFragment();
+  nodes.forEach((n) => frag.appendChild(n));
+  const last = nodes[nodes.length - 1];
+  r.insertNode(frag);
+  if (last) { r.setStartAfter(last); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); }
 }
 
 // Planifie la sauvegarde (différée) de l'éditeur actif, quel que soit l'hôte
