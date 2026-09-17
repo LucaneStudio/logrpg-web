@@ -183,11 +183,16 @@ function aproposParseUserAgent() {
   else if (/Safari/.test(ua))                              browser = 'Safari';
 
   let os = '';
+  // iPadOS 13+ envoie un user-agent identique à macOS (sans le token "iPad") :
+  // ce test doit passer AVANT celui de Mac OS X, complété par la détection
+  // tactile pour distinguer un iPad d'un vrai Mac.
   if      (/Windows NT 10/.test(ua))   os = 'Windows';
   else if (/Windows/.test(ua))         os = 'Windows';
+  else if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
+    m = ua.match(/OS ([\d_]+)/); os = 'iOS' + (m ? ' ' + m[1].replace(/_/g, '.') : '');
+  }
   else if ((m = ua.match(/Mac OS X ([\d_]+)/))) os = 'macOS ' + m[1].replace(/_/g, '.').split('.').slice(0, 2).join('.');
   else if (/Android/.test(ua))         { m = ua.match(/Android ([\d.]+)/); os = 'Android' + (m ? ' ' + m[1] : ''); }
-  else if (/iPhone|iPad|iPod/.test(ua)){ m = ua.match(/OS ([\d_]+)/);      os = 'iOS' + (m ? ' ' + m[1].replace(/_/g, '.') : ''); }
   else if (/Linux/.test(ua))           os = 'Linux';
 
   return os ? `${browser} · ${os}` : browser;
@@ -327,7 +332,10 @@ function aproposBugClearScreenshot() {
 }
 
 function aproposBugHintPaste() {
-  showToast('📋 Copie une image puis fais Ctrl+V ici');
+  const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  showToast(touch
+    ? '📋 Maintiens appuyé dans un champ puis choisis Coller'
+    : '📋 Copie une image puis fais Ctrl+V ici');
 }
 
 // Collage d'image (Ctrl+V) quand la modale bug est ouverte

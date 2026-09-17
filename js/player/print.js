@@ -296,7 +296,7 @@ const AUTO_PRINT = ${onMobile ? 'true' : 'false'};
 // Paginer dès que la police est chargée et le DOM rendu
 document.fonts.ready.then(() => requestAnimationFrame(() => {
   paginateSheet();
-  if (AUTO_PRINT) requestAnimationFrame(() => setTimeout(() => { window.focus(); window.print(); }, 80));
+  if (AUTO_PRINT) requestAnimationFrame(() => { window.focus(); window.print(); });
 }));
 </script>
 <script>

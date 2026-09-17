@@ -2,6 +2,7 @@
    DESIGN TOKENS
 ═══════════════════════════════════════ */
 :root {
+  color-scheme: light;
   --bg: #EEF6F4;
   --white: #FFFFFF;
   --green: #5CC8A8;
@@ -43,6 +44,11 @@ body {
   font-size: 14px;
   line-height: 1.5;
 }
+
+/* Tout élément avec un menu contextuel personnalisé (clic droit / appui long
+   polyfillé côté iOS, voir js/mobile.js) ne doit pas déclencher le callout
+   natif de sélection de Safari (loupe + Copier/Rechercher) en concurrence. */
+[oncontextmenu], [data-touch-ctx] { -webkit-touch-callout: none; }
 
 /* ═══════════════════════════════════════
    LAYOUT DESKTOP (toujours actif)
@@ -392,6 +398,12 @@ body {
   background: var(--white);
 }
 .input:focus { border-color: var(--green); }
+/* Safari zoome automatiquement la page si un champ focalisé fait < 16px : on
+   ne le remonte qu'au toucher (any-pointer: coarse) pour ne pas changer la
+   densité visuelle desktop. */
+@media (any-pointer: coarse) {
+  .input { font-size: 16px; }
+}
 .input-label {
   font-size: 10.5px;
   font-weight: 900;

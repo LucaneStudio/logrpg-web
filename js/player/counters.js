@@ -163,7 +163,7 @@ function renderManaClassicBlock() {
 function renderSpellSlotsBlock() {
   const cells = CS.slots.map((s,i) => {
     const inactive=s.max===0, depleted=!inactive&&s.current===0;
-    return `<div class="spell-cell${depleted?' depleted':''}${inactive?' inactive':''}" data-slot="${i}">
+    return `<div class="spell-cell${depleted?' depleted':''}${inactive?' inactive':''}" data-slot="${i}" data-touch-ctx>
       <div class="sc-lvl">NIV.${s.level}</div>
       <div class="sc-cur">${inactive?'—':s.current}</div>
       <div class="sc-max">${inactive?'':'/'+s.max}</div>

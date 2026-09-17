@@ -145,9 +145,11 @@ let _dragSectionId  = null;
 let _dropTargetId   = null;  // section sous le curseur
 let _dropPosition   = null;  // 'before' | 'after'
 
-// Appelé après chaque render — branche desktop (HTML5) ou mobile (touch)
+// Appelé après chaque render — branche desktop (HTML5) ou mobile (touch).
+// any-pointer:coarse couvre aussi une tablette tactile en paysage (≥1100px,
+// layout "desktop") où le Drag & Drop HTML5 natif ne répond pas au doigt.
 function _bindDragDrop() {
-  if (window.innerWidth < 1100) _bindTouchDragDrop();
+  if (window.innerWidth < 1100 || window.matchMedia('(any-pointer: coarse)').matches) _bindTouchDragDrop();
 }
 
 // ── Touch drag & drop (mobile) ────────────────────────────────────────────────

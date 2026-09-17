@@ -3,6 +3,21 @@
 const db = new Dexie('LogRPGDatabase');
 db.version(1).stores({ characters: '++id, name, createdAt' });
 
+// Ouverture différée au DOMContentLoaded : tous les autres fichiers (mj/db.js…)
+// ont alors déjà enregistré leurs db.version().stores() (scripts synchrones
+// exécutés pendant le parsing HTML), donc appeler db.open() ici ne fige pas
+// le schéma avant les migrations v2/v3. En navigation privée Safari (quota
+// IndexedDB proche de 0), l'ouverture peut échouer : on l'affiche au lieu de
+// laisser une promesse rejetée silencieuse bloquer toute l'app.
+document.addEventListener('DOMContentLoaded', () => {
+  db.open().catch(err => {
+    console.error('[IndexedDB] Ouverture impossible :', err);
+    if (typeof showToast === 'function') {
+      showToast('❌ Stockage indisponible sur cet appareil (navigation privée ?)', 6000);
+    }
+  });
+});
+
 function defaultSlots() {
   return Array.from({length:9}, (_,i) => ({level:i+1, current:0, max:0}));
 }
@@ -64,7 +79,14 @@ async function getProfilePhoto(charId) {
   } catch { return null; }
 }
 async function saveProfilePhoto(charId, dataUrl) {
-  await updateCharacterFields(charId, { profilePhoto: dataUrl });
+  try {
+    await updateCharacterFields(charId, { profilePhoto: dataUrl });
+    return true;
+  } catch (err) {
+    console.error('[saveProfilePhoto]', err);
+    if (typeof showToast === 'function') showToast('❌ Échec de la sauvegarde (stockage plein ou indisponible)');
+    return false;
+  }
 }
 async function deleteProfilePhoto(charId) {
   await updateCharacterFields(charId, { profilePhoto: null });
@@ -270,8 +292,12 @@ async function loadCharacterList() {
   // Si l'écran d'accueil était affiché, le cacher
   hideWelcomeScreen();
   list.innerHTML = chars.map(renderCharCard).join('');
-  // Sélectionner auto le premier perso si aucun n'est sélectionné
-  if (!_selectedCharId && chars.length > 0) {
+  // Sélectionner auto le premier perso si aucun n'est sélectionné (desktop
+  // uniquement : sur mobile, mobSelectChar() gère la sélection au tap sur une
+  // carte — appeler aussi selectCharacter() ici déclenchait un renderFicheTab()
+  // concurrent qui se marchait sur les pieds de celui de _mobDoRender, causant
+  // des rendus corrompus/bloqués, notamment pour le viewer PDF de l'onglet Fiche).
+  if (!_selectedCharId && chars.length > 0 && window.innerWidth >= 1100) {
     selectCharacter(chars[0].id);
   }
 }

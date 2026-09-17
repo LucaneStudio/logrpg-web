@@ -243,8 +243,8 @@ function mjTagCreateMenu(e) {
   const cw = card.offsetWidth, ch = card.offsetHeight;
   let left = r.left;
   let top  = r.bottom + 4;
-  if (top + ch > window.innerHeight - 8) top = r.top - ch - 4;
-  left = Math.max(8, Math.min(left, window.innerWidth - cw - 8));
+  if (top + ch > _vpHeight() - 8) top = r.top - ch - 4;
+  left = Math.max(8, Math.min(left, _vpWidth() - cw - 8));
   card.style.left = left + 'px';
   card.style.top  = top + 'px';
 }
@@ -472,8 +472,8 @@ function _mjAcShowAt(left, top, lineH) {
   el.style.top  = (top + lineH + 2) + 'px';
   el.style.left = left + 'px';
   const r = el.getBoundingClientRect();
-  if (r.right  > window.innerWidth  - 8) el.style.left = Math.max(8, window.innerWidth  - 8 - r.width)  + 'px';
-  if (r.bottom > window.innerHeight - 8) el.style.top  = Math.max(8, top - r.height - 2) + 'px';
+  if (r.right  > _vpWidth()  - 8) el.style.left = Math.max(8, _vpWidth()  - 8 - r.width)  + 'px';
+  if (r.bottom > _vpHeight() - 8) el.style.top  = Math.max(8, top - r.height - 2) + 'px';
   _mjAcOpen = true;
 }
 
@@ -829,7 +829,7 @@ function _mjTagPreviewPlace(tag) {
   let left = r.left + r.width / 2 - bw / 2;
   let top  = r.top - bh - 8;
   if (top < 8) top = r.bottom + 8;                    // bascule en dessous si pas de place au-dessus
-  left = Math.max(8, Math.min(left, window.innerWidth - bw - 8));
+  left = Math.max(8, Math.min(left, _vpWidth() - bw - 8));
   box.style.left = left + 'px';
   box.style.top  = top + 'px';
 }
@@ -1162,8 +1162,8 @@ function mjRichComboOpen(ev) {
   menu.style.left = r.left + 'px';
   menu.style.top  = (r.bottom + 3) + 'px';
   const mr = menu.getBoundingClientRect();
-  if (mr.bottom > window.innerHeight - 8) menu.style.top = Math.max(8, r.top - mr.height - 3) + 'px';
-  if (mr.right  > window.innerWidth  - 8) menu.style.left = Math.max(8, window.innerWidth - 8 - mr.width) + 'px';
+  if (mr.bottom > _vpHeight() - 8) menu.style.top = Math.max(8, r.top - mr.height - 3) + 'px';
+  if (mr.right  > _vpWidth()  - 8) menu.style.left = Math.max(8, _vpWidth() - 8 - mr.width) + 'px';
 }
 function mjRichComboPick(i) {
   const pop = document.getElementById('mj-wdg-pick');
@@ -1247,8 +1247,8 @@ function _mjShowWdgCtx(ev, target) {
   card.style.left = '0px'; card.style.top = '0px';
   const cw = card.offsetWidth, ch = card.offsetHeight;
   let left = ev.clientX, top = ev.clientY;
-  if (left + cw > window.innerWidth  - 8) left = window.innerWidth  - 8 - cw;
-  if (top  + ch > window.innerHeight - 8) top  = window.innerHeight - 8 - ch;
+  if (left + cw > _vpWidth()  - 8) left = _vpWidth()  - 8 - cw;
+  if (top  + ch > _vpHeight() - 8) top  = _vpHeight() - 8 - ch;
   card.style.left = Math.max(8, left) + 'px';
   card.style.top  = Math.max(8, top) + 'px';
 }

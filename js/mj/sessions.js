@@ -489,7 +489,7 @@ function _mjListEditorHtml(b) {
     `<div class="mj-li" data-level="${it.level}" style="--lvl:${it.level};">${mjMdToEditableHtml(it.inline) || '<br>'}</div>`
   ).join('');
   return `<div class="mj-block editing" data-block-id="${b.id}">
-    <div id="mjb-${b.id}" class="mj-list-edit" contenteditable="true" spellcheck="false" data-ltype="${ordered ? 'ol' : 'ul'}"
+    <div id="mjb-${b.id}" class="mj-list-edit" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off" data-ltype="${ordered ? 'ol' : 'ul'}"
       oninput="mjListInput('${b.id}')"
       onkeydown="mjListKeydown(event,'${b.id}')"
       onkeyup="mjRichKeyup(event,'${b.id}')"
@@ -651,7 +651,7 @@ function _mjRichEditorHtml(b) {
   const ph = type === 'p' ? 'Écris ton scénario…  @ pour lier une ressource, / pour un bloc'
            : (type === 'quote' ? 'Citation…' : 'Titre…');
   return `<div class="mj-block editing" data-block-id="${b.id}">
-    <div id="mjb-${b.id}" class="${cls}" contenteditable="true" spellcheck="false"
+    <div id="mjb-${b.id}" class="${cls}" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off"
       data-bp="${escapeHtml(prefix)}" data-ph="${escapeHtml(ph)}"
       oninput="mjRichInput('${b.id}')"
       onkeydown="mjRichKeydown(event,'${b.id}')"
@@ -819,6 +819,7 @@ function _mjFocusBlockEditor(id, pos) {
   if (!el) return null;
   if (el.isContentEditable) {
     el.focus();
+    el.scrollIntoView({ block: 'nearest' });   // le clavier virtuel iOS peut sinon cacher le bloc édité
     if (el.classList.contains('mj-list-edit')) {   // liste : curseur dans le 1er/dernier item
       const items = el.querySelectorAll(':scope > .mj-li');
       const li = pos === 'start' ? items[0] : items[items.length - 1];
@@ -830,6 +831,7 @@ function _mjFocusBlockEditor(id, pos) {
     return el;
   }
   el.focus();
+  el.scrollIntoView({ block: 'nearest' });   // le clavier virtuel iOS peut sinon cacher le bloc édité
   const L = el.value.length;
   const p = (pos === 'start') ? 0 : (typeof pos === 'number' ? Math.min(pos, L) : L);
   el.setSelectionRange(p, p);
@@ -1261,8 +1263,12 @@ function _mjFallbackCopy(text, cb) {
 // Collage dans un éditeur riche/liste : on n'insère QUE du texte brut (text/plain),
 // jamais le HTML externe (pas d'import de styles arbitraires) — spec §9.
 function mjRichPaste(e) {
-  if (!e.clipboardData) return;
+  // preventDefault AVANT de vérifier clipboardData : sur WebKit (Safari),
+  // clipboardData n'est pas toujours peuplé au moment de l'évènement — sans
+  // ce garde-fou, le collage natif (avec mise en forme externe) passerait,
+  // contournant la sanitisation "texte brut uniquement" voulue (§9).
   e.preventDefault();
+  if (!e.clipboardData) return;
   const text = e.clipboardData.getData('text/plain') || '';
   _mjInsertPlainTextAtCaret(text);
   const el = e.target.closest && e.target.closest('.mj-block-rich, .mj-list-edit');

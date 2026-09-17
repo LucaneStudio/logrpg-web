@@ -191,7 +191,13 @@ async function confirmProfilePhoto() {
   const photo = _pendingPhoto;
   _pendingPhoto = null;
   // Sauvegarder dans IndexedDB
-  await db.characters.update(_photoCharId, { profilePhoto: photo });
+  try {
+    await db.characters.update(_photoCharId, { profilePhoto: photo });
+  } catch (err) {
+    console.error('[confirmProfilePhoto]', err);
+    showToast('❌ Échec de la sauvegarde (stockage plein ou indisponible)');
+    return;
+  }
   closeModal('modal-profile-photo');
   // Mettre à jour sidebar (liste ouverte)
   document.querySelectorAll('.char-avatar').forEach(el => {

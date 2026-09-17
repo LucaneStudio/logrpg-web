@@ -67,7 +67,18 @@ async function mjDeletePlace(id) { await db.mj_places.delete(id); }
 
 // ── Assets (images Blob) ──────────────────────────────────────
 async function mjSaveAsset(name, mimeType, blob) {
-  return db.mj_assets.add({ name, mimeType, data: blob });
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 Mo, même limite que les photos de profil (profile.js)
+  if (blob && blob.size > MAX_SIZE) {
+    if (typeof showToast === 'function') showToast('❌ Image trop lourde (max 10 Mo)');
+    return null;
+  }
+  try {
+    return await db.mj_assets.add({ name, mimeType, data: blob });
+  } catch (err) {
+    console.error('[mjSaveAsset]', err);
+    if (typeof showToast === 'function') showToast("❌ Échec de la sauvegarde de l'image (stockage plein ou indisponible)");
+    return null;
+  }
 }
 async function mjGetAsset(id)    { return db.mj_assets.get(id); }
 async function mjDeleteAsset(id) { await db.mj_assets.delete(id); }
@@ -114,8 +125,13 @@ async function mjExportZip() {
   const a    = document.createElement('a');
   a.href     = url;
   a.download = `logrpg-mj-${new Date().toISOString().slice(0,10)}.zip`;
+  // Attaché au DOM avant le clic + révocation différée : sur Safari (iOS/
+  // iPadOS/macOS), un <a> détaché ou une révocation immédiate du blob peut
+  // faire échouer le téléchargement silencieusement.
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 // ── Import ZIP ────────────────────────────────────────────────
@@ -124,8 +140,6 @@ async function mjImportZip(file) {
   const zip  = await JSZip.loadAsync(file);
   const json = await zip.file('data.json').async('string');
   const data = JSON.parse(json);
-
-  if (data.bestiary) bestiarySave(data.bestiary);
 
   // Réimporter les assets
   const assetIdMap = {};
@@ -150,6 +164,17 @@ async function mjImportZip(file) {
   for (const o of (data.objects    || [])) { const {id,...rest}=o; await mjSaveObject(remap(rest)); }
   for (const p of (data.places     || [])) { const {id,...rest}=p; await mjSavePlace(remap(rest)); }
 
-  alert('Import réussi !');
+  // Le bestiaire vit dans localStorage (pas IndexedDB) : en navigation privée
+  // Safari, localStorage.setItem peut lever une QuotaExceededError. On l'isole
+  // et on l'exécute en dernier pour que son échec n'empêche jamais la
+  // restauration des sessions/PNJ/objets/lieux/assets ci-dessus.
+  let bestiaryFailed = false;
+  if (data.bestiary) {
+    try { bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
+  }
+
+  alert(bestiaryFailed
+    ? "Import réussi (le bestiaire personnalisé n'a pas pu être restauré : stockage plein ou indisponible)."
+    : 'Import réussi !');
   await _mjRenderAll();
 }

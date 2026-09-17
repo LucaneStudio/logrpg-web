@@ -4,10 +4,13 @@
 let _mobCharId        = null;
 let _mobTab           = 'tab-fiche';
 let _mobLongPressTimer = null;
+let _mobInitialized    = false;
 
 // ── Init mobile ───────────────────────────────────────────────────────────────
 async function initMobileApp() {
   if (window.innerWidth >= 1100) return;
+  if (_mobInitialized) return;
+  _mobInitialized = true;
   await mobLoadCharList();
 }
 
@@ -115,7 +118,7 @@ function mobSwitchTab(tabId) {
   _mobTab = tabId;
 
   document.querySelectorAll('#mob-tabs .mob-tab').forEach(btn => {
-    const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').match(/mobSwitchTab.'([^']+)'\./);
+    const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').match(/mobSwitchTab\('([^']+)'\)/);
     const btnTab = match ? match[1] : '';
     btn.classList.toggle('active', btnTab === tabId);
   });
@@ -244,6 +247,7 @@ async function refreshCaractTab()     { if (_isMobile()) await mobRefreshCurrent
 async function refreshCapacitesTab()  { if (_isMobile()) await mobRefreshCurrentTab(); else await renderCapacitesTab(); }
 async function refreshInventaireTab() { if (_isMobile()) await mobRefreshCurrentTab(); else await renderInventaireTab(); }
 async function refreshNotesTab()      { if (_isMobile()) await mobRefreshCurrentTab(); else await renderNotesTab(); }
+async function refreshFicheTab()      { if (_isMobile()) await mobRefreshCurrentTab(); else await renderFicheTab(); }
 
 // ── Menu contextuel : helper d'ouverture ──────────────────────────────────────
 // openCharContextMenu attend un event avec clientX/clientY ; on lui fournit un
@@ -336,5 +340,75 @@ async function mobDetailOpenMenu(e) {
 // ── Create / Import mobile ────────────────────────────────────────────────────
 function mobOpenCreateChar() { openCreateCharModal(); }
 function mobTriggerImport()  { triggerImport(); }
+
+// ── Détection iOS / iPadOS ─────────────────────────────────────────────────────
+// Depuis iPadOS 13, Safari envoie un user-agent identique à macOS (sans le
+// token "iPad") : on complète donc avec la détection tactile recommandée par
+// Apple (maxTouchPoints) pour distinguer un iPad d'un vrai Mac.
+function isIOSDevice() {
+  return /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+// ── Viewport visuel (rétrécit quand le clavier virtuel iOS est ouvert) ────────
+// À utiliser à la place de window.innerWidth/innerHeight pour positionner un
+// menu/popup qui doit rester visible même clavier ouvert.
+function _vpWidth()  { return (window.visualViewport && window.visualViewport.width)  || window.innerWidth; }
+function _vpHeight() { return (window.visualViewport && window.visualViewport.height) || window.innerHeight; }
+
+// ── Pont tactile générique : appui long → menu contextuel ─────────────────────
+// De nombreuses actions (renommer/supprimer une section, un widget, un
+// personnage, un item MJ…) ne sont câblées qu'en oncontextmenu (clic droit).
+// Contrairement à Android/Chrome, Safari iOS ne synthétise jamais d'évènement
+// 'contextmenu' au toucher : on ne polyfill donc que sur iOS, pour ne rien
+// changer sur les plateformes qui gèrent déjà nativement l'appui long (Android,
+// PC à écran tactile). Un appui de 500ms (tolérance de mouvement 10px, mêmes
+// seuils que mobLongPressStart plus haut) sur un élément [oncontextmenu] ou
+// [data-touch-ctx] dispatch un vrai évènement 'contextmenu' à ses coordonnées,
+// qui déclenche le gestionnaire déjà existant sans le réécrire.
+function _bindLongPressContextMenu(root) {
+  if (!root || root._lpCtxBound) return;
+  root._lpCtxBound = true;
+  const THRESHOLD = 10, DELAY = 500;
+  let timer = null, target = null, startX = 0, startY = 0, fired = false;
+
+  root.addEventListener('touchstart', (e) => {
+    fired = false;
+    clearTimeout(timer); timer = null;
+    const raw = e.target.nodeType === 3 ? e.target.parentElement : e.target;
+    target = (raw && raw.closest) ? raw.closest('[oncontextmenu], [data-touch-ctx]') : null;
+    if (!target) return;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    timer = setTimeout(() => {
+      fired = true;
+      target.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true, cancelable: true, clientX: startX, clientY: startY, view: window
+      }));
+    }, DELAY);
+  }, { passive: true });
+
+  root.addEventListener('touchmove', (e) => {
+    if (!timer) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - startX) > THRESHOLD || Math.abs(t.clientY - startY) > THRESHOLD) {
+      clearTimeout(timer); timer = null;
+    }
+  }, { passive: true });
+
+  root.addEventListener('touchend', (e) => {
+    clearTimeout(timer); timer = null;
+    if (fired) { e.preventDefault(); fired = false; }
+    target = null;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (isIOSDevice()) _bindLongPressContextMenu(document.body);
+  // Un iPad ouvert en paysage (UI desktop) puis tourné en portrait doit charger
+  // la liste mobile si ce n'est pas déjà fait (initMobileApp est idempotent).
+  window.addEventListener('resize',            () => { if (window.innerWidth < 1100) initMobileApp(); });
+  window.addEventListener('orientationchange',  () => { if (window.innerWidth < 1100) initMobileApp(); });
+});
 
 // ═══════════════════════════════════════════════════════════════
