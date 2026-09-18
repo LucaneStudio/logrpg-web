@@ -94,9 +94,15 @@ async function mjDeleteMap(id) { await db.mj_maps.delete(id); }
 
 // ── Assets (images Blob) ──────────────────────────────────────
 async function mjSaveAsset(name, mimeType, blob) {
-  const MAX_SIZE = 10 * 1024 * 1024; // 10 Mo, même limite que les photos de profil (profile.js)
+  // 25 Mo : plus haut que la limite des photos de profil (10 Mo, profile.js,
+  // qui redimensionne toujours via un cropper avant sauvegarde). Les images
+  // MJ (portraits, mais surtout les fonds de carte) ne passent par aucun
+  // redimensionnement — un simple screenshot de jeu détaillé en PNG dépasse
+  // vite 10 Mo alors qu'il fait une taille d'écran tout à fait normale.
+  const MAX_SIZE = 25 * 1024 * 1024;
   if (blob && blob.size > MAX_SIZE) {
-    if (typeof showToast === 'function') showToast('❌ Image trop lourde (max 10 Mo)');
+    const mo = (blob.size / (1024 * 1024)).toFixed(1);
+    if (typeof showToast === 'function') showToast(`❌ Image trop lourde (${mo} Mo, max 25 Mo)`, 4000);
     return null;
   }
   try {
