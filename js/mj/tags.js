@@ -13,6 +13,7 @@ const _MJ_TAG_META = {
   objet:     { icon: '📦', section: 'objects',    label: 'Objet'    },
   lieu:      { icon: '📍', section: 'places',     label: 'Lieu'     },
   asset:     { icon: '🖼️', section: 'assets',     label: 'Image'    },
+  carte:     { icon: '🗺️', section: 'maps',       label: 'Carte'    },
 };
 
 // Cache d'object URLs pour les aperçus d'image (évite les fuites)
@@ -27,11 +28,12 @@ function _mjAssetUrl(asset) {
 async function mjBuildTagIndex() {
   const idx = [];
   try {
-    const [sessions, encounters, npcs, objects, places, assets] = await Promise.all([
+    const [sessions, encounters, npcs, objects, places, assets, maps] = await Promise.all([
       mjGetSessions(), mjGetEncounters(), mjGetNpcs(),
       (typeof mjGetObjects === 'function' ? mjGetObjects() : []),
       (typeof mjGetPlaces  === 'function' ? mjGetPlaces()  : []),
       db.mj_assets.toArray(),
+      (typeof mjGetMaps === 'function' ? mjGetMaps() : []),
     ]);
     const bestiary = (typeof bestiaryGetAll === 'function') ? bestiaryGetAll() : [];
 
@@ -76,6 +78,9 @@ async function mjBuildTagIndex() {
     });
 
     assets.forEach(a => idx.push({ name: a.name || 'image', type: 'asset', id: a.id, url: _mjAssetUrl(a) }));
+
+    maps.forEach(m => idx.push({ name: m.name || 'Sans nom', type: 'carte', id: m.id,
+      pinCount: (m.pins || []).length }));
 
     // Normaliser puis publier l'index direct
     idx.forEach(r => {
@@ -317,6 +322,7 @@ async function mjTagGo(type, id, parentId) {
   else if (type === 'objet')     await mjSelectObject(id);
   else if (type === 'lieu')      await mjSelectPlace(id);
   else if (type === 'asset')     await mjSelectAsset(id);
+  else if (type === 'carte')     await mjSelectMap(id);
 }
 
 // ═══════════════════════════════════════════════════════════════
