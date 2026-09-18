@@ -145,7 +145,7 @@ function _mjMapRenderPin(p) {
       onmouseleave="_mjMapPinHidePopup(this)"
       onclick="mjMapEditPin('${p.id}')"
       oncontextmenu="return mjItemContext(event, () => mjMapDeletePinConfirm('${p.id}'))">
-      <div style="width:22px;height:22px;border-radius:50%;background:var(--orange);
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--orange-l);
         display:flex;align-items:center;justify-content:center;font-size:12px;
         box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;">📍</div>
       <div class="mj-map-pin-pop" style="display:none;position:absolute;min-width:160px;max-width:240px;
@@ -207,6 +207,7 @@ function _mjMapVisibleBounds(canvas) {
 // (mesure la taille réelle après rendu, comme le clamp du menu contextuel
 // combat — voir js/combat/view.js:_openCvCtx).
 function _mjMapPinShowPopup(el) {
+  if (el._pinHideTimer) { clearTimeout(el._pinHideTimer); el._pinHideTimer = null; }   // annule une fermeture programmée si on re-survole (le pin ou le popup lui-même, descendant du même élément)
   if (_mjMapEditingPinId) return;   // une carte d'édition est déjà ouverte, pas d'aperçu en plus
   const pop = el.querySelector('.mj-map-pin-pop');
   if (!pop) return;
@@ -230,8 +231,17 @@ function _mjMapPinShowPopup(el) {
   pop.style.top  = top + 'px';
 }
 function _mjMapPinHidePopup(el) {
-  const pop = el.querySelector('.mj-map-pin-pop');
-  if (pop) pop.style.display = 'none';
+  // Petit délai avant de fermer : laisse le temps de traverser l'écart entre
+  // le point et le popup (positionné au-dessus/en dessous, pas collé) pour
+  // pouvoir cliquer le lien. Annulé par _mjMapPinShowPopup si on re-survole
+  // le pin OU le popup lui-même (descendant du même élément, donc un nouveau
+  // mouseenter sur .mj-map-pin se déclenche en y entrant).
+  if (el._pinHideTimer) clearTimeout(el._pinHideTimer);
+  el._pinHideTimer = setTimeout(() => {
+    const pop = el.querySelector('.mj-map-pin-pop');
+    if (pop) pop.style.display = 'none';
+    el._pinHideTimer = null;
+  }, 300);
 }
 
 // Même principe de clamp que le popup de survol, appliqué à la carte
