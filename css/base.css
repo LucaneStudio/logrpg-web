@@ -403,6 +403,10 @@ body {
    densité visuelle desktop. */
 @media (any-pointer: coarse) {
   .input { font-size: 16px; }
+  /* Champs de saisie libre Dégâts/Soin (Mode Combat + fiche perso) : mise en
+     forme entièrement inline (pas de .input), donc pas couverts par la règle
+     ci-dessus — même correctif anti-zoom Safari appliqué séparément ici. */
+  .dmg-input { font-size: 16px; }
 }
 .input-label {
   font-size: 10.5px;

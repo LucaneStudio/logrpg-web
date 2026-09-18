@@ -6,6 +6,7 @@ let _cvShowAdd     = false;
 let _cvBonusId     = null;
 let _cvEndModal    = false;
 let _cvConditionId = null; // id du participant pour la dialog condition
+let _cbtDmgInputValue = ''; // montant du champ Dégâts/Soin, conservé entre les rendus
 
 // ── Render principal ──────────────────────────────────────────
 function renderCombatView() {
@@ -91,6 +92,15 @@ function _renderLeftPanel() {
       <div style="display:flex;gap:6px;margin-top:6px;">
         <button class="ctrl-btn minus" onclick="combatHpAction('${p.id}',-5)" style="font-size:12px;">−5</button>
         <button class="ctrl-btn plus"  onclick="combatHpAction('${p.id}',+5)" style="font-size:12px;">+5</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+        <input type="number" id="cbt-dmg-input" class="dmg-input" placeholder="Montant" value="${_cbtDmgInputValue}"
+          oninput="_cbtDmgInputValue=this.value"
+          style="flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1.5px solid var(--divider);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--text);background:var(--white);outline:none;">
+        <button onclick="combatApplyDamageInput('${p.id}','cbt-dmg-input')"
+          style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(255,107,107,.3);background:var(--red-l);color:var(--red);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">🩸 Dégâts</button>
+        <button onclick="combatApplyHealInput('${p.id}','cbt-dmg-input')"
+          style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(92,200,168,.3);background:var(--green-l);color:var(--green-d);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">💚 Soin</button>
       </div>
       <div class="ctr-temp-section">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -310,6 +320,15 @@ function _renderCtxMenu() {
     <div style="padding:6px 10px;border-bottom:1px solid var(--divider);">
       <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin-bottom:5px;">❤️ DÉGÂTS / SOINS</div>
       <div style="display:flex;gap:5px;">${hpBtns}</div>
+      <div style="display:flex;gap:5px;align-items:center;margin-top:5px;">
+        <input type="number" id="cbt-ctx-dmg-input" class="dmg-input" placeholder="Montant" value="${_cbtDmgInputValue}"
+          oninput="_cbtDmgInputValue=this.value"
+          style="flex:1;min-width:0;padding:5px 6px;border-radius:7px;border:1.5px solid var(--divider);font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--text);background:var(--white);outline:none;">
+        <button onclick="combatApplyDamageInput('${p.id}','cbt-ctx-dmg-input',true)"
+          style="padding:5px 7px;border-radius:7px;border:1.5px solid rgba(255,107,107,.3);background:var(--red-l);color:var(--red);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;">🩸</button>
+        <button onclick="combatApplyHealInput('${p.id}','cbt-ctx-dmg-input',true)"
+          style="padding:5px 7px;border-radius:7px;border:1.5px solid rgba(92,200,168,.3);background:var(--green-l);color:var(--green-d);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;">💚</button>
+      </div>
     </div>
     ${actions.map(a => `<button class="cbt-ctx-item ${a.danger ? 'danger' : ''}" onclick="${a.fn}">${a.label}</button>`).join('')}
   </div>`;
@@ -477,10 +496,26 @@ function _resetCombatViewState() {
   _cvBonusId     = null;
   _cvEndModal    = false;
   _cvConditionId = null;
+  _cbtDmgInputValue = '';
 }
 
 // ── Helpers ───────────────────────────────────────────────────
 function combatHpAction(id, delta) { combatChangeHp(id, delta); renderCombatView(); }
+
+// Lit le montant saisi dans le champ (inputId), applique dégâts/soin via
+// combatChangeHp (même fonction que les boutons ±1/±5, même règle d'absorption
+// des PV temporaires). closeCtx=true ferme aussi le menu contextuel (utilisé
+// depuis _renderCtxMenu, qui a son propre champ séparé du panneau détail).
+function _combatApplyInputAmount(id, inputId, sign, closeCtx) {
+  const el = document.getElementById(inputId);
+  const val = Math.abs(parseInt(el.value) || 0);
+  if (val === 0) return;
+  combatChangeHp(id, sign * val);
+  if (closeCtx) _cvCtxId = null;
+  renderCombatView();
+}
+function combatApplyDamageInput(id, inputId, closeCtx) { _combatApplyInputAmount(id, inputId, -1, closeCtx); }
+function combatApplyHealInput(id, inputId, closeCtx)   { _combatApplyInputAmount(id, inputId, 1, closeCtx); }
 
 // Refresh partiel : re-rend uniquement les deux panneaux sans toucher aux dialogs ouverts
 function _refreshLeftRight() {

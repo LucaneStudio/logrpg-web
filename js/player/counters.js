@@ -1,6 +1,7 @@
 // COUNTERS.JS — Compteurs HP / Mana / Monnaie
 // ═══════════════════════════════════════════════════════════════
 let CS = null;
+let _hpDmgInputValue = ''; // montant du champ Dégâts/Soin, conservé entre les rendus
 
 function initCounterState(char) {
   CS = {
@@ -27,7 +28,16 @@ async function saveCS(fields) {
   await loadCharacterList();
 }
 
+// Ne reset le champ Dégâts/Soin que si on change réellement de personnage —
+// sur mobile, renderCountersPanel est aussi rappelée à chaque passage sur
+// l'onglet Compteurs pour le MÊME perso (mobSwitchTab/mobRefreshCurrentTab),
+// où le montant tapé doit au contraire survivre.
+let _lastCountersCharId = null;
 function renderCountersPanel(char) {
+  if (_lastCountersCharId !== char.id) {
+    _hpDmgInputValue = '';
+    _lastCountersCharId = char.id;
+  }
   initCounterState(char);
   const _hdr = document.getElementById('counters-char-header'); if (_hdr) _hdr.innerHTML = '';
   renderCountersContent();
@@ -42,8 +52,8 @@ function renderCountersContent() {
 // ── HP ──
 function renderHpBlock() {
   const {hp,hpMax,hpTemp,hpTempInput} = CS;
-  const basePct = hpMax>0 ? Math.min(hp,hpMax)/hpMax*100 : 0;
-  const tempPct = (hpTemp>0&&hpMax>0) ? Math.max(0,Math.min(hp-hpMax,hpTemp)/hpMax*100) : 0;
+  const basePct = hpMax>0 ? hp/hpMax*100 : 0;
+  const tempPct = hpMax>0 ? Math.min(hpTemp/hpMax*100, 100-basePct) : 0;
   const hasTemp = hpTemp>0;
   return `
   <div class="card ctr-card" style="margin-bottom:10px;">
@@ -59,7 +69,7 @@ function renderHpBlock() {
         <div id="hp-bar-temp" class="ctr-bar-temp" style="left:${basePct}%;width:${tempPct}%;background:linear-gradient(90deg,#FFBBBB,#FFD5D5);"></div>
       </div>
       <div class="ctr-bar-legend">
-        <span class="ctr-legend-item"><span class="ctr-legend-dot" style="background:var(--red);"></span><span id="hp-legend">${Math.min(hp,hpMax)} / ${hpMax} PV</span></span>
+        <span class="ctr-legend-item"><span class="ctr-legend-dot" style="background:var(--red);"></span><span id="hp-legend">${hp} / ${hpMax} PV</span></span>
         <span class="ctr-legend-item" id="hp-temp-legend" style="display:${hasTemp?'':'none'}"><span class="ctr-legend-dot" style="background:#FFBBBB;"></span><span id="hp-temp-legend-val">+${hpTemp} PV temp.</span></span>
       </div>
     </div>
@@ -70,6 +80,15 @@ function renderHpBlock() {
         <div class="ctr-sub">/ ${hpMax}<span id="hp-temp-inline" style="color:#FF9999;font-weight:900;">${hasTemp?' +'+hpTemp+'✨':''}</span></div>
       </div>
       <button class="ctr-btn" style="background:var(--red-l);color:var(--red);" onclick="adjHp(1)">＋</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+      <input type="number" id="hp-dmg-input" class="dmg-input" placeholder="Montant" value="${_hpDmgInputValue}"
+        oninput="_hpDmgInputValue=this.value"
+        style="flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1.5px solid #E8ECF0;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--text);background:var(--white);outline:none;">
+      <button onclick="adjHpDamageInput()"
+        style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(255,107,107,.3);background:var(--red-l);color:var(--red);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">🩸 Dégâts</button>
+      <button onclick="adjHpHealInput()"
+        style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(92,200,168,.3);background:var(--green-l);color:var(--green-d);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">💚 Soin</button>
     </div>
     <div class="ctr-temp-section">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -84,11 +103,35 @@ function renderHpBlock() {
     </div>
   </div>`;
 }
-function adjHp(d) { CS.hp=Math.max(0,Math.min(CS.hpMax+CS.hpTemp,CS.hp+d)); updateHpUI(); saveCS({hpCurrent:CS.hp}); }
+// Les PV temporaires absorbent les dégâts (d négatif) avant les PV réels.
+// Un soin (d positif) ne touche jamais les PV temporaires. CS.hp reste
+// toujours borné à [0, CS.hpMax] — même modèle que combatChangeHp (Mode Combat).
+function adjHp(d) {
+  if (d < 0) {
+    let dmg = -d;
+    const tempUsed = Math.min(CS.hpTemp, dmg);
+    CS.hpTemp -= tempUsed;
+    dmg -= tempUsed;
+    CS.hp = Math.max(0, CS.hp - dmg);
+  } else {
+    CS.hp = Math.min(CS.hpMax, CS.hp + d);
+  }
+  updateHpUI();
+  saveCS({ hpCurrent: CS.hp, temporaryHealth: CS.hpTemp });
+}
+function _adjHpInputAmount(sign) {
+  const el = document.getElementById('hp-dmg-input');
+  const val = Math.abs(parseInt(el.value) || 0);
+  if (val === 0) return;
+  adjHp(sign * val);
+}
+function adjHpDamageInput() { _adjHpInputAmount(-1); }
+function adjHpHealInput()   { _adjHpInputAmount(1); }
+// N'affecte jamais CS.hp — CS.hpTemp est son propre pool, distinct des PV
+// réels (même modèle que combatChangeTempHp en Mode Combat). Un futur
+// lecteur ne doit pas réintroduire de couplage entre les deux ici.
 function adjHpTemp(d) {
   CS.hpTemp = Math.max(0, CS.hpTemp + d);
-  // Si on augmente les PV temp alors que le perso est déjà au max, on augmente aussi les PV courants
-  if (d > 0) CS.hp = Math.min(CS.hp + d, CS.hpMax + CS.hpTemp);
   // Mise à jour UI inline (sans re-render complet)
   const el = document.getElementById('hp-temp-val');
   if (el) el.textContent = CS.hpTemp;
@@ -98,13 +141,13 @@ function adjHpTemp(d) {
 function clearHpTemp() { CS.hpTemp=0; if(CS.hp>CS.hpMax)CS.hp=CS.hpMax; updateHpUI(); saveCS({hpCurrent:CS.hp,temporaryHealth:0}); }
 function resetHp() { CS.hp=CS.hpMax; CS.hpTemp=0; updateHpUI(); saveCS({hpCurrent:CS.hp,temporaryHealth:0}); }
 function updateHpUI() {
-  const basePct=CS.hpMax>0?Math.min(CS.hp,CS.hpMax)/CS.hpMax*100:0;
-  const tempPct=(CS.hpTemp>0&&CS.hpMax>0)?Math.max(0,Math.min(CS.hp-CS.hpMax,CS.hpTemp)/CS.hpMax*100):0;
+  const basePct=CS.hpMax>0?CS.hp/CS.hpMax*100:0;
+  const tempPct=CS.hpMax>0?Math.min(CS.hpTemp/CS.hpMax*100, 100-basePct):0;
   const hasTemp=CS.hpTemp>0;
   const v=document.getElementById('hp-v'); if(v) v.textContent=CS.hp;
   const bb=document.getElementById('hp-bar-base'); if(bb) bb.style.width=basePct+'%';
   const bt=document.getElementById('hp-bar-temp'); if(bt){bt.style.left=basePct+'%';bt.style.width=tempPct+'%';}
-  const leg=document.getElementById('hp-legend'); if(leg) leg.textContent=`${Math.min(CS.hp,CS.hpMax)} / ${CS.hpMax} PV`;
+  const leg=document.getElementById('hp-legend'); if(leg) leg.textContent=`${CS.hp} / ${CS.hpMax} PV`;
   const tleg=document.getElementById('hp-temp-legend'); if(tleg) tleg.style.display=hasTemp?'':'none';
   const tlegv=document.getElementById('hp-temp-legend-val'); if(tlegv) tlegv.textContent=`+${CS.hpTemp} PV temp.`;
   const tinl=document.getElementById('hp-temp-inline'); if(tinl) tinl.textContent=hasTemp?` +${CS.hpTemp}✨`:'';

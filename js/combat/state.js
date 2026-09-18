@@ -99,8 +99,19 @@ function combatRemoveBonus(id) {
 }
 
 // ── HP ────────────────────────────────────────────────────────
+// Les PV temporaires absorbent les dégâts (delta négatif) avant les PV réels.
+// Un soin (delta positif) ne touche jamais les PV temporaires.
 function combatChangeHp(id, delta) {
-  _updateP(id, p => ({ ...p, currentHp: Math.max(0, Math.min(p.maxHp, p.currentHp + delta)) }));
+  if (delta < 0) {
+    _updateP(id, p => {
+      let dmg = -delta;
+      const tempUsed = Math.min(p.tempHp || 0, dmg);
+      dmg -= tempUsed;
+      return { ...p, tempHp: (p.tempHp || 0) - tempUsed, currentHp: Math.max(0, p.currentHp - dmg) };
+    });
+  } else {
+    _updateP(id, p => ({ ...p, currentHp: Math.min(p.maxHp, p.currentHp + delta) }));
+  }
 }
 
 // ── Conditions ────────────────────────────────────────────────
