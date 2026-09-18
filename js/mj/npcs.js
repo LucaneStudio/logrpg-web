@@ -100,10 +100,69 @@ async function mjRenderNpcDetail() {
       <div class="sec-lbl" style="margin-bottom:8px;">STATUT</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">${statusBtns}</div>
 
+      <div class="sec-lbl" style="margin-bottom:8px;">🐉 FICHE DE COMBAT</div>
+      <div style="margin-bottom:16px;">${_mjNpcBestiaryLinkHtml(n)}</div>
+
       <div class="sec-lbl" style="margin-bottom:8px;">NOTES</div>
       ${mjBlockEditorHtml({ boxed: true })}
     </div>`;
   mjMountBlockEditor(n.notes || '', mjNpcSaveNotes);
+}
+
+// ── Lien vers une fiche bestiaire (§5 spec) ───────────────────
+function _mjNpcBestiaryLinkHtml(n) {
+  if (n.bestiaryId) {
+    const entry = (typeof bestiaryGetAll === 'function') ? bestiaryGetAll().find(e => e.id === n.bestiaryId) : null;
+    if (!entry) return `
+      <div class="mj-empty-sm" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span>Fiche liée introuvable (supprimée ?).</span>
+        <button class="mj-btn-secondary" onclick="mjNpcUnlinkBestiary()">Délier</button>
+      </div>`;
+    const statsPreview = (entry.stats || []).slice(0, 3).map(s => `${escapeHtml(s.label)} ${escapeHtml(s.value)}`).join(' · ');
+    return `
+      <div style="padding:10px 12px;border-radius:10px;background:var(--yellow-l);border:1.5px solid rgba(255,209,102,.4);">
+        <div style="font-size:12px;font-weight:900;color:#8a6d00;margin-bottom:4px;">${escapeHtml(entry.name || 'Sans nom')}</div>
+        <div style="font-size:11px;font-weight:700;color:#8a6d00;opacity:.85;">❤️ ${entry.maxHp} PV · Init. ${entry.initiative}${statsPreview ? ' · ' + statsPreview : ''}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="mj-btn-secondary" onclick="mjSwitchSection('bestiary');setTimeout(()=>mjSelectBestiaryEntry('${entry.id}'),0)">Voir la fiche complète</button>
+          <button class="mj-btn-secondary" onclick="mjNpcUnlinkBestiary()">Délier</button>
+        </div>
+      </div>`;
+  }
+  const options = (typeof bestiaryGetAll === 'function' ? bestiaryGetAll() : [])
+    .filter(e => e.id !== n.bestiaryId)
+    .map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+  return `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <select id="mj-npc-link-select" class="mj-field-input" style="flex:1;min-width:160px;">
+        <option value="">— Choisir une fiche existante —</option>
+        ${options}
+      </select>
+      <button class="mj-btn-secondary" onclick="mjNpcLinkBestiary(document.getElementById('mj-npc-link-select').value)">Lier</button>
+      <button class="mj-btn-secondary" onclick="mjNpcCreateLinkedBestiary()">＋ Créer une fiche liée</button>
+    </div>`;
+}
+
+async function mjNpcLinkBestiary(bestiaryId) {
+  if (!_mjNpc || !bestiaryId) return;
+  _mjNpc.bestiaryId = bestiaryId;
+  await mjSaveNpc(_mjNpc);
+  await mjRenderNpcDetail();
+}
+
+async function mjNpcCreateLinkedBestiary() {
+  if (!_mjNpc) return;
+  const id = await bestiaryAdd((_mjNpc.name || '').trim() || 'Nouveau PNJ', 'PNJ', 10, 0);
+  _mjNpc.bestiaryId = id;
+  await mjSaveNpc(_mjNpc);
+  await mjRenderNpcDetail();
+}
+
+async function mjNpcUnlinkBestiary() {
+  if (!_mjNpc) return;
+  _mjNpc.bestiaryId = null;
+  await mjSaveNpc(_mjNpc);
+  await mjRenderNpcDetail();
 }
 
 async function mjNpcSaveNotes() {

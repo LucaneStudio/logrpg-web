@@ -52,7 +52,7 @@ function _effectiveInit(p) { return p.initiative + p.initiativeBonus; }
 
 // ── Participants ──────────────────────────────────────────────
 // avatarColorOverride : permet de passer getAvatarColor(char.id) pour les persos locaux
-function combatAddParticipant(name, type, maxHp, initiative, localCharId = null, avatarColorOverride = null, avatarPhoto = null, currentHpOverride = null) {
+function combatAddParticipant(name, type, maxHp, initiative, localCharId = null, avatarColorOverride = null, avatarPhoto = null, currentHpOverride = null, bestiaryId = null) {
   const p = {
     id: _newCombatId(), name, type, localCharId,
     currentHp: (currentHpOverride !== null ? currentHpOverride : maxHp), maxHp, tempHp: 0, initiative,
@@ -61,6 +61,7 @@ function combatAddParticipant(name, type, maxHp, initiative, localCharId = null,
     avatarColor: avatarColorOverride || combatColorFor(name),
     avatarLetter: (name[0] || '?').toUpperCase(),
     avatarPhoto: avatarPhoto || null,
+    bestiaryId,
   };
   _combat.participants.push(p);
   return p;

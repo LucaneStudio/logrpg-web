@@ -15,6 +15,14 @@ db.version(3).stores({
   mj_places : '++id, name',
 });
 
+// Migration v4 : bestiaire (remplace le localStorage historique). Clé
+// primaire EXPLICITE ('id', pas '++id') : les entrées migrées gardent
+// exactement leur ancien id ('bt_xxxxx'), donc aucune référence existante
+// (participant de rencontre/combat) ne casse.
+db.version(4).stores({
+  mj_bestiary: 'id, name',
+});
+
 // ── Sessions ──────────────────────────────────────────────────
 async function mjGetSessions()    { return db.mj_sessions.orderBy('updatedAt').reverse().toArray(); }
 async function mjGetSession(id)   { return db.mj_sessions.get(id); }
@@ -164,13 +172,13 @@ async function mjImportZip(file) {
   for (const o of (data.objects    || [])) { const {id,...rest}=o; await mjSaveObject(remap(rest)); }
   for (const p of (data.places     || [])) { const {id,...rest}=p; await mjSavePlace(remap(rest)); }
 
-  // Le bestiaire vit dans localStorage (pas IndexedDB) : en navigation privée
-  // Safari, localStorage.setItem peut lever une QuotaExceededError. On l'isole
-  // et on l'exécute en dernier pour que son échec n'empêche jamais la
-  // restauration des sessions/PNJ/objets/lieux/assets ci-dessus.
+  // Le bestiaire vit dans IndexedDB (table mj_bestiary). On isole son échec
+  // (table verrouillée, quota IndexedDB, etc.) et on l'exécute en dernier
+  // pour qu'il n'empêche jamais la restauration des sessions/PNJ/objets/
+  // lieux/assets ci-dessus.
   let bestiaryFailed = false;
   if (data.bestiary) {
-    try { bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
+    try { await bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
   }
 
   alert(bestiaryFailed

@@ -7,6 +7,7 @@ let _cvBonusId     = null;
 let _cvEndModal    = false;
 let _cvConditionId = null; // id du participant pour la dialog condition
 let _cbtDmgInputValue = ''; // montant du champ Dégâts/Soin, conservé entre les rendus
+let _cvFicheId     = null; // id du PARTICIPANT (pas de l'entrée bestiaire) dont la fiche est ouverte
 
 // ── Render principal ──────────────────────────────────────────
 function renderCombatView() {
@@ -21,7 +22,8 @@ function renderCombatView() {
     ${_cvBonusId     ? _renderBonusDialog()     : ''}
     ${_cvEndModal    ? _renderEndModal()      : ''}
     ${_cvConditionId ? _renderConditionDialog() : ''}
-    ${_cvCtxId    ? _renderCtxMenu()      : ''}`;
+    ${_cvCtxId    ? _renderCtxMenu()      : ''}
+    ${_cvFicheId  ? _renderBestiaryFicheModal() : ''}`;
 
   overlay.addEventListener('click', (e) => {
     if (_cvCtxId && !e.target.closest('.cbt-ctx-menu') && !e.target.closest('[data-ctx]')) {
@@ -62,6 +64,7 @@ function _renderLeftPanel() {
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        ${p.bestiaryId && bestiaryGetAll().some(e => e.id === p.bestiaryId) ? `<button onclick="_cvFicheId='${p.id}';renderCombatView()" class="cbt-cancel-btn" style="padding:6px 12px;">📋 Fiche</button>` : ''}
         <div class="round-badge">Round ${_combat.round}</div>
         <button onclick="openEndCombatModal()" class="cbt-end-btn">🏁 Fin de combat</button>
       </div>
@@ -290,6 +293,42 @@ function _openCvCtx(id, event) {
   }
 }
 
+// ── Fiche bestiaire en lecture seule (bouton 📋 pendant le combat) ───────────
+function _renderBestiaryFicheModal() {
+  const p = _combat.participants.find(p => p.id === _cvFicheId);
+  if (!p || !p.bestiaryId) { _cvFicheId = null; return ''; }
+  const entry = bestiaryGetAll().find(e => e.id === p.bestiaryId);
+  if (!entry) { _cvFicheId = null; return ''; }
+
+  const statsHtml = (entry.stats || []).length
+    ? entry.stats.map(s => `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--divider);">
+          <span style="font-size:12px;font-weight:800;color:var(--text-light);">${escapeHtml(s.label)}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text);">${escapeHtml(s.value)}</span>
+        </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text-light);font-style:italic;">Aucune stat.</div>`;
+
+  const notesHtml = entry.notes
+    ? (typeof _mjMarkdownWithTags === 'function' ? _mjMarkdownWithTags(entry.notes) : escapeHtml(entry.notes))
+    : `<div style="font-size:12px;color:var(--text-light);font-style:italic;">Aucune note.</div>`;
+
+  return `
+    <div style="position:fixed;inset:0;z-index:5300;background:rgba(20,24,33,.35);display:flex;align-items:center;justify-content:center;"
+      onclick="_cvFicheId=null;renderCombatView()">
+      <div style="background:var(--white);border-radius:16px;padding:20px;width:min(420px,calc(100vw - 32px));max-height:80vh;overflow-y:auto;"
+        onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:15px;font-weight:900;color:var(--text);">🐉 ${escapeHtml(entry.name)}</span>
+          <button onclick="_cvFicheId=null;renderCombatView()" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-light);">✕</button>
+        </div>
+        <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin-bottom:6px;">STATS</div>
+        ${statsHtml}
+        <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin:14px 0 6px;">NOTES</div>
+        ${notesHtml}
+      </div>
+    </div>`;
+}
+
 function _renderCtxMenu() {
   const p = _combat.participants.find(p => p.id === _cvCtxId);
   if (!p) return '';
@@ -312,6 +351,7 @@ function _renderCtxMenu() {
     ...(p.status !== 'FLED'   ? [{ label: '🏃 Marquer en fuite',  fn: `combatSetStatus('${p.id}','FLED');_cvCtxId=null;renderCombatView()` }] : []),
     ...(p.status !== 'ACTIVE' ? [{ label: '↩️ Remettre actif',    fn: `combatSetStatus('${p.id}','ACTIVE');_cvCtxId=null;renderCombatView()` }] : []),
     { label: '🎲 Bonus / Malus initiative', fn: `_cvBonusId='${p.id}';_cvCtxId=null;renderCombatView()` },
+    ...(p.bestiaryId && bestiaryGetAll().some(e => e.id === p.bestiaryId) ? [{ label: '📋 Fiche bestiaire', fn: `_cvFicheId='${p.id}';_cvCtxId=null;renderCombatView()` }] : []),
     { label: '🗑 Retirer du combat', danger: true, fn: `combatRemoveParticipant('${p.id}');_cvCtxId=null;renderCombatView()` },
   ];
 
@@ -497,6 +537,7 @@ function _resetCombatViewState() {
   _cvEndModal    = false;
   _cvConditionId = null;
   _cbtDmgInputValue = '';
+  _cvFicheId     = null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────

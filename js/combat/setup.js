@@ -8,6 +8,7 @@ let _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false };
 async function openCombatSetup(encounter = null) {
   combatReset();
   _cSetup = { localSel: new Set(), type: 'MONSTRE', bestiaryOpen: false, fromMJ: !!encounter };
+  await bestiaryLoad();
 
   if (encounter?.participants?.length) {
     const bestiary = bestiaryGetAll();
@@ -17,7 +18,7 @@ async function openCombatSetup(encounter = null) {
         const t = bestiary.find(b => b.id === ep.bestiaryId);
         if (!t) continue;
         for (let i = 0; i < (ep.qty || 1); i++) {
-          combatAddParticipant(_uniqueParticipantName(t.name), t.type, t.maxHp, t.initiative);
+          combatAddParticipant(_uniqueParticipantName(t.name), t.type, t.maxHp, t.initiative, null, null, null, null, t.id);
         }
       } else if (ep.pid) {
         // Participant manuel (nom libre)
@@ -306,23 +307,23 @@ function addFromBestiary(id) {
   const t = bestiaryGetAll().find(t => t.id === id);
   if (!t) return;
   const uniqueName = _uniqueParticipantName(t.name);
-  combatAddParticipant(uniqueName, t.type, t.maxHp, t.initiative);
+  combatAddParticipant(uniqueName, t.type, t.maxHp, t.initiative, null, null, null, null, t.id);
   _renderSetup();
 }
 
-function removeFromBestiary(id) {
-  bestiaryRemove(id);
+async function removeFromBestiary(id) {
+  await bestiaryRemove(id);
   _renderSetup();
 }
 
-function submitManualParticipantAndSave() {
+async function submitManualParticipantAndSave() {
   const name = document.getElementById('setup-manual-name')?.value.trim();
   const hp   = parseInt(document.getElementById('setup-manual-hp')?.value)   || 10;
   const init = parseInt(document.getElementById('setup-manual-init')?.value) || 0;
   const err  = document.getElementById('setup-manual-error');
   if (!name) { if (err) err.textContent = 'Le nom est obligatoire.'; return; }
   if (err) err.textContent = '';
-  bestiaryAdd(name, _cSetup.type, Math.max(1, hp), init);
-  combatAddParticipant(_uniqueParticipantName(name), _cSetup.type, Math.max(1, hp), init);
+  const newId = await bestiaryAdd(name, _cSetup.type, Math.max(1, hp), init);
+  combatAddParticipant(_uniqueParticipantName(name), _cSetup.type, Math.max(1, hp), init, null, null, null, null, newId);
   _renderSetup();
 }
