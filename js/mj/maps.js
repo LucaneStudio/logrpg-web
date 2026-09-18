@@ -5,6 +5,22 @@
 let _mjMap = null;
 let _mjMapEditingPinId = null;   // id du pin en cours d'édition (carte flottante ouverte), ou null
 let _mjMapHidePins = false;      // mode présentation : masque tous les pins, jamais persisté
+let _mjMapAssetUrlCache = {};    // assetId -> object URL déjà créée, pour ne pas recréer un
+                                  // nouveau blob (donc recharger/clignoter l'<img>) à chaque
+                                  // rendu déclenché par une interaction sur un pin
+
+async function _mjMapGetAssetUrl(assetId) {
+  if (!assetId) return null;
+  if (_mjMapAssetUrlCache[assetId]) return _mjMapAssetUrlCache[assetId];
+  const url = await mjAssetToUrl(assetId);
+  if (url) _mjMapAssetUrlCache[assetId] = url;
+  return url;
+}
+function _mjMapInvalidateAssetUrl(assetId) {
+  if (!assetId || !_mjMapAssetUrlCache[assetId]) return;
+  URL.revokeObjectURL(_mjMapAssetUrlCache[assetId]);
+  delete _mjMapAssetUrlCache[assetId];
+}
 
 // ── Liste ─────────────────────────────────────────────────────
 async function mjRenderMapsList() {
@@ -43,7 +59,7 @@ async function mjRenderMapDetail() {
   const m = _mjMap;
   let canvasHtml;
   if (m.assetId) {
-    const url = await mjAssetToUrl(m.assetId);
+    const url = await _mjMapGetAssetUrl(m.assetId);
     canvasHtml = url
       ? `<div class="mj-map-canvas" style="position:relative;width:100%;"
             oncontextmenu="return mjMapCanvasContextMenu(event, '${m.id}')">
@@ -87,7 +103,10 @@ function mjMapUploadImage(mapId) {
   input.onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (_mjMap.assetId) await mjDeleteAsset(_mjMap.assetId);
+    if (_mjMap.assetId) {
+      await mjDeleteAsset(_mjMap.assetId);
+      _mjMapInvalidateAssetUrl(_mjMap.assetId);
+    }
     _mjMap.assetId = await mjSaveAsset(file.name, file.type, file);
     await mjSaveMap(_mjMap);
     await mjRenderMapDetail();
@@ -107,7 +126,7 @@ async function mjNewMap() {
 function mjDeleteMapConfirm(id) {
   appConfirm('Supprimer cette carte ? Cette action est définitive.', async () => {
     const map = await mjGetMap(id);
-    if (map?.assetId) await mjDeleteAsset(map.assetId);
+    if (map?.assetId) { await mjDeleteAsset(map.assetId); _mjMapInvalidateAssetUrl(map.assetId); }
     await mjDeleteMap(id);
     if (_mjMap && _mjMap.id === id) _mjMap = null;
     await mjRenderMapsList();
@@ -126,7 +145,7 @@ function _mjMapRenderPin(p) {
       onmouseleave="_mjMapPinHidePopup(this)"
       onclick="mjMapEditPin('${p.id}')"
       oncontextmenu="return mjItemContext(event, () => mjMapDeletePinConfirm('${p.id}'))">
-      <div style="width:22px;height:22px;border-radius:50%;background:var(--red);
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--orange);
         display:flex;align-items:center;justify-content:center;font-size:12px;
         box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;">📍</div>
       <div class="mj-map-pin-pop" style="display:none;position:absolute;min-width:160px;max-width:240px;

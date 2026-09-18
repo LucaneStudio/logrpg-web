@@ -14,6 +14,7 @@ const _MJ_TAG_META = {
   lieu:      { icon: '📍', section: 'places',     label: 'Lieu'     },
   asset:     { icon: '🖼️', section: 'assets',     label: 'Image'    },
   carte:     { icon: '🗺️', section: 'maps',       label: 'Carte'    },
+  bestiaire: { icon: '🐉', section: 'bestiary',    label: 'Bestiaire'},
 };
 
 // Cache d'object URLs pour les aperçus d'image (évite les fuites)
@@ -81,6 +82,8 @@ async function mjBuildTagIndex() {
 
     maps.forEach(m => idx.push({ name: m.name || 'Sans nom', type: 'carte', id: m.id,
       pinCount: (m.pins || []).length }));
+
+    bestiary.forEach(b => idx.push({ name: b.name || 'Sans nom', type: 'bestiaire', id: b.id }));
 
     // Normaliser puis publier l'index direct
     idx.forEach(r => {
@@ -323,6 +326,7 @@ async function mjTagGo(type, id, parentId) {
   else if (type === 'lieu')      await mjSelectPlace(id);
   else if (type === 'asset')     await mjSelectAsset(id);
   else if (type === 'carte')     await mjSelectMap(id);
+  else if (type === 'bestiaire') await mjSelectBestiaryEntry(id);
 }
 
 // ═══════════════════════════════════════════════════════════════

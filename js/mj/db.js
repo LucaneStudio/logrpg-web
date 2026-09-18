@@ -201,8 +201,8 @@ async function mjImportZip(file) {
   // l'id de la carte elle-même. Les liens de pins vers encounter/npc/objet/
   // lieu/asset ont tous besoin d'être corrigés (id Dexie '++id' réassigné à
   // l'import, y compris pour les images — assetIdMap est déjà calculée plus
-  // haut pour ça) ; seuls scenario (id 'doc_xxx') et carte (id 'map_xxx')
-  // sont déjà stables, aucun remap nécessaire pour eux.
+  // haut pour ça) ; scenario ('doc_xxx'), carte ('map_xxx') et bestiaire
+  // ('bt_xxx') sont déjà stables (clé explicite), aucun remap nécessaire.
   const idMapByType = { encounter: encounterIdMap, npc: npcIdMap, objet: objectIdMap, lieu: placeIdMap, asset: assetIdMap };
   let mapsFailed = false;
   if (data.maps) {
