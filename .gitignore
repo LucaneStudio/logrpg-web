@@ -24,3 +24,7 @@ cmake-build-*/
 
 # IntelliJ build output
 out/
+
+### Node / Capacitor
+node_modules/
+/www/

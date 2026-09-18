@@ -1,0 +1,38 @@
+{
+  "name": "logrpg-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:www": "node scripts/build-www.mjs",
+    "android:sync": "npm run build:www && npx cap sync android",
+    "android:open": "npm run android:sync && npx cap open android",
+    "android:deploy": "scripts\\deploy-android.bat"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucaneStudio/logrpg-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LucaneStudio/logrpg-web/issues"
+  },
+  "homepage": "https://github.com/LucaneStudio/logrpg-web#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}
