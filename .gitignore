@@ -24,3 +24,12 @@ cmake-build-*/
 
 # IntelliJ build output
 out/
+
+### Capacitor / Android (vit sur feature/capacitor-android-migration, pas ici)
+android/
+node_modules/
+/www/
+/capacitor.config.json
+/package.json
+/package-lock.json
+/scripts/
