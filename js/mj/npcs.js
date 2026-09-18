@@ -131,7 +131,7 @@ function _mjNpcBestiaryLinkHtml(n) {
   }
   const options = (typeof bestiaryGetAll === 'function' ? bestiaryGetAll() : [])
     .filter(e => e.id !== n.bestiaryId)
-    .map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+    .map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');
   return `
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <select id="mj-npc-link-select" class="mj-field-input" style="flex:1;min-width:160px;">

@@ -498,7 +498,7 @@ function aproposConfirmDeleteClose() {
 async function aproposDeleteAll() {
   try {
     await Promise.all(
-      ['characters', 'mj_sessions', 'mj_encounters', 'mj_npcs', 'mj_assets']
+      ['characters', 'mj_sessions', 'mj_encounters', 'mj_npcs', 'mj_assets', 'mj_bestiary']
         .filter(t => db[t])
         .map(t => db[t].clear())
     );

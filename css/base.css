@@ -405,8 +405,10 @@ body {
   .input { font-size: 16px; }
   /* Champs de saisie libre Dégâts/Soin (Mode Combat + fiche perso) : mise en
      forme entièrement inline (pas de .input), donc pas couverts par la règle
-     ci-dessus — même correctif anti-zoom Safari appliqué séparément ici. */
-  .dmg-input { font-size: 16px; }
+     ci-dessus — même correctif anti-zoom Safari appliqué séparément ici.
+     !important nécessaire : ces 3 champs fixent aussi un font-size inline
+     (11-12px) qui sinon gagne toujours sur une règle de classe. */
+  .dmg-input { font-size: 16px !important; }
 }
 .input-label {
   font-size: 10.5px;

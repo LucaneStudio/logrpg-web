@@ -6,7 +6,7 @@ let _hpDmgInputValue = ''; // montant du champ Dégâts/Soin, conservé entre le
 function initCounterState(char) {
   CS = {
     charId:        char.id,
-    hp:            char.hpCurrent,
+    hp:            Math.min(char.hpCurrent, char.hpMax), // clamp perso pré-v1.7 (ancien modèle PV temp fusionnés pouvait dépasser hpMax)
     hpMax:         char.hpMax,
     hpTemp:        char.temporaryHealth || 0,
     hpTempInput:   5,

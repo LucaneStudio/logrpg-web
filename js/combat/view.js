@@ -285,8 +285,9 @@ function _openCvCtx(id, event) {
     if (menu) {
       let x = mx;
       let y = my;
-      if (x + 220 > window.innerWidth)  x = window.innerWidth  - 224;
-      if (y + 200 > window.innerHeight) y = window.innerHeight - 204;
+      const menuH = menu.offsetHeight || 200; // mesuré après rendu : le nb de lignes varie (bonus init, fiche bestiaire…)
+      if (x + 220 > window.innerWidth)   x = window.innerWidth  - 224;
+      if (y + menuH > window.innerHeight) y = Math.max(4, window.innerHeight - menuH - 4);
       menu.style.left = x + 'px';
       menu.style.top  = y + 'px';
     }
