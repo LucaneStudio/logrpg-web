@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.7.0] — 2026-09-19
+
+### Nouveau
+- Mode Combat : saisie libre du montant de dégâts/soins (en plus des boutons ±1/±5)
+- **PV temporaires** qui absorbent les dégâts en premier, avant de toucher les PV réels (Mode Combat + fiche perso)
+- Mode MJ — nouvel écran **Bestiaire** (liste+détail) : stats personnalisées, notes riches, comme les autres ressources. Stockage migré vers une base plus robuste (fini les pertes de données de l'ancien format).
+- Mode Combat : le lien vers la fiche bestiaire d'origine d'un participant est conservé — bouton **Fiche** pour la consulter sans quitter le combat
+- Mode MJ — PNJ : lien optionnel vers une fiche bestiaire (lier une fiche existante, ou en créer une liée directement)
+- Mode MJ — nouvelle ressource **Carte** : image de fond + pins cliquables (titre, texte, lien optionnel vers PNJ, lieu, objet, rencontre, scénario, image, bestiaire ou une autre carte)
+- Cartes — mode présentation : masquer temporairement tous les pins pour montrer la carte aux joueurs sans spoiler
+- Export / Import ZIP : cartes et bestiaire personnalisé inclus dans la sauvegarde de campagne, avec leurs liens préservés
+
+### Corrections
+- Mode Combat / fiche perso : les PV pouvaient dépasser le maximum avec les PV temporaires et le rester après mise à jour
+- Zoom intempestif sur les champs de dégâts/soin en Mode Combat (iOS Safari)
+- Menu contextuel du combat qui pouvait déborder de l'écran sur une fenêtre basse
+- Suppression totale des données : plusieurs tables oubliées (objets, lieux, bestiaire, cartes) sont désormais bien vidées
+- Sécurité : plusieurs identifiants (bestiaire, carte, pin) insuffisamment protégés pouvaient permettre l'exécution de code via un fichier ZIP de campagne importé malveillant
+- Cartes : l'image de fond ne clignote plus à chaque interaction sur un pin
+- Mode MJ : limite de taille des images relevée à 25 Mo (les captures d'écran de jeu détaillées dépassaient souvent l'ancienne limite de 10 Mo)
+- Mode MJ / Combat : plusieurs fonds, bordures et survols de l'interface qui étaient invisibles depuis longtemps (boutons, séparateurs, barre de PV) sont maintenant bien visibles
+- Import ZIP : une image qui échoue à se réimporter ne fait plus pointer silencieusement vers une image différente de la campagne
+
 ## [1.6.0] — 2026-06-17
 
 ### Nouveau
