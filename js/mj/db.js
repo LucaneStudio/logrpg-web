@@ -186,9 +186,15 @@ async function mjImportZip(file) {
     assetIdMap[meta.id] = newId;
   }
 
-  // Remapper les assetId dans les données
+  // Remapper les assetId dans les données. Si l'image correspondante n'a pas
+  // pu être réimportée (entrée manquante dans le zip, ou échec de
+  // mjSaveAsset — quota, taille), on met assetId à null plutôt que de
+  // garder l'ancien id : cet ancien id numérique existe très probablement
+  // déjà dans la base de destination pour une AUTRE image, donc le garder
+  // ferait pointer silencieusement vers la mauvaise image au lieu d'afficher
+  // clairement « aucune image ».
   const remap = obj => {
-    if (obj.assetId && assetIdMap[obj.assetId]) obj.assetId = assetIdMap[obj.assetId];
+    if (obj.assetId) obj.assetId = assetIdMap[obj.assetId] || null;
     return obj;
   };
 

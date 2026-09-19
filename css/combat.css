@@ -113,7 +113,7 @@
 }
 .status-pill { font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 5px; }
 .status-ko   { background: var(--red-l);    color: var(--red); }
-.status-fled { background: var(--divider);  color: var(--text-light); }
+.status-fled { background: var(--divider);  color: var(--text-mid); }
 .init-separator { text-align: center; font-size: 9px; font-weight: 800; color: var(--text-light); letter-spacing: 1px; padding: 4px 0; flex-shrink: 0; }
 
 /* .cbt-ctx-trigger supprimé — menu contextuel via clic droit */
