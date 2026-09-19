@@ -31,8 +31,8 @@ async function mjRenderMapsList() {
   list.innerHTML = maps.length === 0
     ? `<div class="mj-empty">🗺️<br>Aucune carte.<br>Ajoute la première !</div>`
     : maps.map(m => `
-        <div class="mj-item-card ${_mjMap?.id === m.id ? 'active' : ''}" onclick="mjSelectMap('${m.id}')"
-             oncontextmenu="return mjItemContext(event, () => mjDeleteMapConfirm('${m.id}'))">
+        <div class="mj-item-card ${_mjMap?.id === m.id ? 'active' : ''}" onclick="mjSelectMap('${escapeHtml(m.id)}')"
+             oncontextmenu="return mjItemContext(event, () => mjDeleteMapConfirm('${escapeHtml(m.id)}'))">
           <div class="mj-item-name">${escapeHtml(m.name || 'Sans nom')}</div>
           <div class="mj-item-sub"><span>🗺️ ${(m.pins || []).length} pin${(m.pins || []).length === 1 ? '' : 's'}</span></div>
         </div>`).join('');
@@ -62,7 +62,7 @@ async function mjRenderMapDetail() {
     const url = await _mjMapGetAssetUrl(m.assetId);
     canvasHtml = url
       ? `<div class="mj-map-canvas" style="position:relative;width:100%;"
-            oncontextmenu="return mjMapCanvasContextMenu(event, '${m.id}')">
+            oncontextmenu="return mjMapCanvasContextMenu(event, '${escapeHtml(m.id)}')">
           <img src="${url}" style="width:100%;height:auto;display:block;border-radius:12px;"/>
           ${_mjMapHidePins ? '' : (m.pins || []).map(p => _mjMapRenderPin(p)).join('')}
         </div>`
@@ -80,8 +80,8 @@ async function mjRenderMapDetail() {
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button class="mj-btn-secondary" onclick="mjMapToggleHidePins()">${_mjMapHidePins ? '👁️ Afficher les pins' : '👁️ Masquer les pins'}</button>
-        <button class="mj-btn-secondary" onclick="mjMapUploadImage('${m.id}')">🖼️ Image</button>
-        <button class="mj-btn-danger" onclick="mjDeleteMapConfirm('${m.id}')">🗑️</button>
+        <button class="mj-btn-secondary" onclick="mjMapUploadImage('${escapeHtml(m.id)}')">🖼️ Image</button>
+        <button class="mj-btn-danger" onclick="mjDeleteMapConfirm('${escapeHtml(m.id)}')">🗑️</button>
       </div>
     </div>
     <div class="mj-detail-body">
@@ -139,12 +139,12 @@ function mjDeleteMapConfirm(id) {
 function _mjMapRenderPin(p) {
   const editing = _mjMapEditingPinId === p.id;
   return `
-    <div class="mj-map-pin" data-pin-id="${p.id}"
+    <div class="mj-map-pin" data-pin-id="${escapeHtml(p.id)}"
       style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-100%);z-index:${editing ? 30 : 10};"
       onmouseenter="_mjMapPinShowPopup(this)"
       onmouseleave="_mjMapPinHidePopup(this)"
-      onclick="mjMapEditPin('${p.id}')"
-      oncontextmenu="return mjItemContext(event, () => mjMapDeletePinConfirm('${p.id}'))">
+      onclick="mjMapEditPin('${escapeHtml(p.id)}')"
+      oncontextmenu="return mjItemContext(event, () => mjMapDeletePinConfirm('${escapeHtml(p.id)}'))">
       <div style="width:22px;height:22px;border-radius:50%;background:var(--orange-l);
         display:flex;align-items:center;justify-content:center;font-size:12px;
         box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;">📍</div>
@@ -177,7 +177,7 @@ function _mjMapPinLinkHtml(p) {
   // rester des littéraux numériques dans l'onclick, pas des chaînes : sinon
   // db.mj_npcs.get('5') ne retrouve jamais la clé numérique 5 (même piège que
   // mjLinkifyTags dans js/mj/tags.js, qui applique déjà cette garde).
-  const idArg = (typeof r.id === 'string') ? `'${r.id}'` : r.id;
+  const idArg = (typeof r.id === 'string') ? `'${escapeHtml(r.id)}'` : r.id;
   const parentArg = (r.sessionId != null) ? (typeof r.sessionId === 'string' ? `'${r.sessionId}'` : r.sessionId) : 'null';
   return `<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--blue);cursor:pointer;"
     onclick="event.stopPropagation();mjTagGo('${r.type}',${idArg},${parentArg})">
@@ -250,7 +250,9 @@ function _mjMapPinHidePopup(el) {
 // d'édition fait partie du HTML rendu directement, pas d'un toggle JS
 // séparé comme le popup.
 function _mjMapPlaceEditCard(pinId) {
-  const pinEl = document.querySelector(`.mj-map-pin[data-pin-id="${pinId}"]`);
+  // Comparaison directe plutôt qu'un sélecteur CSS interpolé : un id de pin
+  // contenant un guillemet casserait la syntaxe du sélecteur attribut.
+  const pinEl = [...document.querySelectorAll('.mj-map-pin')].find(el => el.dataset.pinId === pinId);
   if (!pinEl) return;
   const card = pinEl.querySelector('.mj-map-pin-edit');
   const canvas = pinEl.closest('.mj-map-canvas');
@@ -283,12 +285,12 @@ function _mjMapPinEditHtml(p) {
         <button onclick="mjMapCloseEditPin()" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--text-light);">✕</button>
       </div>
       <input class="mj-field-input" style="width:100%;margin-bottom:8px;box-sizing:border-box;" placeholder="Titre"
-        value="${escapeHtml(p.title || '')}" onchange="mjMapSavePinField('${p.id}','title',this.value)"/>
+        value="${escapeHtml(p.title || '')}" onchange="mjMapSavePinField('${escapeHtml(p.id)}','title',this.value)"/>
       <textarea class="mj-field-input" style="width:100%;min-height:56px;resize:vertical;margin-bottom:4px;box-sizing:border-box;"
         placeholder="Texte court…" maxlength="200"
-        oninput="mjMapPinTextCounter('${p.id}',this)"
-        onchange="mjMapSavePinField('${p.id}','text',this.value)">${escapeHtml(p.text || '')}</textarea>
-      <div id="mj-pin-counter-${p.id}" style="font-size:10px;color:var(--text-light);text-align:right;margin-bottom:8px;">${(p.text || '').length}/200</div>
+        oninput="mjMapPinTextCounter('${escapeHtml(p.id)}',this)"
+        onchange="mjMapSavePinField('${escapeHtml(p.id)}','text',this.value)">${escapeHtml(p.text || '')}</textarea>
+      <div id="mj-pin-counter-${escapeHtml(p.id)}" style="font-size:10px;color:var(--text-light);text-align:right;margin-bottom:8px;">${(p.text || '').length}/200</div>
       ${_mjMapPinLinkChipHtml(p)}
     </div>`;
 }
@@ -307,10 +309,10 @@ function _mjMapPinLinkChipHtml(p) {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;
         padding:6px 8px;border-radius:8px;background:var(--bg);font-size:11.5px;font-weight:800;">
         <span>${label}</span>
-        <button onclick="mjMapUnlinkPin('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;">✕</button>
+        <button onclick="mjMapUnlinkPin('${escapeHtml(p.id)}')" style="background:none;border:none;cursor:pointer;color:var(--text-light);font-size:13px;">✕</button>
       </div>`;
   }
-  return `<button class="mj-btn-secondary" style="width:100%;" onclick="mjMapOpenLinkPicker('${p.id}')">🔗 Lier à…</button>`;
+  return `<button class="mj-btn-secondary" style="width:100%;" onclick="mjMapOpenLinkPicker('${escapeHtml(p.id)}')">🔗 Lier à…</button>`;
 }
 async function mjMapUnlinkPin(pinId) {
   await mjMapSavePinField(pinId, 'link', null);
@@ -419,7 +421,7 @@ function mjMapFilterLinkPicker(q) {
     // numérique dans l'onclick — sinon le lien stocké devient une chaîne et
     // ne retrouve plus jamais la clé numérique en base (cf. _mjMapPinLinkHtml).
     : items.map(r => `
-      <div class="mj-ac-item" onclick="mjMapPickLink('${r.type}',${typeof r.id === 'string' ? `'${r.id}'` : r.id})">
+      <div class="mj-ac-item" onclick="mjMapPickLink('${r.type}',${typeof r.id === 'string' ? `'${escapeHtml(r.id)}'` : r.id})">
         <span class="mj-ac-ico">${r.icon}</span>
         <span class="mj-ac-name">${escapeHtml(r.name)}</span>
         <span class="mj-ac-type">${_MJ_TAG_META[r.type].label}</span>

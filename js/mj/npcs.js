@@ -124,7 +124,7 @@ function _mjNpcBestiaryLinkHtml(n) {
         <div style="font-size:12px;font-weight:900;color:#8a6d00;margin-bottom:4px;">${escapeHtml(entry.name || 'Sans nom')}</div>
         <div style="font-size:11px;font-weight:700;color:#8a6d00;opacity:.85;">❤️ ${entry.maxHp} PV · Init. ${entry.initiative}${statsPreview ? ' · ' + statsPreview : ''}</div>
         <div style="display:flex;gap:6px;margin-top:8px;">
-          <button class="mj-btn-secondary" onclick="mjSwitchSection('bestiary');setTimeout(()=>mjSelectBestiaryEntry('${entry.id}'),0)">Voir la fiche complète</button>
+          <button class="mj-btn-secondary" onclick="mjSwitchSection('bestiary');setTimeout(()=>mjSelectBestiaryEntry('${escapeHtml(entry.id)}'),0)">Voir la fiche complète</button>
           <button class="mj-btn-secondary" onclick="mjNpcUnlinkBestiary()">Délier</button>
         </div>
       </div>`;

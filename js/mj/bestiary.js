@@ -23,8 +23,8 @@ async function mjRenderBestiaryList() {
         const tm = _bestiaryTypeMeta(e.type);
         return `
           <div class="mj-item-card ${_mjBestiaryEntry?.id === e.id ? 'active' : ''}"
-               onclick="mjSelectBestiaryEntry('${e.id}')"
-               oncontextmenu="return mjItemContext(event, () => mjDeleteBestiaryEntryConfirm('${e.id}'))">
+               onclick="mjSelectBestiaryEntry('${escapeHtml(e.id)}')"
+               oncontextmenu="return mjItemContext(event, () => mjDeleteBestiaryEntryConfirm('${escapeHtml(e.id)}'))">
             <div class="mj-item-name">${escapeHtml(e.name || 'Sans nom')}</div>
             <div class="mj-item-sub">
               <span class="mj-pill" style="color:${tm.color};background:${tm.bg};">${tm.label}</span>
@@ -85,7 +85,7 @@ async function mjRenderBestiaryDetail() {
           onchange="mjBestiarySaveField('name', this.value)"/>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button class="mj-btn-danger" onclick="mjDeleteBestiaryEntryConfirm('${e.id}')">🗑️</button>
+        <button class="mj-btn-danger" onclick="mjDeleteBestiaryEntryConfirm('${escapeHtml(e.id)}')">🗑️</button>
       </div>
     </div>
 

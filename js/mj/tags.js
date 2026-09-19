@@ -136,7 +136,7 @@ function mjLinkifyTags(html) {
       const shown = (braced != null ? braced : simple).trim();
       const res   = _mjTagFind(_mjUnescape(shown).toLowerCase());
       if (res) {
-        const idArg = (typeof res.id === 'string') ? `'${res.id}'` : res.id;
+        const idArg = (typeof res.id === 'string') ? `'${escapeHtml(res.id)}'` : res.id;
         const extra = res.type === 'scenario' ? `,${res.sessionId}` : '';
         const hover = ` data-type="${res.type}" data-id="${typeof res.id === 'string' ? escapeHtml(res.id) : res.id}"`
                     + ` onmouseenter="mjTagHover(event)" onmouseleave="mjTagPreviewHide()"`;
