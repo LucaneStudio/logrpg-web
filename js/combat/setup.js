@@ -261,15 +261,15 @@ function _renderBestiarySection() {
             <span style="font-size:10px;font-weight:700;color:var(--text-light);">❤️ ${t.maxHp} PV · Init. ${t.initiative}</span>
           </div>
         </div>
-        <button onclick="importFromBestiary('${t.id}')" title="Importer dans le formulaire"
+        <button onclick="importFromBestiary('${escapeHtml(t.id)}')" title="Importer dans le formulaire"
           style="padding:6px 10px;border-radius:9px;background:var(--yellow-l);border:1.5px solid rgba(255,209,102,.4);
           font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;color:#B8860B;cursor:pointer;flex-shrink:0;transition:background .15s;"
           onmouseenter="${hoverImportOn}" onmouseleave="${hoverImportOff}">📋</button>
-        <button onclick="addFromBestiary('${t.id}')" title="Ajouter au combat"
+        <button onclick="addFromBestiary('${escapeHtml(t.id)}')" title="Ajouter au combat"
           style="padding:6px 12px;border-radius:9px;background:var(--green-l);border:1.5px solid rgba(92,200,168,.4);
           font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;color:var(--green-d);cursor:pointer;flex-shrink:0;transition:background .15s;"
           onmouseenter="${hoverAddOn}" onmouseleave="${hoverAddOff}">＋</button>
-        <button onclick="removeFromBestiary('${t.id}')" title="Supprimer du bestiaire"
+        <button onclick="removeFromBestiary('${escapeHtml(t.id)}')" title="Supprimer du bestiaire"
           style="padding:6px 10px;border-radius:9px;background:var(--red-l);border:1.5px solid rgba(255,107,107,.3);color:var(--red);
           font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;flex-shrink:0;transition:background .15s;"
           onmouseenter="${hoverDelOn}" onmouseleave="${hoverDelOff}">🗑️</button>

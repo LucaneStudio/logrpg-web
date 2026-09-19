@@ -199,7 +199,7 @@ function mjShowRefs(type, id) {
   el.querySelector('#mj-refs-title').textContent = `🔗 Référencé par (${list.length})`;
   el.querySelector('#mj-refs-list').innerHTML = list.length
     ? list.map(b => `
-        <div class="mj-refs-item" onclick="mjCloseRefs();mjTagGo('scenario','${b.docId}',${b.sessionId})">
+        <div class="mj-refs-item" onclick="mjCloseRefs();mjTagGo('scenario','${escapeHtml(b.docId)}',${b.sessionId})">
           <span class="mj-tree-ico">📄</span>
           <div style="min-width:0;flex:1;">
             <div class="mj-refs-doc">${escapeHtml(b.docTitle)}</div>

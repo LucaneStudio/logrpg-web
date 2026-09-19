@@ -140,8 +140,8 @@ async function mjRenderSessionsList() {
     if (expanded) {
       const docNodes = docs.map(d => `
         <div class="mj-tree-doc ${(activeSess && _mjSessionDoc?.id === d.id) ? 'active' : ''}"
-             onclick="event.stopPropagation();mjSelectDocFromTree(${s.id},'${d.id}')"
-             oncontextmenu="return mjItemContext(event, () => mjDeleteScenarioConfirm(${s.id},'${d.id}'))">
+             onclick="event.stopPropagation();mjSelectDocFromTree(${s.id},'${escapeHtml(d.id)}')"
+             oncontextmenu="return mjItemContext(event, () => mjDeleteScenarioConfirm(${s.id},'${escapeHtml(d.id)}'))">
           <span class="mj-tree-ico">📄</span>
           <span class="mj-tree-label">${escapeHtml(d.title || 'Sans titre')}</span>
         </div>`).join('');
@@ -208,7 +208,7 @@ function mjRenderSessionDetail() {
             onchange="_mjDocChanged()"/>
           <span id="mj-doc-save-ind" style="font-size:10px;color:var(--text-light);font-weight:700;flex-shrink:0;"></span>
           <button class="mj-btn-sm" onclick="mjCopyDocMarkdown(this)" title="Copier le contenu en Markdown" style="flex-shrink:0;">⧉ Markdown</button>
-          <button class="mj-btn-sm-danger" onclick="mjDeleteDoc('${_mjSessionDoc.id}')" title="Supprimer">×</button>
+          <button class="mj-btn-sm-danger" onclick="mjDeleteDoc('${escapeHtml(_mjSessionDoc.id)}')" title="Supprimer">×</button>
         </div>
         ${_mjFormatBarHtml()}
         <div id="mj-doc-scroll" class="mj-doc-scroll">
