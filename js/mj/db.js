@@ -15,6 +15,21 @@ db.version(3).stores({
   mj_places : '++id, name',
 });
 
+// Migration v4 : bestiaire (remplace le localStorage historique). Clé
+// primaire EXPLICITE ('id', pas '++id') : les entrées migrées gardent
+// exactement leur ancien id ('bt_xxxxx'), donc aucune référence existante
+// (participant de rencontre/combat) ne casse.
+db.version(4).stores({
+  mj_bestiary: 'id, name',
+});
+
+// Migration v5 : cartes à pins. Clé primaire EXPLICITE ('id', pas '++id'),
+// même raison que le bestiaire : un pin peut lier une carte à une autre
+// carte, l'id doit rester stable après un export/import ZIP.
+db.version(5).stores({
+  mj_maps: 'id, name',
+});
+
 // ── Sessions ──────────────────────────────────────────────────
 async function mjGetSessions()    { return db.mj_sessions.orderBy('updatedAt').reverse().toArray(); }
 async function mjGetSession(id)   { return db.mj_sessions.get(id); }
@@ -65,11 +80,29 @@ async function mjSavePlace(p)   {
 }
 async function mjDeletePlace(id) { await db.mj_places.delete(id); }
 
+// ── Cartes ────────────────────────────────────────────────────
+// { id, name, assetId, pins: [{id,x,y,title,text,link:{type,id}|null}] }
+function newMapId() { return 'map_' + Math.random().toString(36).slice(2, 9); }
+async function mjGetMaps()    { return db.mj_maps.orderBy('name').toArray(); }
+async function mjGetMap(id)   { return db.mj_maps.get(id); }
+async function mjSaveMap(m)   {
+  if (!m.id) m.id = newMapId();   // stampe l'id sur l'objet passé (mutation), pas de copie
+  await db.mj_maps.put(m);
+  return m.id;
+}
+async function mjDeleteMap(id) { await db.mj_maps.delete(id); }
+
 // ── Assets (images Blob) ──────────────────────────────────────
 async function mjSaveAsset(name, mimeType, blob) {
-  const MAX_SIZE = 10 * 1024 * 1024; // 10 Mo, même limite que les photos de profil (profile.js)
+  // 25 Mo : plus haut que la limite des photos de profil (10 Mo, profile.js,
+  // qui redimensionne toujours via un cropper avant sauvegarde). Les images
+  // MJ (portraits, mais surtout les fonds de carte) ne passent par aucun
+  // redimensionnement — un simple screenshot de jeu détaillé en PNG dépasse
+  // vite 10 Mo alors qu'il fait une taille d'écran tout à fait normale.
+  const MAX_SIZE = 25 * 1024 * 1024;
   if (blob && blob.size > MAX_SIZE) {
-    if (typeof showToast === 'function') showToast('❌ Image trop lourde (max 10 Mo)');
+    const mo = (blob.size / (1024 * 1024)).toFixed(1);
+    if (typeof showToast === 'function') showToast(`❌ Image trop lourde (${mo} Mo, max 25 Mo)`, 4000);
     return null;
   }
   try {
@@ -92,14 +125,16 @@ async function mjAssetToUrl(id) {
 }
 
 // ── Export ZIP ────────────────────────────────────────────────
-async function mjExportZip() {
-  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+// Construit l'archive de campagne (data.json + assets/) et renvoie le Blob,
+// sans téléchargement : réutilisée telle quelle par la sauvegarde complète
+// (js/backup.js, mj.zip).
+async function mjBuildExportBlob() {
   const zip = new JSZip();
   const assetsFolder = zip.folder('assets');
 
-  const [sessions, encounters, npcs, objects, places, allAssets] = await Promise.all([
+  const [sessions, encounters, npcs, objects, places, allAssets, maps] = await Promise.all([
     mjGetSessions(), mjGetEncounters(), mjGetNpcs(), mjGetObjects(), mjGetPlaces(),
-    db.mj_assets.toArray(),
+    db.mj_assets.toArray(), mjGetMaps(),
   ]);
 
   // Ajouter les images dans le dossier assets
@@ -116,27 +151,24 @@ async function mjExportZip() {
     npcs,
     objects,
     places,
+    maps,
     assetMeta: allAssets.map(a => ({ id: a.id, name: a.name, mimeType: a.mimeType })),
   };
   zip.file('data.json', JSON.stringify(data, null, 2));
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `logrpg-mj-${new Date().toISOString().slice(0,10)}.zip`;
-  // Attaché au DOM avant le clic + révocation différée : sur Safari (iOS/
-  // iPadOS/macOS), un <a> détaché ou une révocation immédiate du blob peut
-  // faire échouer le téléchargement silencieusement.
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return zip.generateAsync({ type: 'blob' });
+}
+
+async function mjExportZip() {
+  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+  const blob = await mjBuildExportBlob();
+  downloadBlob(blob, `logrpg-mj-${new Date().toISOString().slice(0,10)}.zip`);
 }
 
 // ── Import ZIP ────────────────────────────────────────────────
-async function mjImportZip(file) {
-  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+// Cœur de l'import (sans alerte ni rendu) : réutilisé par la sauvegarde
+// complète (js/backup.js). `file` : File, Blob, ArrayBuffer ou Uint8Array.
+async function mjImportZipData(file) {
   const zip  = await JSZip.loadAsync(file);
   const json = await zip.file('data.json').async('string');
   const data = JSON.parse(json);
@@ -152,29 +184,72 @@ async function mjImportZip(file) {
     assetIdMap[meta.id] = newId;
   }
 
-  // Remapper les assetId dans les données
+  // Remapper les assetId dans les données. Si l'image correspondante n'a pas
+  // pu être réimportée (entrée manquante dans le zip, ou échec de
+  // mjSaveAsset — quota, taille), on met assetId à null plutôt que de
+  // garder l'ancien id : cet ancien id numérique existe très probablement
+  // déjà dans la base de destination pour une AUTRE image, donc le garder
+  // ferait pointer silencieusement vers la mauvaise image au lieu d'afficher
+  // clairement « aucune image ».
   const remap = obj => {
-    if (obj.assetId && assetIdMap[obj.assetId]) obj.assetId = assetIdMap[obj.assetId];
+    if (obj.assetId) obj.assetId = assetIdMap[obj.assetId] || null;
     return obj;
   };
 
-  for (const s of (data.sessions   || [])) { const {id,...rest}=s; await mjSaveSession(remap(rest)); }
-  for (const e of (data.encounters || [])) { const {id,...rest}=e; await mjSaveEncounter(remap(rest)); }
-  for (const n of (data.npcs       || [])) { const {id,...rest}=n; await mjSaveNpc(remap(rest)); }
-  for (const o of (data.objects    || [])) { const {id,...rest}=o; await mjSaveObject(remap(rest)); }
-  for (const p of (data.places     || [])) { const {id,...rest}=p; await mjSavePlace(remap(rest)); }
+  // Tables de correspondance ancien-id → nouvel-id : encounter/npc/objet/lieu
+  // changent d'id (Dexie '++id' réassigné à l'import), donc tout pin de carte
+  // qui les référence doit être remappé après coup (§5 de la spec Groupe C).
+  const encounterIdMap = {}, npcIdMap = {}, objectIdMap = {}, placeIdMap = {};
 
-  // Le bestiaire vit dans localStorage (pas IndexedDB) : en navigation privée
-  // Safari, localStorage.setItem peut lever une QuotaExceededError. On l'isole
-  // et on l'exécute en dernier pour que son échec n'empêche jamais la
-  // restauration des sessions/PNJ/objets/lieux/assets ci-dessus.
-  let bestiaryFailed = false;
-  if (data.bestiary) {
-    try { bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
+  for (const s of (data.sessions   || [])) { const {id,...rest}=s; await mjSaveSession(remap(rest)); }
+  for (const e of (data.encounters || [])) { const {id,...rest}=e; const newId = await mjSaveEncounter(remap(rest)); if (id != null) encounterIdMap[id] = newId; }
+  for (const n of (data.npcs       || [])) { const {id,...rest}=n; const newId = await mjSaveNpc(remap(rest));       if (id != null) npcIdMap[id] = newId; }
+  for (const o of (data.objects    || [])) { const {id,...rest}=o; const newId = await mjSaveObject(remap(rest));   if (id != null) objectIdMap[id] = newId; }
+  for (const p of (data.places     || [])) { const {id,...rest}=p; const newId = await mjSavePlace(remap(rest));    if (id != null) placeIdMap[id] = newId; }
+
+  // Cartes : id stable (clé explicite, comme le bestiaire) — aucun remap de
+  // l'id de la carte elle-même. Les liens de pins vers encounter/npc/objet/
+  // lieu/asset ont tous besoin d'être corrigés (id Dexie '++id' réassigné à
+  // l'import, y compris pour les images — assetIdMap est déjà calculée plus
+  // haut pour ça) ; scenario ('doc_xxx'), carte ('map_xxx') et bestiaire
+  // ('bt_xxx') sont déjà stables (clé explicite), aucun remap nécessaire.
+  const idMapByType = { encounter: encounterIdMap, npc: npcIdMap, objet: objectIdMap, lieu: placeIdMap, asset: assetIdMap };
+  let mapsFailed = false;
+  if (data.maps) {
+    try {
+      for (const m of data.maps) {
+        const fixedPins = (m.pins || []).map(p => {
+          if (!p.link) return p;
+          const idMap = idMapByType[p.link.type];
+          if (!idMap) return p;   // scenario / carte : id déjà stable
+          const mapped = idMap[p.link.id];
+          return { ...p, link: (mapped != null) ? { type: p.link.type, id: mapped } : null };
+        });
+        await mjSaveMap(remap({ ...m, pins: fixedPins }));
+      }
+    } catch (err) { console.error('[mjImportZip] cartes', err); mapsFailed = true; }
   }
 
-  alert(bestiaryFailed
-    ? "Import réussi (le bestiaire personnalisé n'a pas pu être restauré : stockage plein ou indisponible)."
-    : 'Import réussi !');
+  // Le bestiaire vit dans IndexedDB (table mj_bestiary). On isole son échec
+  // (table verrouillée, quota IndexedDB, etc.) et on l'exécute en dernier
+  // pour qu'il n'empêche jamais la restauration des sessions/PNJ/objets/
+  // lieux/assets ci-dessus.
+  let bestiaryFailed = false;
+  if (data.bestiary) {
+    try { await bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
+  }
+
+  return { bestiaryFailed, mapsFailed };
+}
+
+async function mjImportZip(file) {
+  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+  const { bestiaryFailed, mapsFailed } = await mjImportZipData(file);
+  alert([
+    'Import réussi !',
+    bestiaryFailed ? "(le bestiaire personnalisé n'a pas pu être restauré : stockage plein ou indisponible)" : null,
+    mapsFailed ? "(les cartes n'ont pas pu être restaurées : stockage plein ou indisponible)" : null,
+  ].filter(Boolean).join(' '));
+  if (typeof mjBuildTagIndex === 'function') await mjBuildTagIndex();
   await _mjRenderAll();
 }

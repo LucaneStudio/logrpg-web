@@ -6,6 +6,8 @@ let _cvShowAdd     = false;
 let _cvBonusId     = null;
 let _cvEndModal    = false;
 let _cvConditionId = null; // id du participant pour la dialog condition
+let _cbtDmgInputValue = ''; // montant du champ Dégâts/Soin, conservé entre les rendus
+let _cvFicheId     = null; // id du PARTICIPANT (pas de l'entrée bestiaire) dont la fiche est ouverte
 
 // ── Render principal ──────────────────────────────────────────
 function renderCombatView() {
@@ -20,7 +22,8 @@ function renderCombatView() {
     ${_cvBonusId     ? _renderBonusDialog()     : ''}
     ${_cvEndModal    ? _renderEndModal()      : ''}
     ${_cvConditionId ? _renderConditionDialog() : ''}
-    ${_cvCtxId    ? _renderCtxMenu()      : ''}`;
+    ${_cvCtxId    ? _renderCtxMenu()      : ''}
+    ${_cvFicheId  ? _renderBestiaryFicheModal() : ''}`;
 
   overlay.addEventListener('click', (e) => {
     if (_cvCtxId && !e.target.closest('.cbt-ctx-menu') && !e.target.closest('[data-ctx]')) {
@@ -61,6 +64,7 @@ function _renderLeftPanel() {
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        ${p.bestiaryId && bestiaryGetAll().some(e => e.id === p.bestiaryId) ? `<button onclick="_cvFicheId='${p.id}';renderCombatView()" class="cbt-cancel-btn" style="padding:6px 12px;">📋 Fiche</button>` : ''}
         <div class="round-badge">Round ${_combat.round}</div>
         <button onclick="openEndCombatModal()" class="cbt-end-btn">🏁 Fin de combat</button>
       </div>
@@ -91,6 +95,15 @@ function _renderLeftPanel() {
       <div style="display:flex;gap:6px;margin-top:6px;">
         <button class="ctrl-btn minus" onclick="combatHpAction('${p.id}',-5)" style="font-size:12px;">−5</button>
         <button class="ctrl-btn plus"  onclick="combatHpAction('${p.id}',+5)" style="font-size:12px;">+5</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+        <input type="number" id="cbt-dmg-input" class="dmg-input" placeholder="Montant" value="${_cbtDmgInputValue}"
+          oninput="_cbtDmgInputValue=this.value"
+          style="flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1.5px solid var(--divider);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--text);background:var(--white);outline:none;">
+        <button onclick="combatApplyDamageInput('${p.id}','cbt-dmg-input')"
+          style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(255,107,107,.3);background:var(--red-l);color:var(--red);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">🩸 Dégâts</button>
+        <button onclick="combatApplyHealInput('${p.id}','cbt-dmg-input')"
+          style="padding:6px 10px;border-radius:8px;border:1.5px solid rgba(92,200,168,.3);background:var(--green-l);color:var(--green-d);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;">💚 Soin</button>
       </div>
       <div class="ctr-temp-section">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -272,12 +285,49 @@ function _openCvCtx(id, event) {
     if (menu) {
       let x = mx;
       let y = my;
-      if (x + 220 > window.innerWidth)  x = window.innerWidth  - 224;
-      if (y + 200 > window.innerHeight) y = window.innerHeight - 204;
+      const menuH = menu.offsetHeight || 200; // mesuré après rendu : le nb de lignes varie (bonus init, fiche bestiaire…)
+      if (x + 220 > window.innerWidth)   x = window.innerWidth  - 224;
+      if (y + menuH > window.innerHeight) y = Math.max(4, window.innerHeight - menuH - 4);
       menu.style.left = x + 'px';
       menu.style.top  = y + 'px';
     }
   }
+}
+
+// ── Fiche bestiaire en lecture seule (bouton 📋 pendant le combat) ───────────
+function _renderBestiaryFicheModal() {
+  const p = _combat.participants.find(p => p.id === _cvFicheId);
+  if (!p || !p.bestiaryId) { _cvFicheId = null; return ''; }
+  const entry = bestiaryGetAll().find(e => e.id === p.bestiaryId);
+  if (!entry) { _cvFicheId = null; return ''; }
+
+  const statsHtml = (entry.stats || []).length
+    ? entry.stats.map(s => `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--divider);">
+          <span style="font-size:12px;font-weight:800;color:var(--text-light);">${escapeHtml(s.label)}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text);">${escapeHtml(s.value)}</span>
+        </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text-light);font-style:italic;">Aucune stat.</div>`;
+
+  const notesHtml = entry.notes
+    ? (typeof _mjMarkdownWithTags === 'function' ? _mjMarkdownWithTags(entry.notes) : escapeHtml(entry.notes))
+    : `<div style="font-size:12px;color:var(--text-light);font-style:italic;">Aucune note.</div>`;
+
+  return `
+    <div style="position:fixed;inset:0;z-index:5300;background:rgba(20,24,33,.35);display:flex;align-items:center;justify-content:center;"
+      onclick="_cvFicheId=null;renderCombatView()">
+      <div style="background:var(--white);border-radius:16px;padding:20px;width:min(420px,calc(100vw - 32px));max-height:80vh;overflow-y:auto;"
+        onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:15px;font-weight:900;color:var(--text);">🐉 ${escapeHtml(entry.name)}</span>
+          <button onclick="_cvFicheId=null;renderCombatView()" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-light);">✕</button>
+        </div>
+        <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin-bottom:6px;">STATS</div>
+        ${statsHtml}
+        <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin:14px 0 6px;">NOTES</div>
+        ${notesHtml}
+      </div>
+    </div>`;
 }
 
 function _renderCtxMenu() {
@@ -302,6 +352,7 @@ function _renderCtxMenu() {
     ...(p.status !== 'FLED'   ? [{ label: '🏃 Marquer en fuite',  fn: `combatSetStatus('${p.id}','FLED');_cvCtxId=null;renderCombatView()` }] : []),
     ...(p.status !== 'ACTIVE' ? [{ label: '↩️ Remettre actif',    fn: `combatSetStatus('${p.id}','ACTIVE');_cvCtxId=null;renderCombatView()` }] : []),
     { label: '🎲 Bonus / Malus initiative', fn: `_cvBonusId='${p.id}';_cvCtxId=null;renderCombatView()` },
+    ...(p.bestiaryId && bestiaryGetAll().some(e => e.id === p.bestiaryId) ? [{ label: '📋 Fiche bestiaire', fn: `_cvFicheId='${p.id}';_cvCtxId=null;renderCombatView()` }] : []),
     { label: '🗑 Retirer du combat', danger: true, fn: `combatRemoveParticipant('${p.id}');_cvCtxId=null;renderCombatView()` },
   ];
 
@@ -310,6 +361,15 @@ function _renderCtxMenu() {
     <div style="padding:6px 10px;border-bottom:1px solid var(--divider);">
       <div style="font-size:9px;font-weight:900;color:var(--text-light);letter-spacing:.8px;margin-bottom:5px;">❤️ DÉGÂTS / SOINS</div>
       <div style="display:flex;gap:5px;">${hpBtns}</div>
+      <div style="display:flex;gap:5px;align-items:center;margin-top:5px;">
+        <input type="number" id="cbt-ctx-dmg-input" class="dmg-input" placeholder="Montant" value="${_cbtDmgInputValue}"
+          oninput="_cbtDmgInputValue=this.value"
+          style="flex:1;min-width:0;padding:5px 6px;border-radius:7px;border:1.5px solid var(--divider);font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--text);background:var(--white);outline:none;">
+        <button onclick="combatApplyDamageInput('${p.id}','cbt-ctx-dmg-input',true)"
+          style="padding:5px 7px;border-radius:7px;border:1.5px solid rgba(255,107,107,.3);background:var(--red-l);color:var(--red);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;">🩸</button>
+        <button onclick="combatApplyHealInput('${p.id}','cbt-ctx-dmg-input',true)"
+          style="padding:5px 7px;border-radius:7px;border:1.5px solid rgba(92,200,168,.3);background:var(--green-l);color:var(--green-d);font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;">💚</button>
+      </div>
     </div>
     ${actions.map(a => `<button class="cbt-ctx-item ${a.danger ? 'danger' : ''}" onclick="${a.fn}">${a.label}</button>`).join('')}
   </div>`;
@@ -477,10 +537,27 @@ function _resetCombatViewState() {
   _cvBonusId     = null;
   _cvEndModal    = false;
   _cvConditionId = null;
+  _cbtDmgInputValue = '';
+  _cvFicheId     = null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
 function combatHpAction(id, delta) { combatChangeHp(id, delta); renderCombatView(); }
+
+// Lit le montant saisi dans le champ (inputId), applique dégâts/soin via
+// combatChangeHp (même fonction que les boutons ±1/±5, même règle d'absorption
+// des PV temporaires). closeCtx=true ferme aussi le menu contextuel (utilisé
+// depuis _renderCtxMenu, qui a son propre champ séparé du panneau détail).
+function _combatApplyInputAmount(id, inputId, sign, closeCtx) {
+  const el = document.getElementById(inputId);
+  const val = Math.abs(parseInt(el.value) || 0);
+  if (val === 0) return;
+  combatChangeHp(id, sign * val);
+  if (closeCtx) _cvCtxId = null;
+  renderCombatView();
+}
+function combatApplyDamageInput(id, inputId, closeCtx) { _combatApplyInputAmount(id, inputId, -1, closeCtx); }
+function combatApplyHealInput(id, inputId, closeCtx)   { _combatApplyInputAmount(id, inputId, 1, closeCtx); }
 
 // Refresh partiel : re-rend uniquement les deux panneaux sans toucher aux dialogs ouverts
 function _refreshLeftRight() {

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Test — PV temporaires absorbent les dégâts (combatChangeHp)</title>
+  <style>
+    body { font-family: ui-monospace, Menlo, Consolas, monospace; background:#0f1419; color:#d6dde6;
+           margin:0; padding:24px; line-height:1.5; }
+    h1 { font-size:16px; color:#fff; margin:0 0 4px; }
+    .sub { color:#7b8794; font-size:12px; margin-bottom:18px; }
+    #summary { font-size:14px; font-weight:700; padding:10px 14px; border-radius:8px; margin-bottom:16px; }
+    .ok  { background:#15351f; color:#7ee2a8; }
+    .ko  { background:#3a1620; color:#ff8aa3; }
+    table { border-collapse:collapse; width:100%; font-size:12px; }
+    th, td { border:1px solid #243040; padding:6px 9px; text-align:left; vertical-align:top; }
+    th { background:#161d27; color:#9fb0c2; position:sticky; top:0; }
+    td.pass { color:#7ee2a8; font-weight:700; white-space:nowrap; }
+    td.fail { color:#ff8aa3; font-weight:700; white-space:nowrap; }
+  </style>
+</head>
+<body>
+  <h1>combatChangeHp — PV temporaires absorbent les dégâts avant les PV réels</h1>
+  <div class="sub">Spec : docs/superpowers/specs/2026-09-18-combat-degats-pv-temporaires-design.md §2, §6</div>
+  <div id="summary">Exécution…</div>
+  <table id="results">
+    <thead><tr><th>Cas</th><th>Avant</th><th>Delta</th><th>Attendu</th><th>Obtenu</th><th>Résultat</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="../js/combat/state.js"></script>
+  <script>
+    const CASES = [
+      ['dégâts absorbés en partie',       {currentHp:20, maxHp:20, tempHp:10}, -15, {currentHp:15, tempHp:0}],
+      ['dégâts dépassent largement temp', {currentHp:20, maxHp:20, tempHp:3},  -10, {currentHp:13, tempHp:0}],
+      ['dégâts sans PV temp',             {currentHp:20, maxHp:20, tempHp:0},  -6,  {currentHp:14, tempHp:0}],
+      ['dégâts < temp (absorbe tout)',    {currentHp:20, maxHp:20, tempHp:10}, -4,  {currentHp:20, tempHp:6}],
+      ['dégâts = temp pile',              {currentHp:20, maxHp:20, tempHp:10}, -10, {currentHp:20, tempHp:0}],
+      ['dégâts clampés à 0',              {currentHp:5,  maxHp:20, tempHp:0},  -20, {currentHp:0,  tempHp:0}],
+      ['soin ne touche jamais temp',      {currentHp:15, maxHp:20, tempHp:5},  8,   {currentHp:20, tempHp:5}],
+      ['soin clampé à maxHp',             {currentHp:18, maxHp:20, tempHp:0},  5,   {currentHp:20, tempHp:0}],
+    ];
+
+    function runCase([label, before, delta, expected]) {
+      _combat.participants = [{ id: 'p1', currentHp: before.currentHp, maxHp: before.maxHp, tempHp: before.tempHp }];
+      combatChangeHp('p1', delta);
+      const after = _combat.participants[0];
+      const pass = after.currentHp === expected.currentHp && after.tempHp === expected.tempHp;
+      return { label, before, delta, expected, after, pass };
+    }
+
+    const results = CASES.map(runCase);
+    const allPass = results.every(r => r.pass);
+
+    document.getElementById('summary').textContent = allPass
+      ? `✅ ${results.length}/${results.length} cas OK`
+      : `❌ ${results.filter(r=>!r.pass).length}/${results.length} cas en échec`;
+    document.getElementById('summary').className = allPass ? 'ok' : 'ko';
+
+    document.querySelector('#results tbody').innerHTML = results.map(r => `
+      <tr>
+        <td>${r.label}</td>
+        <td>PV ${r.before.currentHp}/${r.before.maxHp} + ${r.before.tempHp} temp</td>
+        <td>${r.delta > 0 ? '+' : ''}${r.delta}</td>
+        <td>PV ${r.expected.currentHp}, temp ${r.expected.tempHp}</td>
+        <td>PV ${r.after.currentHp}, temp ${r.after.tempHp}</td>
+        <td class="${r.pass ? 'pass' : 'fail'}">${r.pass ? '✅ PASS' : '❌ FAIL'}</td>
+      </tr>`).join('');
+  </script>
+</body>
+</html>

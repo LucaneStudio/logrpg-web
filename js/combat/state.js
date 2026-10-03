@@ -52,7 +52,7 @@ function _effectiveInit(p) { return p.initiative + p.initiativeBonus; }
 
 // ── Participants ──────────────────────────────────────────────
 // avatarColorOverride : permet de passer getAvatarColor(char.id) pour les persos locaux
-function combatAddParticipant(name, type, maxHp, initiative, localCharId = null, avatarColorOverride = null, avatarPhoto = null, currentHpOverride = null) {
+function combatAddParticipant(name, type, maxHp, initiative, localCharId = null, avatarColorOverride = null, avatarPhoto = null, currentHpOverride = null, bestiaryId = null) {
   const p = {
     id: _newCombatId(), name, type, localCharId,
     currentHp: (currentHpOverride !== null ? currentHpOverride : maxHp), maxHp, tempHp: 0, initiative,
@@ -61,6 +61,7 @@ function combatAddParticipant(name, type, maxHp, initiative, localCharId = null,
     avatarColor: avatarColorOverride || combatColorFor(name),
     avatarLetter: (name[0] || '?').toUpperCase(),
     avatarPhoto: avatarPhoto || null,
+    bestiaryId,
   };
   _combat.participants.push(p);
   return p;
@@ -99,8 +100,19 @@ function combatRemoveBonus(id) {
 }
 
 // ── HP ────────────────────────────────────────────────────────
+// Les PV temporaires absorbent les dégâts (delta négatif) avant les PV réels.
+// Un soin (delta positif) ne touche jamais les PV temporaires.
 function combatChangeHp(id, delta) {
-  _updateP(id, p => ({ ...p, currentHp: Math.max(0, Math.min(p.maxHp, p.currentHp + delta)) }));
+  if (delta < 0) {
+    _updateP(id, p => {
+      let dmg = -delta;
+      const tempUsed = Math.min(p.tempHp || 0, dmg);
+      dmg -= tempUsed;
+      return { ...p, tempHp: (p.tempHp || 0) - tempUsed, currentHp: Math.max(0, p.currentHp - dmg) };
+    });
+  } else {
+    _updateP(id, p => ({ ...p, currentHp: Math.min(p.maxHp, p.currentHp + delta) }));
+  }
 }
 
 // ── Conditions ────────────────────────────────────────────────

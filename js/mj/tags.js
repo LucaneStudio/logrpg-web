@@ -13,6 +13,8 @@ const _MJ_TAG_META = {
   objet:     { icon: '📦', section: 'objects',    label: 'Objet'    },
   lieu:      { icon: '📍', section: 'places',     label: 'Lieu'     },
   asset:     { icon: '🖼️', section: 'assets',     label: 'Image'    },
+  carte:     { icon: '🗺️', section: 'maps',       label: 'Carte'    },
+  bestiaire: { icon: '🐉', section: 'bestiary',    label: 'Bestiaire'},
 };
 
 // Cache d'object URLs pour les aperçus d'image (évite les fuites)
@@ -27,11 +29,12 @@ function _mjAssetUrl(asset) {
 async function mjBuildTagIndex() {
   const idx = [];
   try {
-    const [sessions, encounters, npcs, objects, places, assets] = await Promise.all([
+    const [sessions, encounters, npcs, objects, places, assets, maps] = await Promise.all([
       mjGetSessions(), mjGetEncounters(), mjGetNpcs(),
       (typeof mjGetObjects === 'function' ? mjGetObjects() : []),
       (typeof mjGetPlaces  === 'function' ? mjGetPlaces()  : []),
       db.mj_assets.toArray(),
+      (typeof mjGetMaps === 'function' ? mjGetMaps() : []),
     ]);
     const bestiary = (typeof bestiaryGetAll === 'function') ? bestiaryGetAll() : [];
 
@@ -76,6 +79,11 @@ async function mjBuildTagIndex() {
     });
 
     assets.forEach(a => idx.push({ name: a.name || 'image', type: 'asset', id: a.id, url: _mjAssetUrl(a) }));
+
+    maps.forEach(m => idx.push({ name: m.name || 'Sans nom', type: 'carte', id: m.id,
+      pinCount: (m.pins || []).length }));
+
+    bestiary.forEach(b => idx.push({ name: b.name || 'Sans nom', type: 'bestiaire', id: b.id }));
 
     // Normaliser puis publier l'index direct
     idx.forEach(r => {
@@ -128,7 +136,7 @@ function mjLinkifyTags(html) {
       const shown = (braced != null ? braced : simple).trim();
       const res   = _mjTagFind(_mjUnescape(shown).toLowerCase());
       if (res) {
-        const idArg = (typeof res.id === 'string') ? `'${res.id}'` : res.id;
+        const idArg = (typeof res.id === 'string') ? `'${escapeHtml(res.id)}'` : res.id;
         const extra = res.type === 'scenario' ? `,${res.sessionId}` : '';
         const hover = ` data-type="${res.type}" data-id="${typeof res.id === 'string' ? escapeHtml(res.id) : res.id}"`
                     + ` onmouseenter="mjTagHover(event)" onmouseleave="mjTagPreviewHide()"`;
@@ -191,7 +199,7 @@ function mjShowRefs(type, id) {
   el.querySelector('#mj-refs-title').textContent = `🔗 Référencé par (${list.length})`;
   el.querySelector('#mj-refs-list').innerHTML = list.length
     ? list.map(b => `
-        <div class="mj-refs-item" onclick="mjCloseRefs();mjTagGo('scenario','${b.docId}',${b.sessionId})">
+        <div class="mj-refs-item" onclick="mjCloseRefs();mjTagGo('scenario','${escapeHtml(b.docId)}',${b.sessionId})">
           <span class="mj-tree-ico">📄</span>
           <div style="min-width:0;flex:1;">
             <div class="mj-refs-doc">${escapeHtml(b.docTitle)}</div>
@@ -317,6 +325,8 @@ async function mjTagGo(type, id, parentId) {
   else if (type === 'objet')     await mjSelectObject(id);
   else if (type === 'lieu')      await mjSelectPlace(id);
   else if (type === 'asset')     await mjSelectAsset(id);
+  else if (type === 'carte')     await mjSelectMap(id);
+  else if (type === 'bestiaire') await mjSelectBestiaryEntry(id);
 }
 
 // ═══════════════════════════════════════════════════════════════

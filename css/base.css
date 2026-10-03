@@ -21,6 +21,8 @@
   --text: #2C3E50;
   --text-mid: #6B7C8E;
   --text-light: #A8B8C8;
+  --surface: #F5F7F8;
+  --divider: #E8ECF0;
   --shadow: rgba(90, 140, 120, 0.12);
   --shadow-md: rgba(90, 140, 120, 0.18);
   --r: 16px;
@@ -403,6 +405,12 @@ body {
    densité visuelle desktop. */
 @media (any-pointer: coarse) {
   .input { font-size: 16px; }
+  /* Champs de saisie libre Dégâts/Soin (Mode Combat + fiche perso) : mise en
+     forme entièrement inline (pas de .input), donc pas couverts par la règle
+     ci-dessus — même correctif anti-zoom Safari appliqué séparément ici.
+     !important nécessaire : ces 3 champs fixent aussi un font-size inline
+     (11-12px) qui sinon gagne toujours sur une règle de classe. */
+  .dmg-input { font-size: 16px !important; }
 }
 .input-label {
   font-size: 10.5px;

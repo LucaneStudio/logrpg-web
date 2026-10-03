@@ -1,6 +1,6 @@
 # Dégâts combat (saisie libre) + PV temporaires qui absorbent
 
-> Design validé — 2026-09-18. Branche : `main` (à confirmer/ajuster si besoin).
+> Design validé — 2026-09-18. Branche : `v1.7.0`.
 > Objectif : (1) permettre de saisir un montant de dégâts/soin libre au lieu de
 > cliquer −5/−1/+1/+5, et (2) faire en sorte que les PV temporaires absorbent
 > réellement les dégâts avant les PV réels — en Mode Combat **et** sur la fiche

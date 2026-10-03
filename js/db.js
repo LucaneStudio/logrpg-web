@@ -136,6 +136,20 @@ function showToast(msg, duration = 2500) {
   _toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
+// Téléchargement d'un Blob. Attaché au DOM avant le clic + révocation
+// différée : sur Safari (iOS/iPadOS/macOS), un <a> détaché ou une révocation
+// immédiate du blob peut faire échouer le téléchargement silencieusement.
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;

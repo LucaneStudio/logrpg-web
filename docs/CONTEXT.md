@@ -23,6 +23,7 @@
 - `js/combat/` — bestiaire, setup, state, view.
 - `js/mj/` — `db.js` (Dexie v2/v3 + CRUD + export/import ZIP), `view.js` (shell + nav + `mjSwitchSection`), `sessions.js` (scénarios), `encounters.js`, `npcs.js`, **`objects.js`** (Objets + Lieux), `assets.js`, `pj.js`, `tags.js` (tags `@`, autocomplétion, widgets `/`, aperçus).
 - `js/mobile.js` — couche mobile.
+- `js/backup.js` — sauvegarde complète (`backup.json` + `mj.zip`, export/import depuis À propos) et transfert en un clic vers l'app native (`#logrpg-transfer=<port>.<token>` → POST `http://127.0.0.1:<port>/logrpg/transfer`).
 
 ## Pièges / conventions importantes
 - **Cache-busting** : les assets locaux sont en `?v=<version>` dans `index.html` (28 balises). **À bumper en même temps que `APP_CONFIG.version` à chaque release**, sinon les utilisateurs (et le preview) gardent d'anciens fichiers → bugs de mismatch. (Cause racine de plusieurs bugs « ça marche pas sur mobile ».)

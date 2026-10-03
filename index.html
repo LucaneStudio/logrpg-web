@@ -26,13 +26,13 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=1.6.0"></script>
+  <script src="js/config.js?v=1.7.1"></script>
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="/ic-logrpg-monograme.svg">
-  <link rel="stylesheet" href="css/base.css?v=1.6.0">
-  <link rel="stylesheet" href="css/combat.css?v=1.6.0">
-  <link rel="stylesheet" href="css/mj.css?v=1.6.0">
+  <link rel="stylesheet" href="css/base.css?v=1.7.1">
+  <link rel="stylesheet" href="css/combat.css?v=1.7.1">
+  <link rel="stylesheet" href="css/mj.css?v=1.7.1">
   <style>
     @media (max-width: 1099px) {
       /* Cacher l'app desktop */
@@ -937,12 +937,8 @@
       </div>
       <div style="font-size:10px;font-weight:900;color:#6B7C8E;letter-spacing:1.2px;">MES PERSONNAGES</div>
     </div>
-    <!-- Liste personnages -->
+    <!-- Liste personnages (bouton "Ajouter" injecté en fin de liste par mobLoadCharList) -->
     <div id="mob-char-list" style="flex:1;overflow-y:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;"></div>
-    <!-- Bouton ajouter -->
-    <div style="padding:12px 16px;flex-shrink:0;">
-      <button onclick="mobOpenCreateChar()" style="width:100%;padding:14px;border-radius:16px;border:2px dashed rgba(92,200,168,.4);background:transparent;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#5CC8A8;cursor:pointer;">＋ Ajouter un personnage</button>
-    </div>
   </div>
 
   <!-- ── Écran Détail Personnage ────────────────────────────── -->
@@ -1026,6 +1022,12 @@
       <div class="apropos-row-arr">›</div>
     </div>
 
+    <!-- Rempli par aproposLoadDownloads() à partir de download/version.json ; masqué si absent -->
+    <div id="apropos-downloads" style="display:none;">
+      <div class="apropos-section-label">Version locale</div>
+      <div id="apropos-downloads-list"></div>
+    </div>
+
     <!-- Masqué tant que le Discord n'est pas en ligne (Retours + Communauté) -->
     <div style="display:none;">
       <div class="apropos-section-label">Retours</div>
@@ -1058,6 +1060,22 @@
     </div>
 
     <div class="apropos-section-label">Données</div>
+    <div class="apropos-row" onclick="backupExportAll()">
+      <div class="apropos-row-icon" style="background:var(--green-l);">📦</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Exporter toutes mes données</div>
+        <div class="apropos-row-sub">Personnages + campagne MJ dans un fichier .zip</div>
+      </div>
+      <div class="apropos-row-arr">↓</div>
+    </div>
+    <div class="apropos-row" onclick="backupImportPick()">
+      <div class="apropos-row-icon" style="background:var(--green-l);">📥</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Importer une sauvegarde complète</div>
+        <div class="apropos-row-sub">Ajoute les données d'un fichier exporté</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
     <div class="apropos-row" onclick="aproposConfirmDeleteOpen()">
       <div class="apropos-row-icon" style="background:var(--red-l);">🗑️</div>
       <div class="apropos-row-text">
@@ -1219,22 +1237,46 @@
   </div>
 </div>
 
+<!-- Transfert vers l'application (ouvert via #logrpg-transfer=…, js/backup.js) -->
+<div class="modal-overlay" id="modal-transfer">
+  <div class="modal-sheet" style="max-width:400px;">
+    <div class="modal-handle"></div>
+    <div class="rn-header" style="margin-bottom:8px;">
+      <div class="rn-icon" style="background:var(--green-l);">📲</div>
+      <div>
+        <div class="rn-title">Transférer vers l'application</div>
+        <div id="transfer-summary" style="font-size:11.5px;color:var(--text-light);margin-top:3px;"></div>
+      </div>
+    </div>
+    <div style="font-size:12.5px;line-height:1.5;color:var(--text);margin-bottom:8px;">
+      L'application LogRPG ouverte sur cet ordinateur demande une copie de tes données de ce navigateur
+      (personnages, photos, PDF, campagne MJ et images). Elles seront ajoutées dans l'application ;
+      rien n'est supprimé ici.
+    </div>
+    <div id="transfer-status" style="display:none;font-size:12px;font-weight:700;line-height:1.45;margin-bottom:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="transfer-cancel-btn" onclick="backupTransferClose()">Annuler</button>
+      <button class="btn btn-primary" id="transfer-send-btn" onclick="backupTransferSend()">Envoyer mes données</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script src="js/db.js?v=1.6.0"></script>
-<script src="js/player/counters.js?v=1.6.0"></script>
-<script src="js/player/caract.js?v=1.6.0"></script>
-<script src="js/player/capacites.js?v=1.6.0"></script>
-<script src="js/player/inventaire.js?v=1.6.0"></script>
-<script src="js/player/notes.js?v=1.6.0"></script>
-<script src="js/player/profile.js?v=1.6.0"></script>
-<script src="js/mobile.js?v=1.6.0"></script>
-<script src="js/init.js?v=1.6.0"></script>
-<script src="js/player/print.js?v=1.6.0"></script>
-<script src="js/combat/bestiary.js?v=1.6.0"></script>
-<script src="js/combat/state.js?v=1.6.0"></script>
-<script src="js/combat/setup.js?v=1.6.0"></script>
-<script src="js/combat/view.js?v=1.6.0"></script>
+<script src="js/db.js?v=1.7.1"></script>
+<script src="js/player/counters.js?v=1.7.1"></script>
+<script src="js/player/caract.js?v=1.7.1"></script>
+<script src="js/player/capacites.js?v=1.7.1"></script>
+<script src="js/player/inventaire.js?v=1.7.1"></script>
+<script src="js/player/notes.js?v=1.7.1"></script>
+<script src="js/player/profile.js?v=1.7.1"></script>
+<script src="js/mobile.js?v=1.7.1"></script>
+<script src="js/init.js?v=1.7.1"></script>
+<script src="js/player/print.js?v=1.7.1"></script>
+<script src="js/combat/bestiary.js?v=1.7.1"></script>
+<script src="js/combat/state.js?v=1.7.1"></script>
+<script src="js/combat/setup.js?v=1.7.1"></script>
+<script src="js/combat/view.js?v=1.7.1"></script>
 
 <!-- ── Mode MJ (desktop) ──────────────────────────────────── -->
 <div id="mj-overlay" style="display:none;flex-direction:column;"></div>
@@ -1242,16 +1284,19 @@
 <!-- ── Mode combat (desktop) ─────────────────────────────── -->
 <div id="combat-overlay" style="display:none;flex-direction:row;"></div>
 
-<script src="js/mj/db.js?v=1.6.0"></script>
-<script src="js/mj/sessions.js?v=1.6.0"></script>
-<script src="js/mj/encounters.js?v=1.6.0"></script>
-<script src="js/mj/npcs.js?v=1.6.0"></script>
-<script src="js/mj/objects.js?v=1.6.0"></script>
-<script src="js/mj/assets.js?v=1.6.0"></script>
-<script src="js/mj/pj.js?v=1.6.0"></script>
-<script src="js/mj/tags.js?v=1.6.0"></script>
-<script src="js/mj/rich.js?v=1.6.0"></script>
-<script src="js/mj/view.js?v=1.6.0"></script>
-<script src="js/apropos.js?v=1.6.0"></script>
+<script src="js/mj/db.js?v=1.7.1"></script>
+<script src="js/mj/sessions.js?v=1.7.1"></script>
+<script src="js/mj/encounters.js?v=1.7.1"></script>
+<script src="js/mj/npcs.js?v=1.7.1"></script>
+<script src="js/mj/bestiary.js?v=1.7.1"></script>
+<script src="js/mj/maps.js?v=1.7.1"></script>
+<script src="js/mj/objects.js?v=1.7.1"></script>
+<script src="js/mj/assets.js?v=1.7.1"></script>
+<script src="js/mj/pj.js?v=1.7.1"></script>
+<script src="js/mj/tags.js?v=1.7.1"></script>
+<script src="js/mj/rich.js?v=1.7.1"></script>
+<script src="js/mj/view.js?v=1.7.1"></script>
+<script src="js/backup.js?v=1.7.1"></script>
+<script src="js/apropos.js?v=1.7.1"></script>
 </body>
 </html>

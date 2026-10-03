@@ -74,9 +74,9 @@ async function openNoteEditor(id) {
   if (!note) return;
   _editingNote = note;
 
-  // ── Mobile : remplacer mob-content par l'éditeur plein écran ─────────────
+  // ── Mobile : remplacer la zone de contenu par l'éditeur plein écran ───────
   if (window.innerWidth < 1100) {
-    const area = document.getElementById('mob-content');
+    const area = document.getElementById('content-area-mobile');
     if (area) {
       area.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;">

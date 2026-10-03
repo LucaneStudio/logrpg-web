@@ -32,7 +32,7 @@
   font-family: 'Nunito',sans-serif; font-size: 12px; font-weight: 800;
   color: var(--text-mid); cursor: pointer; transition: background .15s;
 }
-.mj-btn-export:hover, .mj-btn-close:hover { background: var(--divider); }
+.mj-btn-export:hover, .mj-btn-close:hover { filter: brightness(.94); }
 
 /* ── Body ── */
 .mj-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
@@ -222,7 +222,7 @@
 /* Au repos : transparent ; en édition : fond blanc + contour violet. */
 .mj-owner-view {
   min-height: 38px; padding: 8px 12px; box-sizing: border-box;
-  border: 1.5px solid var(--divider); border-radius: 10px; background: transparent;
+  border: 1.5px solid transparent; border-radius: 10px; background: transparent;
   cursor: text; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; color: var(--text);
   transition: border-color .1s;

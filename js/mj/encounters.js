@@ -97,7 +97,7 @@ function _renderEncParticipants(e) {
     } else {
       name=p.name; ptype=p.ptype||'MONSTRE'; maxHp=p.maxHp; initiative=p.initiative;
     }
-    const pid = p.bestiaryId || p.pid;
+    const pid = escapeHtml(p.bestiaryId || p.pid);
     const {c,b} = _encTypeColors(ptype);
     return `
       <div class="mj-participant-row">
@@ -152,7 +152,7 @@ function _renderEncParticipants(e) {
   const bRows = bestiary.length === 0
     ? `<div class="mj-empty-sm">Bestiaire vide.</div>`
     : bestiary.map(t => `
-        <div class="mj-bestiary-add-row" onclick="mjEncAddParticipant('${t.id}')">
+        <div class="mj-bestiary-add-row" onclick="mjEncAddParticipant('${escapeHtml(t.id)}')">
           <div class="mj-p-av" style="background:${combatColorFor(t.name)};width:28px;height:28px;font-size:11px;">${(t.name[0]||'?').toUpperCase()}</div>
           <span style="font-size:12px;font-weight:800;color:var(--text);flex:1;">${escapeHtml(t.name)}</span>
           <span style="font-size:10px;font-weight:700;color:var(--text-light);">❤️ ${t.maxHp} · ＋</span>
