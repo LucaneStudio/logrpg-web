@@ -33,3 +33,5 @@ node_modules/
 /package.json
 /package-lock.json
 /scripts/
+### Fichiers de téléchargement (hébergés sur le serveur, pas dans le repo)
+/download/

@@ -138,10 +138,70 @@ function aproposOpen() {
   const footer = document.getElementById('apropos-footer-version');
   if (footer) footer.textContent = `${APP_CONFIG.appName} Web · v${APP_CONFIG.version}`;
   document.getElementById('panel-apropos').classList.add('open');
+  aproposLoadDownloads();
 }
 
 function aproposClose() {
   document.getElementById('panel-apropos').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Version locale (application installable) — lit download/version.json
+// ═══════════════════════════════════════════════════════════════
+const APROPOS_DOWNLOADS = [
+  { key: 'windows', icon: '💻', title: 'Télécharger pour Windows', kind: 'Installeur .msi' },
+  { key: 'android', icon: '📱', title: 'Télécharger pour Android', kind: 'Fichier .apk' },
+  { key: 'macos',   icon: '🍎', title: 'Télécharger pour macOS',   kind: 'Image .dmg' },
+  { key: 'linux',   icon: '🐧', title: 'Télécharger pour Linux',   kind: 'Paquet .deb' },
+];
+
+function aproposCurrentPlatform() {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return 'android';
+  if (/Windows/i.test(ua)) return 'windows';
+  if (/Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad/i.test(ua)) return 'macos';
+  if (/Linux/i.test(ua)) return 'linux';
+  return null;
+}
+
+function aproposFormatSize(bytes) {
+  if (!bytes) return '';
+  return (bytes / 1024 / 1024).toFixed(1).replace('.', ',') + ' Mo';
+}
+
+async function aproposLoadDownloads() {
+  const box = document.getElementById('apropos-downloads');
+  const list = document.getElementById('apropos-downloads-list');
+  if (!box || !list) return;
+  try {
+    const manifestUrl = new URL('download/version.json', document.baseURI);
+    const res = await fetch(manifestUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const manifest = await res.json();
+    const downloads = manifest.downloads || {};
+    const current = aproposCurrentPlatform();
+    // La plateforme de l'appareil en premier, les autres ensuite.
+    const entries = APROPOS_DOWNLOADS
+      .filter(d => downloads[d.key] && downloads[d.key].url)
+      .sort((a, b) => (b.key === current) - (a.key === current));
+    if (!entries.length) { box.style.display = 'none'; return; }
+    list.innerHTML = entries.map(d => {
+      const file = downloads[d.key];
+      const href = new URL(file.url, manifestUrl).href;
+      const sub = [d.kind, 'v' + manifest.version, aproposFormatSize(file.size)].filter(Boolean).join(' · ');
+      return `<a class="apropos-row" href="${escapeHtml(href)}" download style="text-decoration:none;">
+        <div class="apropos-row-icon" style="background:var(--green-l);">${d.icon}</div>
+        <div class="apropos-row-text">
+          <div class="apropos-row-title">${d.title}</div>
+          <div class="apropos-row-sub">${escapeHtml(sub)}</div>
+        </div>
+        <div class="apropos-row-arr">↓</div>
+      </a>`;
+    }).join('');
+    box.style.display = '';
+  } catch (_) {
+    box.style.display = 'none';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
