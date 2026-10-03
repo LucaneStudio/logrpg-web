@@ -4,6 +4,8 @@
 
 ### Nouveau
 - À propos : nouvelle section « Version locale » pour télécharger l'application installable (Windows, Android) quand elle est disponible
+- À propos → Données : **Exporter toutes mes données** (personnages avec photos et PDF + campagne MJ complète dans un seul fichier .zip) et **Importer une sauvegarde complète** pour tout retrouver dans un autre navigateur
+- Transfert en un clic vers l'application LogRPG installée : quand l'application le demande, le site propose d'envoyer toutes les données (rien n'est envoyé sans confirmation)
 
 ### Corrections
 - Version mobile : impossible d'écrire ou de modifier une note (l'éditeur ne s'ouvrait pas)

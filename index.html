@@ -1060,6 +1060,22 @@
     </div>
 
     <div class="apropos-section-label">Données</div>
+    <div class="apropos-row" onclick="backupExportAll()">
+      <div class="apropos-row-icon" style="background:var(--green-l);">📦</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Exporter toutes mes données</div>
+        <div class="apropos-row-sub">Personnages + campagne MJ dans un fichier .zip</div>
+      </div>
+      <div class="apropos-row-arr">↓</div>
+    </div>
+    <div class="apropos-row" onclick="backupImportPick()">
+      <div class="apropos-row-icon" style="background:var(--green-l);">📥</div>
+      <div class="apropos-row-text">
+        <div class="apropos-row-title">Importer une sauvegarde complète</div>
+        <div class="apropos-row-sub">Ajoute les données d'un fichier exporté</div>
+      </div>
+      <div class="apropos-row-arr">›</div>
+    </div>
     <div class="apropos-row" onclick="aproposConfirmDeleteOpen()">
       <div class="apropos-row-icon" style="background:var(--red-l);">🗑️</div>
       <div class="apropos-row-text">
@@ -1221,6 +1237,30 @@
   </div>
 </div>
 
+<!-- Transfert vers l'application (ouvert via #logrpg-transfer=…, js/backup.js) -->
+<div class="modal-overlay" id="modal-transfer">
+  <div class="modal-sheet" style="max-width:400px;">
+    <div class="modal-handle"></div>
+    <div class="rn-header" style="margin-bottom:8px;">
+      <div class="rn-icon" style="background:var(--green-l);">📲</div>
+      <div>
+        <div class="rn-title">Transférer vers l'application</div>
+        <div id="transfer-summary" style="font-size:11.5px;color:var(--text-light);margin-top:3px;"></div>
+      </div>
+    </div>
+    <div style="font-size:12.5px;line-height:1.5;color:var(--text);margin-bottom:8px;">
+      L'application LogRPG ouverte sur cet ordinateur demande une copie de tes données de ce navigateur
+      (personnages, photos, PDF, campagne MJ et images). Elles seront ajoutées dans l'application ;
+      rien n'est supprimé ici.
+    </div>
+    <div id="transfer-status" style="display:none;font-size:12px;font-weight:700;line-height:1.45;margin-bottom:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="transfer-cancel-btn" onclick="backupTransferClose()">Annuler</button>
+      <button class="btn btn-primary" id="transfer-send-btn" onclick="backupTransferSend()">Envoyer mes données</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="js/db.js?v=1.7.1"></script>
@@ -1256,6 +1296,7 @@
 <script src="js/mj/tags.js?v=1.7.1"></script>
 <script src="js/mj/rich.js?v=1.7.1"></script>
 <script src="js/mj/view.js?v=1.7.1"></script>
+<script src="js/backup.js?v=1.7.1"></script>
 <script src="js/apropos.js?v=1.7.1"></script>
 </body>
 </html>

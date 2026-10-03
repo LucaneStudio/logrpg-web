@@ -125,8 +125,10 @@ async function mjAssetToUrl(id) {
 }
 
 // ── Export ZIP ────────────────────────────────────────────────
-async function mjExportZip() {
-  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+// Construit l'archive de campagne (data.json + assets/) et renvoie le Blob,
+// sans téléchargement : réutilisée telle quelle par la sauvegarde complète
+// (js/backup.js, mj.zip).
+async function mjBuildExportBlob() {
   const zip = new JSZip();
   const assetsFolder = zip.folder('assets');
 
@@ -154,23 +156,19 @@ async function mjExportZip() {
   };
   zip.file('data.json', JSON.stringify(data, null, 2));
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `logrpg-mj-${new Date().toISOString().slice(0,10)}.zip`;
-  // Attaché au DOM avant le clic + révocation différée : sur Safari (iOS/
-  // iPadOS/macOS), un <a> détaché ou une révocation immédiate du blob peut
-  // faire échouer le téléchargement silencieusement.
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return zip.generateAsync({ type: 'blob' });
+}
+
+async function mjExportZip() {
+  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+  const blob = await mjBuildExportBlob();
+  downloadBlob(blob, `logrpg-mj-${new Date().toISOString().slice(0,10)}.zip`);
 }
 
 // ── Import ZIP ────────────────────────────────────────────────
-async function mjImportZip(file) {
-  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+// Cœur de l'import (sans alerte ni rendu) : réutilisé par la sauvegarde
+// complète (js/backup.js). `file` : File, Blob, ArrayBuffer ou Uint8Array.
+async function mjImportZipData(file) {
   const zip  = await JSZip.loadAsync(file);
   const json = await zip.file('data.json').async('string');
   const data = JSON.parse(json);
@@ -241,6 +239,12 @@ async function mjImportZip(file) {
     try { await bestiarySave(data.bestiary); } catch (err) { console.error('[mjImportZip] bestiaire', err); bestiaryFailed = true; }
   }
 
+  return { bestiaryFailed, mapsFailed };
+}
+
+async function mjImportZip(file) {
+  if (typeof JSZip === 'undefined') { alert('JSZip non chargé'); return; }
+  const { bestiaryFailed, mapsFailed } = await mjImportZipData(file);
   alert([
     'Import réussi !',
     bestiaryFailed ? "(le bestiaire personnalisé n'a pas pu être restauré : stockage plein ou indisponible)" : null,
