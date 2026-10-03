@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.7.1] — 2026-10-03
+## [1.7.1] — 2026-10-04
 
 ### Nouveau
 - À propos : nouvelle section « Version locale » pour télécharger l'application installable (Windows, Android) quand elle est disponible
