@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1] — 2026-10-03
+
+### Nouveau
+- À propos : nouvelle section « Version locale » pour télécharger l'application installable (Windows, Android) quand elle est disponible
+
+### Corrections
+- Version mobile : impossible d'écrire ou de modifier une note (l'éditeur ne s'ouvrait pas)
+
 ## [1.7.0] — 2026-09-19
 
 ### Nouveau
